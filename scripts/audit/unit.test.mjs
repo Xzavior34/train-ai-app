@@ -40,13 +40,21 @@ test('Instructor workspace routing follows trusted roles without admin fallback'
  assert(getAvailableDashboards(['super_admin'],'someone@example.invalid').includes('owner'));
 });
 
-test('Role lookup uses the authenticated RPC and propagates lookup failures',async()=>{
+test('Role lookup uses the authenticated RPC and falls back during schema-cache drift',async()=>{
  const source=fs.readFileSync('src/services/authService.js','utf8');
  const fn=source.slice(source.indexOf('export async function fetchMyRoles'),source.indexOf('async function fetchDemoRoles')).replace('export ','');
  let calls=0;
  const context={supabase:{rpc:async name=>{assert.equal(name,'get_my_workspace_roles');calls++;return {data:['mentor']};}}};
  vm.createContext(context);vm.runInContext(fn,context);
  assert.equal((await context.fetchMyRoles()).join(','),'mentor');assert.equal(calls,1);
+ context.supabase={
+  rpc:async()=>({error:{code:'PGRST202',message:'Could not find get_my_workspace_roles in the schema cache'}}),
+  auth:{getUser:async()=>({data:{user:{id:'fixture-user'}}})},
+  from:table=>({select:()=>({eq:()=>table==='user_roles'
+   ? Promise.resolve({data:[{role:'admin'},{role:'learner'}],error:null})
+   : {maybeSingle:async()=>({data:{role:'admin'},error:null})}})}),
+ };
+ assert.equal((await context.fetchMyRoles()).join(','),'admin,learner');
  context.supabase.rpc=async()=>({error:new Error('Role lookup unavailable')});
  await assert.rejects(context.fetchMyRoles(),/Role lookup unavailable/);
 });

@@ -5,8 +5,31 @@ import { safeStorage } from "../lib/storage.js";
 export async function fetchMyRoles() {
   if (supabase) {
     const { data, error } = await supabase.rpc("get_my_workspace_roles");
-    if (error) throw error;
-    return Array.isArray(data) && data.length ? data : ["learner"];
+    if (!error) return Array.isArray(data) && data.length ? data : ["learner"];
+
+    // Keep sign-in usable while a new database migration is propagating or
+    // PostgREST is refreshing its schema cache. The self-read policy on
+    // user_roles makes this a safe compatibility path and prevents a missing
+    // helper RPC from blocking every learner and administrator at startup.
+    const rpcUnavailable = error.code === "PGRST202"
+      || /get_my_workspace_roles|schema cache/i.test(error.message || "");
+    if (!rpcUnavailable) throw error;
+
+    const { data: authData, error: authError } = await supabase.auth.getUser();
+    if (authError || !authData?.user?.id) throw authError || error;
+
+    const userId = authData.user.id;
+    const [{ data: roleRows, error: rolesError }, { data: profile, error: profileError }] = await Promise.all([
+      supabase.from("user_roles").select("role").eq("user_id", userId),
+      supabase.from("user_profiles").select("role").eq("id", userId).maybeSingle(),
+    ]);
+    if (rolesError && profileError) throw error;
+
+    const roles = [...new Set([
+      ...(roleRows || []).map((row) => row.role),
+      profile?.role,
+    ].filter(Boolean))];
+    return roles.length ? roles : ["learner"];
   }
   return fetchDemoRoles();
 }
