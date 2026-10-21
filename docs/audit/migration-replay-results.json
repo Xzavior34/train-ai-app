@@ -422,5 +422,17 @@
   {
     "file": "202610200009_grant_sara_and_platform_owner_free_seats.sql",
     "result": "PASS"
+  },
+  {
+    "file": "202610210001_workspace_role_boot_compatibility.sql",
+    "result": "PASS"
+  },
+  {
+    "file": "202610210002_member_learning_track_display.sql",
+    "result": "PASS"
+  },
+  {
+    "file": "202610210003_strictly_restrict_platform_owner_role.sql",
+    "result": "PASS"
   }
 ]

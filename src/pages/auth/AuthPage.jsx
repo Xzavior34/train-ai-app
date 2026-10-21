@@ -15,6 +15,7 @@ import {
 } from "../../lib/api/organizations.js";
 import { getRateLimitStatus, formatLockoutTime, MAX_PASSWORD_TRIALS } from "../../lib/authRateLimiter.js";
 import { supabase, getSupabaseClientForProject, resolveProjectForSignUp } from "../../lib/supabaseClient.js";
+import { getCanonicalDomain } from "../../services/emailService.js";
 
 export default function AuthPage({
   onSignIn, onSignUp, authError, initialEmail = "", initialMode = "",

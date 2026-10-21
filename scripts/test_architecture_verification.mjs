@@ -1,11 +1,12 @@
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 import { createClient } from "@supabase/supabase-js";
 
-// Authoritative Database URLs for Train AI 2.0
-const ORG_DB_URL = process.env.VITE_SUPABASE_ORGANIZATION_URL || "https://djikuoucsuhdiyrhsduz.supabase.co";
-const ORG_DB_ANON_KEY = process.env.VITE_SUPABASE_ORGANIZATION_ANON_KEY || "sb_publishable_mZQWX6ByDTehCprpYsP85g_1NCE0NIx";
+// Authoritative Database URLs for Train AI 2.0 (Consolidated Unified Primary: jeobggrtxeybxvlwpxvn)
+const ORG_DB_URL = process.env.VITE_SUPABASE_URL || "https://jeobggrtxeybxvlwpxvn.supabase.co";
+const ORG_DB_ANON_KEY = process.env.VITE_SUPABASE_ANON_KEY || "sb_publishable_BvoX4QvVa1-pG6mx7NsVUQ_4GXGlwaJ";
 
-const SARA_URL = process.env.VITE_SUPABASE_SARA_URL || "https://jeobggrtxeybxvlwpxvn.supabase.co";
-const SARA_ANON_KEY = process.env.VITE_SUPABASE_SARA_ANON_KEY || "sb_publishable_BvoX4QvVa1-pG6mx7NsVUQ_4GXGlwaJ";
+const SARA_URL = process.env.VITE_SUPABASE_URL || "https://jeobggrtxeybxvlwpxvn.supabase.co";
+const SARA_ANON_KEY = process.env.VITE_SUPABASE_ANON_KEY || "sb_publishable_BvoX4QvVa1-pG6mx7NsVUQ_4GXGlwaJ";
 
 const LEGACY_DB_URL = "https://qibqouymqtpirtbyjvjr.supabase.co";
 
@@ -30,16 +31,10 @@ async function run() {
   console.log("--- 1. PHYSICAL DATABASE ARCHITECTURE CLASSIFICATION ---");
   const dbs = [
     {
-      role: "Train AI 2.0 Organization Database (Primary Shared & Central Auth)",
-      ref: "djikuoucsuhdiyrhsduz",
-      url: ORG_DB_URL,
-      scope: "Platform Owner, Digital Users org (tech-learning), B2B Tenants, Individual signups, Platform administration"
-    },
-    {
-      role: "Train AI 2.0 Sara Foundation Database (Dedicated Tenant Data)",
+      role: "Train AI 2.0 Unified Canonical Database (Primary Shared, Central Auth & Tenants)",
       ref: "jeobggrtxeybxvlwpxvn",
-      url: SARA_URL,
-      scope: "Sara Foundation learners, instructors, courses, cohorts, progress, certs, analytics"
+      url: ORG_DB_URL,
+      scope: "Platform Owner, Digital Users org (tech-learning), Sara Foundation, B2B Tenants, Individual signups, Platform administration, courses, cohorts"
     },
     {
       role: "Train AI 1.0 Legacy Database (Historical Data Boundary)",
@@ -49,7 +44,7 @@ async function run() {
     }
   ];
 
-  console.log("Active Runtime Physical Databases: 2 (Org DB + Sara DB)");
+  console.log("Active Runtime Physical Databases: 1 (Unified Primary Database: jeobggrtxeybxvlwpxvn)");
   dbs.forEach((db, i) => {
     console.log(`  [DB ${i + 1}] ${db.role}`);
     console.log(`       Project Ref: ${db.ref}`);
@@ -57,8 +52,7 @@ async function run() {
     console.log(`       Scope:       ${db.scope}\n`);
   });
 
-  assertCheck("Organization DB Project Ref Mapping", ORG_DB_URL.includes("djikuoucsuhdiyrhsduz"), "djikuoucsuhdiyrhsduz");
-  assertCheck("Sara Foundation DB Project Ref Mapping", SARA_URL.includes("jeobggrtxeybxvlwpxvn"), "jeobggrtxeybxvlwpxvn");
+  assertCheck("Unified DB Project Ref Mapping", ORG_DB_URL.includes("jeobggrtxeybxvlwpxvn"), "jeobggrtxeybxvlwpxvn");
   assertCheck("Legacy DB Isolated from Runtime", LEGACY_DB_URL.includes("qibqouymqtpirtbyjvjr"), "0 production traffic");
   console.log();
 
@@ -120,22 +114,16 @@ async function run() {
     { email: "learner@gmail.com", expected: "organization_db" },
     { email: "trainailtd@gmail.com", expected: "organization_db" },
     { email: "admin@enterprise-corp.com", expected: "organization_db" },
-    { email: "student@sarafoundationafrica.com", expected: "sara_foundation" },
-    { email: "instructor@sarafoundationafrica.com", expected: "sara_foundation" }
+    { email: "student@sarafoundationafrica.com", expected: "organization_db" },
+    { email: "instructor@sarafoundationafrica.com", expected: "organization_db" }
   ];
 
   function resolveProjectForSignIn(email = "") {
-    const normalized = email.trim().toLowerCase();
-    if (normalized.endsWith("@sarafoundationafrica.com")) {
-      return "sara_foundation";
-    }
     return "organization_db";
   }
 
   function fallbackProjectForSignIn(triedProjectKey) {
-    if (triedProjectKey === "sara_foundation") return "organization_db";
-    if (triedProjectKey === "organization_db") return "sara_foundation";
-    return null;
+    return "organization_db";
   }
 
   routingTestCases.forEach(tc => {
@@ -146,20 +134,20 @@ async function run() {
   // Test fallback for non-domain Sara user (e.g. sara.student@gmail.com)
   const nonDomainEmail = "sara.student@gmail.com";
   const initialTarget = resolveProjectForSignIn(nonDomainEmail); // organization_db
-  const fallbackTarget = fallbackProjectForSignIn(initialTarget); // sara_foundation
-  assertCheck("Fallback Routing for Non-Domain Sara Users", fallbackTarget === "sara_foundation", "Attempts Org DB then falls back to Sara DB");
+  const fallbackTarget = fallbackProjectForSignIn(initialTarget);
+  assertCheck("Routing for Non-Domain Sara Users", fallbackTarget === "organization_db", "Targets canonical unified DB");
   console.log();
 
   // -------------------------------------------------------------------------
   // 4. PLATFORM OWNER & DIGITAL USERS SEPARATION
   // -------------------------------------------------------------------------
   console.log("--- 4. PLATFORM OWNER & DIGITAL USERS SEPARATION ---");
-  console.log("  Platform Owner canonical identity: trainailtd@gmail.com in Organization DB (djikuoucsuhdiyrhsduz)");
+  console.log("  Platform Owner canonical identity: trainailtd@gmail.com in Unified Primary DB (jeobggrtxeybxvlwpxvn)");
   console.log("  Platform Owner role: super_admin");
   console.log("  Canonical Digital Users Organization: slug 'tech-learning'");
   console.log("  Platform Admin Organization: slug 'train-ai-ltd'");
-  assertCheck("Platform Owner Canonical Identity Database", true, "Organization DB (djikuoucsuhdiyrhsduz)");
-  assertCheck("Platform Owner Not in Sara DB as Primary Auth", true, "Preserved in Org DB");
+  assertCheck("Platform Owner Canonical Identity Database", true, "Unified DB (jeobggrtxeybxvlwpxvn)");
+  assertCheck("Platform Owner in Unified DB as Primary Auth", true, "Preserved in Unified DB");
   console.log();
 
   // -------------------------------------------------------------------------

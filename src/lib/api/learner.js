@@ -1,90 +1,49 @@
+import { isRealDatabaseId } from "../mockDataManager.js";
+import { resolveOrganizationId } from "./dataReferences.js";
 import { supabase } from "../supabaseClient.js";
 import { fetchProfilesByUserIds } from "./schemaHelper.js";
 import { ACHIEVEMENT_CATALOG } from "../../learner/achievementCatalog.js";
 
 export async function fetchPublishedCourses(organizationId) {
-  if (!supabase) {
-    const now = new Date().toISOString();
-    return [
-      {
-        id: "demo-course-ai-fundamentals", title: "AI Fundamentals", description: "An introduction to core AI concepts for the workplace.",
-        category: "AI", level: "beginner", duration_hours: 4, course_source: "internal", is_published: true, is_approved: true,
-        is_mandatory: false, price: 0, requires_approval: false, created_at: now,
-      },
-      {
-        id: "demo-course-compliance-101", title: "Workplace Compliance 101", description: "Mandatory compliance training covering core policies.",
-        category: "Compliance", level: "beginner", duration_hours: 2, course_source: "internal", is_published: true, is_approved: true,
-        is_mandatory: true, price: 0, requires_approval: false, created_at: now,
-      },
-      {
-        id: "demo-course-external-leadership", title: "Leadership Essentials", description: "A curated external course on foundational leadership skills.",
-        category: "Leadership", level: "intermediate", duration_hours: 6, course_source: "external", is_published: true, is_approved: true,
-        is_mandatory: false, price: 0, requires_approval: false, created_at: now,
-      },
-    ];
+  const now = new Date().toISOString();
+  const STARTER_COURSES = [
+    {
+      id: "demo-course-ai-fundamentals", title: "AI Fundamentals", description: "An introduction to core AI concepts for the workplace.",
+      category: "AI", level: "beginner", duration_hours: 4, course_source: "internal", is_published: true, is_approved: true,
+      is_mandatory: false, price: 0, requires_approval: false, created_at: now,
+    },
+    {
+      id: "demo-course-compliance-101", title: "Workplace Compliance 101", description: "Mandatory compliance training covering core policies.",
+      category: "Compliance", level: "beginner", duration_hours: 2, course_source: "internal", is_published: true, is_approved: true,
+      is_mandatory: true, price: 0, requires_approval: false, created_at: now,
+    },
+    {
+      id: "demo-course-external-leadership", title: "Leadership Essentials", description: "A curated external course on foundational leadership skills.",
+      category: "Leadership", level: "intermediate", duration_hours: 6, course_source: "external", is_published: true, is_approved: true,
+      is_mandatory: false, price: 0, requires_approval: false, created_at: now,
+    },
+  ];
+
+  if (!supabase) return STARTER_COURSES;
+  if (!organizationId || organizationId === "demo-org-id") return [];
+
+  const orgId = await resolveOrganizationId(organizationId);
+
+  let query = supabase.from("courses").select("*")
+    .eq("is_published", true)
+    .is("archived_at", null);
+
+  if (orgId && isRealDatabaseId(orgId)) {
+    query = query.or(`organization_id.eq.${orgId},organization_id.is.null`);
+  } else {
+    query = query.is("organization_id", null);
   }
-  try {
-    let query = supabase
-      .from("courses")
-      .select("*")
-      .eq("is_published", true)
-      .is("archived_at", null);
 
-    if (organizationId && organizationId !== "demo-org-id") {
-      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(organizationId).trim());
-      let filterOrgId = isUuid ? String(organizationId).trim() : null;
-      if (!filterOrgId) {
-        const clean = String(organizationId).trim().toLowerCase();
-        try {
-          const { data: orgData } = await supabase
-            .from("organizations")
-            .select("id")
-            .or(`slug.eq.${clean},name.ilike.%${clean}%`)
-            .limit(1)
-            .maybeSingle();
-          if (orgData?.id) filterOrgId = orgData.id;
-        } catch {}
-      }
-      if (filterOrgId) {
-        query = query.or(`organization_id.eq.${filterOrgId},organization_id.is.null`);
-      }
-    }
-
-    let { data, error } = await query.order("created_at", { ascending: false });
-    if (!error && data && data.length > 0) {
-      return data;
-    }
-
-    // Fallback to active starter courses so learner workspace is always immediately functional
-    const now = new Date().toISOString();
-    return [
-      {
-        id: "demo-course-ai-fundamentals", title: "AI Fundamentals", description: "An introduction to core AI concepts for the workplace.",
-        category: "AI", level: "beginner", duration_hours: 4, course_source: "internal", is_published: true, is_approved: true,
-        is_mandatory: false, price: 0, requires_approval: false, created_at: now,
-      },
-      {
-        id: "demo-course-compliance-101", title: "Workplace Compliance 101", description: "Mandatory compliance training covering core policies.",
-        category: "Compliance", level: "beginner", duration_hours: 2, course_source: "internal", is_published: true, is_approved: true,
-        is_mandatory: true, price: 0, requires_approval: false, created_at: now,
-      },
-      {
-        id: "demo-course-external-leadership", title: "Leadership Essentials", description: "A curated external course on foundational leadership skills.",
-        category: "Leadership", level: "intermediate", duration_hours: 6, course_source: "external", is_published: true, is_approved: true,
-        is_mandatory: false, price: 0, requires_approval: false, created_at: now,
-      },
-    ];
-  } catch (e) {
-    console.warn("Could not fetch published courses:", e);
-    const now = new Date().toISOString();
-    return [
-      {
-        id: "demo-course-ai-fundamentals", title: "AI Fundamentals", description: "An introduction to core AI concepts for the workplace.",
-        category: "AI", level: "beginner", duration_hours: 4, course_source: "internal", is_published: true, is_approved: true,
-        is_mandatory: false, price: 0, requires_approval: false, created_at: now,
-      },
-    ];
+  const { data, error } = await query.order("created_at", { ascending: false });
+  if (error) {
+    throw new Error("Could not load courses. Please retry.");
   }
+  return data || [];
 }
 
 export async function fetchMyEnrollments(userId) {
@@ -108,8 +67,7 @@ export async function fetchMyEnrollments(userId) {
     .select("*")
     .eq("user_id", userId);
   if (error) {
-    console.warn("Could not fetch enrollments:", error);
-    return [];
+    throw new Error("Could not load your course progress. Please retry.");
   }
   return data || [];
 }
@@ -707,16 +665,18 @@ export async function fetchPublishedLearningPaths(organizationId) {
   ];
 
   if (!supabase) return DEMO_PATHS;
+  if (!organizationId || organizationId === "demo-org-id") return [];
+  const orgId = await resolveOrganizationId(organizationId);
   let query = supabase
     .from("learning_paths")
     .select("*, learning_path_courses(*, courses(id, title, description, level, category, duration_hours, cover_image_url))")
     .eq("is_published", true)
     .order("title", { ascending: true });
   if (organizationId && organizationId !== "demo-org-id") {
-    query = query.or(`organization_id.eq.${organizationId},organization_id.is.null`);
+    query = query.or(`organization_id.eq.${orgId},organization_id.is.null`);
   }
   const { data, error } = await query;
-  if (error) { console.warn("Learning paths fetch warning:", error); }
+  if (error) throw new Error("Could not load learning paths. Please retry.");
   
   const formattedPaths = (data || []).map((p) => ({
     id: p.id,
@@ -742,46 +702,7 @@ export async function fetchPublishedLearningPaths(organizationId) {
       })).filter(c => c.id),
   })).filter(p => p.courses && p.courses.length > 0);
 
-  if (formattedPaths.length > 0) return formattedPaths;
-
-  // If learning_paths table has no mapped courses yet, dynamically group live courses into career pathways
-  let courseQuery = supabase
-    .from("courses")
-    .select("id, title, description, level, category, duration_hours, cover_image_url")
-    .order("created_at", { ascending: true });
-  if (organizationId && organizationId !== "demo-org-id") {
-    courseQuery = courseQuery.or(`organization_id.eq.${organizationId},organization_id.is.null`);
-  }
-  const { data: allCourses } = await courseQuery;
-  const coursesList = allCourses || [];
-  if (!coursesList.length) return DEMO_PATHS;
-
-  const byCategory = {};
-  for (const c of coursesList) {
-    const cat = c.category || "Core Systems";
-    if (!byCategory[cat]) byCategory[cat] = [];
-    byCategory[cat].push({
-      id: c.id,
-      title: c.title,
-      description: c.description || "",
-      level: c.level || "intermediate",
-      category: c.category || cat,
-      coverImageUrl: c.cover_image_url || null,
-      hours: c.duration_hours || 6,
-      isRequired: true,
-      unlockRule: "complete_previous",
-      orderIndex: byCategory[cat].length,
-    });
-  }
-
-  return Object.entries(byCategory).map(([catName, courseArr], idx) => ({
-    id: `path-track-${idx + 1}`,
-    title: `${catName} Career Track`,
-    description: `Comprehensive industry career progression track for ${catName}.`,
-    category: catName,
-    level: "All Levels",
-    courses: courseArr,
-  }));
+  return formattedPaths;
 }
 
 /**

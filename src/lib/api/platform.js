@@ -1,10 +1,11 @@
 import { supabase, activeProject } from "../supabaseClient.js";
 import { fetchProfilesByUserIds } from "./schemaHelper.js";
-import { isRealDatabaseId } from "../mockDataManager.js";
+import { isRealDatabaseId, isMockDataEnabled } from "../mockDataManager.js";
+import { resolveOrganizationId } from "./dataReferences.js";
 import { DEMO_PROJECT_DATA, DEMO_LEARNERS, DEMO_INSTRUCTORS, DEMO_COURSES, DEMO_ENROLLMENTS, DEMO_CERTIFICATES, DEMO_COHORT, DEMO_STUDY_GROUP, demoTotalUsersBreakdown, demoTopCourses, demoSkillGapsDetail, demoLearnerProgressOverview } from "./demoData.js";
 import { getCanonicalDomain } from "../../services/emailService.js";
 import { calculateCohortProgress, assignCourseToCohortOrLearners, unassignCohortCourse } from "./cohorts.js";
-import { getReferralSignupsRoster, getLinkClicksRoster } from "./organizations.js";
+import { getReferralSignupsRoster, getLinkClicksRoster, BASELINE_CONFIRMED_REFERRAL_SIGNUPS, PUBLIC_ORGANIZATIONS_DIRECTORY } from "./organizations.js";
 export { assignCourseToCohortOrLearners, unassignCohortCourse };
 
 
@@ -14,12 +15,17 @@ export { assignCourseToCohortOrLearners, unassignCohortCourse };
 // which is the point of doing authorization at the database layer.
 
 export async function fetchCurrentUserProfile(userId) {
-  if (!supabase || !userId || !isRealDatabaseId(userId)) {
+  if (!userId) return null;
+  if (!supabase || !isRealDatabaseId(userId)) {
     let saved = null;
     try { saved = JSON.parse(localStorage.getItem("trainai_active_session_v1") || "null"); } catch { /* ignore */ }
-    const role = saved?.user?.user_metadata?.role || saved?.role || "learner";
+    const role = saved?.user?.user_metadata?.role || saved?.role || (userId.includes("instructor") ? "mentor" : userId.includes("manager") ? "manager" : userId.includes("admin") ? "admin" : "learner");
+    const isSara = userId.includes("sara") || (typeof window !== "undefined" && window.location?.search?.includes("sara"));
+    const orgId = isSara ? "sara-org-1" : "demo-org-id";
     return {
-      id: userId || "demo-learner-1", organization_id: "demo-org-id", role,
+      id: userId || "demo-learner-1",
+      organization_id: orgId,
+      role,
       display_name: role === "admin" ? "Demo Admin" : role === "mentor" ? "Demo Instructor" : role === "manager" ? "Demo Manager" : "Demo Learner",
       manager_id: role === "learner" ? "demo-manager-id" : null,
     };
@@ -160,7 +166,8 @@ export async function updateWeeklyGoal(userId, goal) {
 export async function safeInQuery(tableName, selectFields, idColumn, ids) {
   if (!supabase || !ids || !ids.length) return [];
   if (ids.length <= 30) {
-    const { data } = await supabase.from(tableName).select(selectFields).in(idColumn, ids);
+    const { data, error } = await supabase.from(tableName).select(selectFields).in(idColumn, ids);
+    if (error) throw error;
     return data || [];
   }
   // Chunks used to be awaited one at a time in a for loop - correct, but on
@@ -176,7 +183,8 @@ export async function safeInQuery(tableName, selectFields, idColumn, ids) {
     chunks.map((chunk) => supabase.from(tableName).select(selectFields).in(idColumn, chunk))
   );
   const results = [];
-  for (const { data } of chunkResults) {
+  for (const { data, error } of chunkResults) {
+    if (error) throw error;
     if (data) results.push(...data);
   }
   return results;
@@ -318,7 +326,7 @@ export async function fetchOrgMembers(organizationId) {
           const { data: orgMatch } = await supabase
             .from("organizations")
             .select("id, name, slug")
-            .or(`slug.eq.${clean},slug.ilike.${clean},name.ilike.%${clean}%`)
+            .eq("slug", clean)
             .limit(1)
             .maybeSingle();
           if (orgMatch) {
@@ -327,6 +335,27 @@ export async function fetchOrgMembers(organizationId) {
           }
         } catch {}
       }
+      if (!resolvedOrgUuid) {
+        const dirMatch = PUBLIC_ORGANIZATIONS_DIRECTORY?.find(
+          (item) =>
+            item.id?.toLowerCase() === clean ||
+            item.slug?.toLowerCase() === clean ||
+            item.name?.toLowerCase() === clean ||
+            (clean.includes("sara") && item.slug === "sara-foundation") ||
+            ((clean.includes("digital") || clean.includes("tech")) && item.slug === "tech-learning")
+        );
+        if (dirMatch) {
+          resolvedOrgUuid = dirMatch.id;
+          resolvedOrgInfo = dirMatch;
+        } else {
+          resolvedOrgUuid = clean;
+          resolvedOrgInfo = {
+            id: clean,
+            name: String(organizationId).replace(/[-_]/g, " ").replace(/\b\w/g, (l) => l.toUpperCase()),
+            slug: clean,
+          };
+        }
+      }
     }
   }
 
@@ -334,7 +363,11 @@ export async function fetchOrgMembers(organizationId) {
   const clickMembers = getLinkClicksRoster(organizationId, resolvedOrgInfo);
   const demoMembers = generateDemoOrgMembers(organizationId, baseOrigin);
 
-  if (!supabase || organizationId === "demo-org-id") {
+  if (supabase && organizationId && organizationId !== "demo-org-id" && !isRealDatabaseId(resolvedOrgUuid)) {
+    throw new Error("Could not find the selected organization in the directory.");
+  }
+
+  if (!supabase || organizationId === "demo-org-id" || !isRealDatabaseId(resolvedOrgUuid)) {
     const seen = new Set();
     const combined = [];
     for (const rm of rosterMembers) {
@@ -409,7 +442,7 @@ export async function fetchOrgMembers(organizationId) {
   // 2. Query user_profiles and organization_members in parallel
   let query = supabase.from("user_profiles").select("*").order("last_active_at", { ascending: false });
   if (resolvedOrgUuid) {
-    query = query.or(`organization_id.eq.${resolvedOrgUuid},organization_id.is.null`);
+    query = query.eq("organization_id", resolvedOrgUuid);
   }
 
   let omQuery = supabase.from("organization_members").select("*").order("joined_at", { ascending: false });
@@ -418,10 +451,13 @@ export async function fetchOrgMembers(organizationId) {
   }
 
   const [upResult, omResult, orgRowsResult] = await Promise.all([
-    query.then((r) => r, () => ({ data: [] })),
-    omQuery.then((r) => r, () => ({ data: [] })),
+    query.then((r) => r, error => ({ data: [], error })),
+    omQuery.then((r) => r, error => ({ data: [], error })),
     supabase.from("organizations").select("id, name, slug").then((r) => r, () => ({ data: [] })),
   ]);
+  if (upResult.error && omResult.error && !directoryRows.length && !rosterMembers.length && !clickMembers.length) {
+    throw new Error("Could not load organization members. Please retry.");
+  }
 
   const orgRows = orgRowsResult?.data || [];
 
@@ -597,9 +633,7 @@ export async function fetchOrgMembers(organizationId) {
     const defaultDomain = isSara ? "sarafoundationafrica.com" : "trainailtd.com";
     const hasEmail = Boolean(rawEmail && rawEmail.includes("@"));
     const isLinkClicked = (p.status === "link_clicked" || om?.status === "link_clicked") && !hasEmail;
-    const email = isLinkClicked
-      ? null
-      : (rawEmail || (p.display_name ? `${p.display_name.toLowerCase().replace(/[^a-z0-9]/g, ".")}@${defaultDomain}` : null));
+    const email = rawEmail || null;
     const effectiveStatus = hasEmail && (p.status === "link_clicked" || om?.status === "link_clicked")
       ? "active"
       : (directory?.member_status || om?.status || p.status || "active");
@@ -641,6 +675,7 @@ export async function fetchOrgMembers(organizationId) {
 
     return {
       ...p,
+      role: ({ member: "learner", instructor: "mentor", people_manager: "manager", owner: "admin" })[directory?.role || om?.role] || directory?.role || om?.role || p.role || "learner",
       email,
       status: effectiveStatus,
       display_name: cleanDisplayName,
@@ -1253,73 +1288,28 @@ export async function fetchOrgDashboardStats(organizationId) {
     avgCompletedCourses: 2.8,
   };
   if (!supabase) return DEMO_STATS;
-  try {
-    const orgFilter = (organizationId && organizationId !== "demo-org-id") ? organizationId : null;
-
-    let userQuery = supabase.from("user_profiles").select("id", { count: "exact", head: true }).eq("role", "learner");
-    if (orgFilter) userQuery = userQuery.eq("organization_id", orgFilter);
-    const { count: activeStudents } = await userQuery;
-
-    let cohortQuery = supabase.from("cohorts").select("id", { count: "exact", head: true });
-    if (orgFilter) cohortQuery = cohortQuery.eq("organization_id", orgFilter);
-    const { count: cohortCount } = await cohortQuery;
-
-    let courseQuery = supabase.from("courses").select("id", { count: "exact", head: true }).eq("is_published", true);
-    const { count: courseCount } = await courseQuery;
-
-    let mentorQuery = supabase.from("mentors").select("id", { count: "exact", head: true }).eq("is_active", true);
-    if (orgFilter) mentorQuery = mentorQuery.eq("organization_id", orgFilter);
-    const { count: mentorCount } = await mentorQuery;
-
-    let otherQuery = supabase.from("user_profiles").select("id", { count: "exact", head: true }).not("role", "in", "(learner,mentor)");
-    if (orgFilter) otherQuery = otherQuery.eq("organization_id", orgFilter);
-    const { count: otherUserCount } = await otherQuery;
-    let completedCount = 0;
-    let completionRate = DEMO_STATS.completionRate;
-    try {
-      const { data: enrollments } = await supabase.from("course_enrollments").select("progress_percentage, completed_at");
-      const enrollList = enrollments || [];
-      completedCount = enrollList.filter(e => e.completed_at || (e.progress_percentage || 0) >= 100).length;
-      if (enrollList.length) {
-        completionRate = Math.round((completedCount / enrollList.length) * 100);
-      }
-    } catch {}
-
-    const rosterList = getReferralSignupsRoster(organizationId);
-    const rosterLearners = (rosterList || []).filter(m => (m.role || "learner") === "learner");
-    const isSara = !organizationId || String(organizationId).toLowerCase().includes("sara") || organizationId === "demo-org-id";
-    const baselineLearners = isSara ? DEMO_STATS.activeStudents : 88;
-    const resolvedActiveStudents = Math.max(activeStudents || 0, rosterLearners.length, (!organizationId || organizationId === "demo-org-id" ? baselineLearners : rosterLearners.length));
-    const resolvedMentors = Math.max(mentorCount ?? 0, (!organizationId || organizationId === "demo-org-id" ? DEMO_STATS.mentors : 2));
-    const resolvedCohorts = Math.max(cohortCount ?? 0, (!organizationId || organizationId === "demo-org-id" ? DEMO_STATS.cohorts : 1));
-    const resolvedCourses = Math.max(courseCount ?? 0, (!organizationId || organizationId === "demo-org-id" ? DEMO_STATS.courses : 4));
-    const resolvedOther = Math.max(otherUserCount ?? 0, (!organizationId || organizationId === "demo-org-id" ? DEMO_STATS.otherUsers : 1));
-
-    const totalLearners = resolvedActiveStudents || 1;
-    const avgCompletedCourses = totalLearners > 0 ? (completedCount / totalLearners).toFixed(1) : "1.2";
-
-    return {
-      activeStudents: resolvedActiveStudents,
-      cohorts: resolvedCohorts,
-      courses: resolvedCourses,
-      mentors: resolvedMentors,
-      otherUsers: resolvedOther,
-      completionRate: completionRate || DEMO_STATS.completionRate,
-      avgCompletedCourses: Number(avgCompletedCourses) > 0 ? avgCompletedCourses : DEMO_STATS.avgCompletedCourses,
-    };
-  } catch (err) {
-    console.warn("fetchOrgDashboardStats query warning:", err);
-    const rosterList = getReferralSignupsRoster(organizationId);
-    return {
-      activeStudents: Math.max(DEMO_STATS.activeStudents, (rosterList || []).length),
-      cohorts: DEMO_STATS.cohorts,
-      courses: DEMO_STATS.courses,
-      mentors: DEMO_STATS.mentors,
-      otherUsers: DEMO_STATS.otherUsers,
-      completionRate: DEMO_STATS.completionRate,
-      avgCompletedCourses: DEMO_STATS.avgCompletedCourses
-    };
-  }
+  if (!organizationId || organizationId === "demo-org-id") return { activeStudents: 0, cohorts: 0, courses: 0, mentors: 0, otherUsers: 0, totalMembers: 0, completionRate: 0, avgCompletedCourses: 0 };
+  const orgId = await resolveOrganizationId(organizationId);
+  const members = await fetchOrgMembers(orgId);
+  const learners = members.filter(member => member.role === "learner");
+  const learnerIds = learners.map(member => member.id);
+  const [cohorts, courses, enrollments] = await Promise.all([
+    supabase.from("cohorts").select("id", { count: "exact", head: true }).eq("organization_id", orgId),
+    supabase.from("courses").select("id", { count: "exact", head: true }).eq("is_published", true).is("archived_at", null).or(`organization_id.eq.${orgId},organization_id.is.null`),
+    safeInQuery("course_enrollments", "user_id, progress_percentage, completed_at", "user_id", learnerIds),
+  ]);
+  if (cohorts.error || courses.error) throw new Error("Could not load dashboard totals. Please retry.");
+  const completed = enrollments.filter(row => row.completed_at || Number(row.progress_percentage) >= 100).length;
+  return {
+    activeStudents: learners.filter(member => member.status === "active").length,
+    cohorts: cohorts.count ?? 0,
+    courses: courses.count ?? 0,
+    mentors: members.filter(member => member.role === "mentor" && member.status === "active").length,
+    otherUsers: members.filter(member => !["learner", "mentor"].includes(member.role)).length,
+    totalMembers: members.length,
+    completionRate: enrollments.length ? Math.round(completed / enrollments.length * 100) : 0,
+    avgCompletedCourses: learners.length ? Number((completed / learners.length).toFixed(1)) : 0,
+  };
 }
 
 export async function fetchTodaysTasks(organizationId) {
@@ -1821,6 +1811,8 @@ export async function fetchLearningPathsAdmin(orgId) {
   ];
 
   if (!supabase) return DEMO_PATHS;
+  if (!orgId || orgId === "demo-org-id") return [];
+  const resolvedOrgId = await resolveOrganizationId(orgId);
   try {
     let query = supabase
       .from("learning_paths")
@@ -1828,7 +1820,7 @@ export async function fetchLearningPathsAdmin(orgId) {
       .order("title", { ascending: true });
 
     if (orgId && orgId !== "demo-org-id") {
-      query = query.or(`organization_id.eq.${orgId},organization_id.is.null`);
+      query = query.or(`organization_id.eq.${resolvedOrgId},organization_id.is.null`);
     }
 
     const { data, error } = await query;
@@ -1851,7 +1843,7 @@ export async function fetchLearningPathsAdmin(orgId) {
         .filter(Boolean),
     }));
   } catch {
-    return DEMO_PATHS;
+    throw new Error("Could not load learning paths. Please retry.");
   }
 }
 
@@ -2298,6 +2290,7 @@ export async function fetchCohortsWithStats(organizationId) {
     if (!cohorts || cohorts.length === 0) return [];
     const cohortResults = await Promise.all((cohorts || []).map(async (c) => {
       try {
+        let instructor = null;
         const [{ count: members }, { count: courses }, { data: memberRows }] = await Promise.all([
           supabase.from("cohort_members").select("id", { count: "exact", head: true }).eq("cohort_id", c.id).then(r => r, () => ({ count: 0 })),
           supabase.from("cohort_courses").select("id", { count: "exact", head: true }).eq("cohort_id", c.id).then(r => r, () => ({ count: 0 })),
@@ -5557,20 +5550,182 @@ export async function fetchMyLearnerActivityAlerts() {
 
 export async function assignCohortInstructor(cohortId, userId) {
   if (!supabase) throw new Error("Instructor assignment requires a connected organization.");
+  const isCohortUuid = isRealDatabaseId(cohortId);
+  const isUserUuid = isRealDatabaseId(userId);
+  if (!isCohortUuid || !isUserUuid) {
+    return { success: true };
+  }
   const { data, error } = await supabase.rpc("assign_cohort_instructor", { p_cohort_id: cohortId, p_user_id: userId });
   if (error) throw error;
   window.dispatchEvent(new Event("trainai-role-changed"));
   return data;
 }
+
 export async function fetchMemberLearningTrack(userId, organizationId, cohortId = null) {
-  if (!supabase) return { enrollments: [], tracks: [], cohorts: [] };
-  if (!organizationId || !userId) throw new Error("Select an organization member to view their track.");
-  const { data, error } = await supabase.rpc("get_member_learning_track", { p_org_id: organizationId, p_user_id: userId, p_cohort_id: cohortId });
-  if (error) throw error;
-  return data;
+  if (!userId) throw new Error("Select a member to view their learning track.");
+  const cleanUserId = String(userId).trim();
+  if (supabase) {
+    if (!isRealDatabaseId(cleanUserId)) return { enrollments: [], tracks: [], cohorts: [], unavailableReason: "This preview or visitor entry has no saved learning record. Choose a registered member to view their progress." };
+    const orgId = await resolveOrganizationId(organizationId);
+    if (!isRealDatabaseId(orgId)) throw new Error("Select a saved organization to view learning progress.");
+    if (cohortId && !isRealDatabaseId(cohortId)) throw new Error("Select a saved cohort to view learning progress.");
+    const { data, error } = await supabase.rpc("get_member_learning_track", { p_org_id: orgId, p_user_id: cleanUserId, p_cohort_id: cohortId });
+    if (error) throw new Error("Could not load this member's learning track. Please retry or check that the database is up to date.");
+    if (!data) throw new Error("No learning record was returned for this member. Please retry.");
+    return data;
+  }
+
+  // Sample progress is available in preview, demo, or fallback modes.
+  const roster = [
+    ...(getReferralSignupsRoster(organizationId) || []),
+    ...(BASELINE_CONFIRMED_REFERRAL_SIGNUPS || []),
+  ];
+  const clicks = getLinkClicksRoster(organizationId) || [];
+  const matchedRoster = roster.find((r) => r.id === cleanUserId || r.user_id === cleanUserId || r.email === cleanUserId);
+  const matchedClick = clicks.find((c) => c.id === cleanUserId || c.user_id === cleanUserId || c.email === cleanUserId);
+  const matchedDemo = DEMO_LEARNERS.find((d) => d.id === cleanUserId || d.name === cleanUserId || d.email === cleanUserId);
+
+  const displayName = matchedRoster?.display_name || matchedClick?.display_name || matchedDemo?.name || (cleanUserId.includes("@") ? cleanUserId.split("@")[0].replace(/[._-]/g, " ") : "Learner");
+  const email = matchedRoster?.email || matchedClick?.email || matchedDemo?.email || (cleanUserId.includes("@") ? cleanUserId : "learner@example.com");
+  const cohortName = matchedRoster?.cohort_name || (DEMO_COHORT.memberNames?.includes(displayName) ? DEMO_COHORT.name : "Active Learning Cohort");
+  const role = matchedRoster?.role || matchedDemo?.role || "learner";
+  const joinedAt = matchedRoster?.joined_at || matchedRoster?.created_at || new Date(Date.now() - 3600000 * 24 * 5).toISOString();
+
+  const isPriya = cleanUserId === "user-dt-learner-priya" || displayName.toLowerCase().includes("priya");
+  const isFatima = cleanUserId === "user-sara-learner-fatima" || displayName.toLowerCase().includes("fatima");
+
+  const trackTitle = isPriya
+    ? "Digital Workforce AI Track"
+    : isFatima
+    ? "CAP Cohort 3 Curriculum Track"
+    : `${cohortName || "Workforce"} Foundation Track`;
+
+  const trackCourses = [
+    {
+      id: "demo-course-ai",
+      title: "AI Fundamentals",
+      category: "AI",
+      progress: 100,
+      completedAt: new Date(Date.now() - 3600000 * 24 * 2).toISOString(),
+      orderIndex: 0,
+      status: "completed",
+    },
+    {
+      id: "demo-course-data",
+      title: "Data Literacy for Teams",
+      category: "Data",
+      progress: isPriya ? 65 : 45,
+      completedAt: null,
+      orderIndex: 1,
+      status: "in_progress",
+    },
+    {
+      id: "demo-course-leadership",
+      title: "Leadership Essentials",
+      category: "Leadership",
+      progress: isPriya ? 25 : 0,
+      completedAt: null,
+      orderIndex: 2,
+      status: isPriya ? "in_progress" : "assigned",
+    },
+    {
+      id: "demo-course-compliance",
+      title: "Workplace Compliance 101",
+      category: "Compliance",
+      progress: 0,
+      completedAt: null,
+      orderIndex: 3,
+      status: "assigned",
+    },
+  ];
+
+  const enrollments = trackCourses.map((c, i) => ({
+    id: `enr-${cleanUserId}-${c.id}`,
+    courseId: c.id,
+    title: c.title,
+    category: c.category,
+    progress: c.progress,
+    completedAt: c.completedAt,
+    enrolledAt: new Date(Date.now() - 3600000 * 24 * (5 - i)).toISOString(),
+    status: c.status,
+  }));
+
+  const completedCount = enrollments.filter((e) => e.completedAt).length;
+  const avgProgress = Math.round(enrollments.reduce((s, e) => s + e.progress, 0) / enrollments.length);
+
+  return {
+    isPreview: true,
+    profile: {
+      id: cleanUserId,
+      display_name: displayName,
+      email: email,
+      department: matchedRoster?.department || "Operations",
+      school: matchedRoster?.school || "Technology & Business",
+      bio: matchedRoster?.bio || "Enrolled learner in good standing.",
+      created_at: joinedAt,
+    },
+    membership: {
+      organization_id: organizationId || "tech-learning",
+      role: role,
+      status: matchedRoster?.status || "active",
+      joined_at: joinedAt,
+    },
+    roles: [role],
+    certificates: [
+      {
+        id: `cert-${cleanUserId}-1`,
+        title: "AI Fundamentals",
+        certificate_title: "AI Fundamentals",
+        issued_at: new Date(Date.now() - 3600000 * 24 * 2).toISOString(),
+        certificate_number: `TAI-2026-${cleanUserId.slice(-4).toUpperCase()}`,
+      },
+    ],
+    stats: {
+      total_points: 380,
+      streak_days: 4,
+      rank: 2,
+    },
+    compliance: [
+      {
+        id: `comp-${cleanUserId}-1`,
+        title: "Workplace Compliance 101",
+        status: "in_progress",
+        dueAt: new Date(Date.now() + 3600000 * 24 * 7).toISOString(),
+        completedAt: null,
+      },
+    ],
+    cohorts: [
+      {
+        id: "demo-cohort-1",
+        name: cohortName,
+        memberRowId: `cm-${cleanUserId}`,
+      },
+    ],
+    tracks: [
+      {
+        id: `track-${cleanUserId}`,
+        title: trackTitle,
+        status: "in_progress",
+        courses: trackCourses,
+      },
+    ],
+    enrollments,
+    completedCount,
+    avgProgress,
+  };
 }
+
 export async function fetchInstructorCohortWorkspace(cohortId) {
   if (!supabase) throw new Error("Teaching assignments require a connected organization.");
+  const isCohortUuid = isRealDatabaseId(cohortId);
+  if (!isCohortUuid) {
+    return {
+      cohort: { id: cohortId, name: "Demo Cohort" },
+      members: [],
+      resources: [],
+      sessions: [],
+    };
+  }
   const { data, error } = await supabase.rpc("get_instructor_cohort_workspace", { p_cohort_id: cohortId });
   if (error) throw error;
   return data;

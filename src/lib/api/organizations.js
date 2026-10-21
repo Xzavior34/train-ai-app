@@ -1,4 +1,5 @@
 import { supabase, getSupabaseClientForProject, SUPABASE_PROJECTS, activeProject } from "../supabaseClient.js";
+import { isRealDatabaseId } from "../mockDataManager.js";
 import { startPaystackPayment, startStripePayment, PAYMENT_CONTEXTS } from "./payments.js";
 import { setDemoRoleForEmail } from "../roleRouting.js";
 
@@ -93,6 +94,7 @@ export const BASELINE_CONFIRMED_LINK_CLICKS = [
  * Stored locally and persistent across sessions to guarantee admin visibility of click traffic.
  */
 export function getLinkClicksRoster(orgIdOrSlug = null, resolvedOrgInfo = null) {
+  if (supabase && (!orgIdOrSlug || isRealDatabaseId(orgIdOrSlug))) return [];
   try {
     const raw = getRosterStorage(LINK_CLICKS_ROSTER_KEY);
     let list = raw ? JSON.parse(raw) : [];
@@ -348,6 +350,7 @@ export const BASELINE_CONFIRMED_REFERRAL_SIGNUPS = [
  * Stored locally and persistent across sessions to guarantee admin visibility.
  */
 export function getReferralSignupsRoster(orgIdOrSlug = null, resolvedOrgInfo = null) {
+  if (supabase && (!orgIdOrSlug || isRealDatabaseId(orgIdOrSlug))) return [];
   try {
     const raw = getRosterStorage(REFERRAL_SIGNUPS_ROSTER_KEY);
     let list = raw ? JSON.parse(raw) : [];

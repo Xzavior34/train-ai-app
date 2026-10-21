@@ -1,3 +1,5 @@
+import { CourseImage } from "../../components/common/CourseImage.jsx";
+import { useDialogFocus } from "../../lib/useDialogFocus.js";
 import React, { useState, useEffect, useRef } from "react";
 import {
   ShoppingBag, Search, Filter, Star, BookOpen, Clock, Users,
@@ -22,6 +24,8 @@ export default function MarketplacePage({ onGoHome, onBookDemo, onSignIn }) {
   
   // Course Detail & Purchase Modal
   const [selectedCourse, setSelectedCourse] = useState(null);
+  const courseDialogRef = useRef(null);
+  useDialogFocus(!!selectedCourse, courseDialogRef, () => setSelectedCourse(null));
 
   const plans = fetchInstructorSeatPlans();
 
@@ -274,7 +278,7 @@ export default function MarketplacePage({ onGoHome, onBookDemo, onSignIn }) {
                       }}
                     >
                       <div style={{ position: "relative", height: 180, overflow: "hidden", background: "#1E293B" }}>
-                        <img
+                        <CourseImage
                           src={course.thumbnail_url}
                           alt={course.title}
                           style={{ width: "100%", height: "100%", objectFit: "cover" }}
@@ -429,6 +433,7 @@ export default function MarketplacePage({ onGoHome, onBookDemo, onSignIn }) {
       {/* Course Detail Modal */}
       {selectedCourse && (
         <div
+          onClick={() => setSelectedCourse(null)}
           style={{
             position: "fixed",
             inset: 0,
@@ -439,9 +444,15 @@ export default function MarketplacePage({ onGoHome, onBookDemo, onSignIn }) {
             alignItems: "center",
             justifyContent: "center",
             padding: 16,
+            boxSizing: "border-box",
           }}
         >
           <div
+            ref={courseDialogRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="marketplace-course-title"
+            onClick={event => event.stopPropagation()}
             style={{
               background: "#111827",
               border: "1px solid #1F2937",
@@ -449,6 +460,9 @@ export default function MarketplacePage({ onGoHome, onBookDemo, onSignIn }) {
               padding: 28,
               maxWidth: 540,
               width: "100%",
+              maxHeight: "calc(100dvh - 32px)",
+              overflowY: "auto",
+              boxSizing: "border-box",
               boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.5)",
             }}
           >
@@ -457,11 +471,12 @@ export default function MarketplacePage({ onGoHome, onBookDemo, onSignIn }) {
                 <span style={{ fontSize: 11, fontWeight: 700, color: "#60A5FA", textTransform: "uppercase" }}>
                   {selectedCourse.academy_name}
                 </span>
-                <h2 style={{ fontSize: 19, fontWeight: 800, margin: "4px 0 0", color: "#FFF" }}>
+                <h2 id="marketplace-course-title" style={{ fontSize: 19, fontWeight: 800, margin: "4px 0 0", color: "#FFF" }}>
                   {selectedCourse.title}
                 </h2>
               </div>
               <button
+                aria-label="Close course details"
                 style={{ background: "none", border: "none", cursor: "pointer", color: "#94A3B8" }}
                 onClick={() => setSelectedCourse(null)}
               >

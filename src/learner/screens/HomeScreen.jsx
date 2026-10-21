@@ -1,3 +1,4 @@
+import { CourseImage } from "../../components/common/CourseImage.jsx";
 import React from "react";
 import { Tag } from "../components/LearnerUI.jsx";
 import { AIRecommendationsCard } from "../components/AIRecommendationsCard.jsx";
@@ -32,7 +33,7 @@ export function HomeScreen({
 
   const completedCourses = enrolledCourses.filter(c => (c.progress || 0) >= 100);
   const userFirstName = (user?.name || "Learner").split(" ")[0];
-  const certificatesCount = myCertificatesQuery?.data?.length ?? user.certificatesCount ?? completedCourses.length;
+  const certificatesCount = myCertificatesQuery?.data?.length ?? user.certificatesCount ?? 0;
   const lessonsDoneCount = user.lessonsCompleted ?? enrolledCourses.reduce((s, c) => s + (c.progress > 0 ? Math.round(((c.progress || 0) / 100) * (c.lessons || 4)) : 0), 0);
   const totalHoursCount = user.totalHours ?? Math.round(enrolledCourses.reduce((sum, c) => sum + (((c.progress || 0) / 100) * (c.hours || 4)), 0) * 10) / 10;
 
@@ -93,7 +94,7 @@ export function HomeScreen({
                 }}
               >
                 <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                  <img
+                  <CourseImage
                     src={continueCourse.coverImageUrl || "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=400&auto=format&fit=crop&q=80"}
                     alt={continueCourse.title}
                     style={{ width: 48, height: 48, borderRadius: 8, objectFit: "cover", flexShrink: 0, border: "1px solid rgba(255,255,255,0.2)" }}

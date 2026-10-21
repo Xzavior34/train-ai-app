@@ -4,7 +4,7 @@ import http from 'node:http';
 import { build } from 'esbuild';
 fs.mkdirSync('scripts/audit/.generated',{recursive:true});
 await build({entryPoints:['scripts/audit/website-preview.jsx'],bundle:true,format:'esm',outdir:'scripts/audit/.generated/website',loader:{'.png':'file','.jpg':'file','.svg':'file'},logLevel:'error',define:{'import.meta.env':'{}'},plugins:[{name:'isolated-services',setup(b){
- b.onResolve({filter:/services\/supabaseClient\.js$/},()=>({path:path.resolve('scripts/audit/fixture-client.mjs')}));
+ b.onResolve({filter:/(?:^|[\\/])supabaseClient\.js$/},()=>({path:path.resolve('scripts/audit/fixture-client.mjs')}));
  b.onResolve({filter:/^react-onesignal$/},()=>({path:'onesignal',namespace:'fixture'}));
  b.onLoad({filter:/.*/,namespace:'fixture'},()=>({contents:'export default {init:async()=>{},login:async()=>{},logout:async()=>{},Notifications:{addEventListener:()=>{},removeEventListener:()=>{},requestPermission:async()=>false},User:{PushSubscription:{optIn:async()=>{},optOut:async()=>{},addEventListener:()=>{},removeEventListener:()=>{}}}};'}));
 }}]});

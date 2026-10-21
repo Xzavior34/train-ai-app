@@ -1,7 +1,9 @@
 import { MemberLearningTrack } from "../components/MemberLearningTrack.jsx";
-import React, { useState, useEffect, useContext, useMemo } from "react";
+import { ScrollableTabsBar, ScrollableTableWrap } from "../../components/common/ScrollableContent.jsx";
+import React, { useState, useEffect, useContext, useMemo, useRef } from "react";
 import { TopBar, Avatar, Tag, ToastContext, Switch } from "../components/PlatformUI.jsx";
 import {
+  ChevronLeft, ChevronRight,
   UserPlus, Search, X, Download, Trash2, FileText, ArrowUpRight, ArrowDownRight,
   Minus, Award, Eye, Pencil, ShieldCheck, Layers, UserMinus, RefreshCw, Link2,
   BookOpen, GraduationCap, MoreHorizontal, Save, CheckCircle2,
@@ -244,7 +246,7 @@ export function MemberDetailModal({ member, orgId, cohorts, initialTab = "track"
       {detailQuery.error && tab !== "track" && <div className="ta-empty" role="alert">{detailQuery.error} <button className="ta-btn ta-btn-outline" onClick={detailQuery.refetch}>Retry</button></div>}
       {detailQuery.loading && <div className="ta-empty ta-mt16">Loading this member's record...</div>}
 
-      {tab === "track" && <MemberLearningTrack orgId={orgId} userId={member.id} />}
+      {tab === "track" && <MemberLearningTrack orgId={orgId} userId={member.id} member={member} learningTrackQuery={detailQuery} />}
 
       {!detailQuery.loading && !detailQuery.error && tab === "overview" && (
         <div className="ta-mt16">
@@ -947,6 +949,7 @@ export function PeopleScreen({ orgId, orgSelector, setScreen, currentUserId }) {
         onNavigate={setScreen}
       />
       <div className="ta-content" style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+        {membersQuery.error && <div className="ta-card" role="alert" style={{ padding: 16 }}>Could not load organization members. <button className="ta-btn ta-btn-outline" onClick={membersQuery.refetch}>Retry</button></div>}
         {/* =========================================================================
             PEOPLE & ACCESS HERO BANNER
             ========================================================================= */}
@@ -986,8 +989,10 @@ export function PeopleScreen({ orgId, orgSelector, setScreen, currentUserId }) {
           </div>
         </div>
 
-        <div className="ta-tabs">
-          {[
+        <ScrollableTabsBar
+          activeTab={tab}
+          onChange={setTab}
+          tabs={[
             { k: "all", label: `Users (${members.length})` },
             { k: "link_users", label: `🔗 Joined via Link (${linkMembers.length})` },
             { k: "approvals", label: `Pending Approvals (${joinRequests.length})` },
@@ -997,10 +1002,8 @@ export function PeopleScreen({ orgId, orgSelector, setScreen, currentUserId }) {
             { k: "privileges", label: "Privileges & Roles" },
             { k: "invites", label: `Invitations (${invitations.length})` },
             { k: "dsar", label: `Data Requests (${pendingDsarCount})` },
-          ].map(t => (
-            <div key={t.k} className={`ta-tab ${tab === t.k ? "active" : ""}`} onClick={() => setTab(t.k)}>{t.label}</div>
-          ))}
-        </div>
+          ]}
+        />
 
         {tab === "all" && (
           <div className="ta-col ta-gap16">
@@ -1256,8 +1259,8 @@ export function PeopleScreen({ orgId, orgSelector, setScreen, currentUserId }) {
                 </div>
               )}
 
-              <div className="ta-table-wrap">
-                <table className="ta-table">
+              <ScrollableTableWrap label="Member directory table">
+                <table className="ta-table" style={{ minWidth: 1180 }}>
                   <thead>
                     <tr>
                       <th style={{ width: 32 }}>
@@ -1419,8 +1422,91 @@ export function PeopleScreen({ orgId, orgSelector, setScreen, currentUserId }) {
                     })}
                   </tbody>
                 </table>
+              </ScrollableTableWrap>
+            </div>
+          </div>
+        )}
+
+        {tab === "dsar" && (
+          <div className="ta-card">
+            <div className="ta-row ta-between" style={{ marginBottom: 14, gap: 10, flexWrap: "wrap" }}>
+              <div>
+                <div style={{ fontWeight: 800, fontSize: 15, color: "var(--text)" }}>Data Subject Access & Privacy Requests (GDPR)</div>
+                <div style={{ fontSize: 12, color: "var(--text-2)", marginTop: 2 }}>
+                  Official user requests to export or erase personal account data.
+                </div>
               </div>
             </div>
+
+            <ScrollableTableWrap label="Data requests table">
+              <table className="ta-table" style={{ minWidth: 820 }}>
+                <thead>
+                  <tr>
+                    <th>Requester</th>
+                    <th>Request Type</th>
+                    <th>Date Requested</th>
+                    <th>Status</th>
+                    <th style={{ textAlign: "right" }}>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {dsarQuery.loading && <tr><td colSpan={5} className="ta-empty">Loading data requests...</td></tr>}
+                  {!dsarQuery.loading && dsarRequests.length === 0 && (
+                    <tr>
+                      <td colSpan={5} className="ta-empty">
+                        No pending data privacy or export requests on file.
+                      </td>
+                    </tr>
+                  )}
+                  {dsarRequests.map((req) => (
+                    <tr key={req.id}>
+                      <td>
+                        <div style={{ fontWeight: 600 }}>{req.email || "User"}</div>
+                        <div style={{ fontSize: 11, color: "var(--text-3)" }}>ID: {req.user_id}</div>
+                      </td>
+                      <td>
+                        <Tag tone={req.request_type === "erasure" ? "danger" : "default"}>
+                          {req.request_type ? req.request_type.toUpperCase() : "EXPORT"}
+                        </Tag>
+                      </td>
+                      <td>{req.requested_at ? new Date(req.requested_at).toLocaleDateString() : "Recent"}</td>
+                      <td>
+                        <Tag tone={req.status === "completed" ? "success" : req.status === "rejected" ? "danger" : "warning"}>
+                          {req.status || "pending"}
+                        </Tag>
+                      </td>
+                      <td style={{ textAlign: "right" }}>
+                        <div className="ta-row ta-gap6" style={{ justifyContent: "flex-end" }}>
+                          <button
+                            type="button"
+                            className="ta-btn ta-btn-outline ta-btn-sm"
+                            onClick={() => downloadUserDataExport(req.user_id, req.email)}
+                            title="Export data bundle"
+                          >
+                            <Download size={13} /> Export JSON
+                          </button>
+                          {req.status === "pending" && (
+                            <button
+                              type="button"
+                              className="ta-btn ta-btn-primary ta-btn-sm"
+                              onClick={async () => {
+                                const res = await updateDSARRequestStatus(req.id, "completed");
+                                if (res.success) {
+                                  showToast("Request marked completed.");
+                                  dsarQuery.refetch();
+                                }
+                              }}
+                            >
+                              Mark Done
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </ScrollableTableWrap>
           </div>
         )}
 
@@ -1510,8 +1596,8 @@ export function PeopleScreen({ orgId, orgSelector, setScreen, currentUserId }) {
                 </div>
               </div>
 
-              <div className="ta-table-wrap">
-                <table className="ta-table">
+              <ScrollableTableWrap label="Link users table">
+                <table className="ta-table" style={{ minWidth: 1060 }}>
                   <thead>
                     <tr>
                       <th style={{ minWidth: 180 }}>Learner / User</th>
@@ -1618,7 +1704,7 @@ export function PeopleScreen({ orgId, orgSelector, setScreen, currentUserId }) {
                     })}
                   </tbody>
                 </table>
-              </div>
+              </ScrollableTableWrap>
             </div>
           </div>
         )}
@@ -1653,8 +1739,8 @@ export function PeopleScreen({ orgId, orgSelector, setScreen, currentUserId }) {
             </div>
 
             <div className="ta-card">
-              <div className="ta-table-wrap">
-                <table className="ta-table">
+              <ScrollableTableWrap label="Join requests approval table">
+                <table className="ta-table" style={{ minWidth: 960 }}>
                   <thead>
                     <tr>
                       <th>Learner</th>
@@ -1764,7 +1850,7 @@ export function PeopleScreen({ orgId, orgSelector, setScreen, currentUserId }) {
                     ))}
                   </tbody>
                 </table>
-              </div>
+              </ScrollableTableWrap>
             </div>
           </div>
         )}
@@ -1780,8 +1866,8 @@ export function PeopleScreen({ orgId, orgSelector, setScreen, currentUserId }) {
                 <option value="name">Sort: name</option>
               </select>
             </div>
-            <div className="ta-table-wrap">
-              <table className="ta-table">
+            <ScrollableTableWrap label="Learner progress table">
+              <table className="ta-table" style={{ minWidth: 900 }}>
                 <thead><tr><th>Learner</th><th>Department</th><th>Assigned</th><th>Completed</th><th>Pending</th><th>Avg. progress</th><th>Pace</th></tr></thead>
                 <tbody>
                   {progressQuery.loading && <tr><td colSpan={7} className="ta-empty">Loading learner progress...</td></tr>}
@@ -1812,7 +1898,7 @@ export function PeopleScreen({ orgId, orgSelector, setScreen, currentUserId }) {
                   })}
                 </tbody>
               </table>
-            </div>
+            </ScrollableTableWrap>
           </div>
         )}
 
@@ -1824,8 +1910,8 @@ export function PeopleScreen({ orgId, orgSelector, setScreen, currentUserId }) {
               row to active, which is what actually lists them to learners and lets them be assigned
               sessions. The schema has no separate "is_approved" flag, so `is_active` is the real gate.
             </div>
-            <div className="ta-table-wrap">
-              <table className="ta-table">
+            <ScrollableTableWrap label="Instructor applications table">
+              <table className="ta-table" style={{ minWidth: 840 }}>
                 <thead><tr><th>Applicant</th><th>Specialization</th><th>Rate</th><th>Submitted</th><th style={{ textAlign: "right" }}>Decision</th></tr></thead>
                 <tbody>
                   {applicationsQuery.loading && <tr><td colSpan={5} className="ta-empty">Loading applications...</td></tr>}
@@ -1886,7 +1972,7 @@ export function PeopleScreen({ orgId, orgSelector, setScreen, currentUserId }) {
                   ))}
                 </tbody>
               </table>
-            </div>
+            </ScrollableTableWrap>
           </div>
         )}
 
@@ -1906,8 +1992,8 @@ export function PeopleScreen({ orgId, orgSelector, setScreen, currentUserId }) {
             {rolePermsQuery.loading && <div className="ta-empty ta-mt12">Loading permissions...</div>}
 
             {!rolePermsQuery.loading && (
-              <div className="ta-table-wrap ta-mt12">
-                <table className="ta-table">
+              <ScrollableTableWrap label="Privileges and role matrix" style={{ marginTop: 12 }}>
+                <table className="ta-table" style={{ minWidth: 820 }}>
                   <thead>
                     <tr>
                       <th style={{ minWidth: 240 }}>Permission</th>
@@ -1944,7 +2030,7 @@ export function PeopleScreen({ orgId, orgSelector, setScreen, currentUserId }) {
                     ))}
                   </tbody>
                 </table>
-              </div>
+              </ScrollableTableWrap>
             )}
 
             <div className="ta-mt12" style={{ fontSize: 11.5, color: "var(--text-3)" }}>
@@ -1957,8 +2043,8 @@ export function PeopleScreen({ orgId, orgSelector, setScreen, currentUserId }) {
 
         {tab === "applications" && (
           <div className="ta-card">
-            <div className="ta-table-wrap">
-            <table className="ta-table">
+            <ScrollableTableWrap label="Instructor monitor table">
+            <table className="ta-table" style={{ minWidth: 820 }}>
               <thead><tr><th>Instructor</th><th>Status</th><th>Sessions Completed</th><th>Rating</th><th style={{ textAlign: "right" }}>Actions</th></tr></thead>
               <tbody>
                 {instructorsQuery.loading && <tr><td colSpan={5} className="ta-empty">Loading instructors...</td></tr>}
@@ -1986,7 +2072,7 @@ export function PeopleScreen({ orgId, orgSelector, setScreen, currentUserId }) {
                 })}
               </tbody>
             </table>
-            </div>
+            </ScrollableTableWrap>
           </div>
         )}
 
@@ -2000,8 +2086,8 @@ export function PeopleScreen({ orgId, orgSelector, setScreen, currentUserId }) {
                 Resending cancels the stale invite and issues a fresh 7-day token, which is what actually
                 re-sends the email. Copy link is the fallback for when email delivery isn't configured.
               </div>
-              <div className="ta-table-wrap">
-              <table className="ta-table">
+              <ScrollableTableWrap label="Invitations table">
+              <table className="ta-table" style={{ minWidth: 820 }}>
                 <thead><tr><th>Email</th><th>Role</th><th>Sent</th><th>Expires</th><th style={{ textAlign: "right" }}>Actions</th></tr></thead>
                 <tbody>
                   {invitationsQuery.loading && <tr><td colSpan={5} className="ta-empty">Loading invitations...</td></tr>}
@@ -2064,7 +2150,7 @@ export function PeopleScreen({ orgId, orgSelector, setScreen, currentUserId }) {
                   ))}
                 </tbody>
               </table>
-              </div>
+              </ScrollableTableWrap>
             </div>
           </div>
         )}

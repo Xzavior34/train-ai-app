@@ -12,7 +12,9 @@
     "test:database:start": "node scripts/audit/start-local-database.mjs",
     "test:database:stop": "node scripts/audit/stop-local-database.mjs",
     "test:community": "node scripts/audit/render-community.mjs",
-    "test:website": "node scripts/audit/website-inventory.mjs"
+    "test:website": "node scripts/audit/website-inventory.mjs",
+    "test:pages": "node scripts/audit/page-render-checks.mjs",
+    "test:pages:browser": "node scripts/audit/page-checks.mjs && node scripts/audit/page-interactions.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.110.9",

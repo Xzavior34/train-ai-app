@@ -16,6 +16,8 @@ import { PortalModal } from "../../components/common/PortalModal.jsx";
 export const MobileMenuContext = React.createContext(() => {});
 export const ToastContext = React.createContext(() => {});
 export const NavigationContext = React.createContext(null);
+export const WorkspaceContext = React.createContext("admin");
+export const ActiveDashboardContext = React.createContext(true);
 export const SignOutContext = React.createContext(null);
 
 export function getStoredThemeDark() {
@@ -630,7 +632,42 @@ export const TOKENS = `
   .ta-tag { padding: 4px 10px; border-radius: 8px; font-size: 11.5px; font-weight: 700; background: var(--surface-2); color: var(--primary); display:inline-flex; align-items:center; gap:4px; }
   .ta-divider { height: 1px; background: var(--border); border: none; margin: 16px 0; }
   .ta-table { width: 100%; border-collapse: collapse; }
-  .ta-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; border-radius: 12px; border: 1px solid var(--border); background: var(--surface); }
+  .ta-table-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    scrollbar-width: thin;
+    scrollbar-color: rgba(148, 163, 184, 0.6) rgba(15, 23, 42, 0.04);
+  }
+  .ta-table-wrap::-webkit-scrollbar {
+    height: 9px;
+    width: 9px;
+  }
+  .ta-table-wrap::-webkit-scrollbar-track {
+    background: rgba(15, 23, 42, 0.03);
+    border-radius: 99px;
+  }
+  .ta-table-wrap::-webkit-scrollbar-thumb {
+    background: #CBD5E1;
+    border-radius: 99px;
+  }
+  .ta-table-wrap::-webkit-scrollbar-thumb:hover {
+    background: #94A3B8;
+  }
+  .ta.dark .ta-table-wrap, html.dark .ta-table-wrap {
+    scrollbar-color: rgba(148, 163, 184, 0.45) rgba(255, 255, 255, 0.04);
+  }
+  .ta.dark .ta-table-wrap::-webkit-scrollbar-track, html.dark .ta-table-wrap::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.04);
+  }
+  .ta.dark .ta-table-wrap::-webkit-scrollbar-thumb, html.dark .ta-table-wrap::-webkit-scrollbar-thumb {
+    background: #475569;
+  }
+  .ta.dark .ta-table-wrap::-webkit-scrollbar-thumb:hover, html.dark .ta-table-wrap::-webkit-scrollbar-thumb:hover {
+    background: #64748B;
+  }
   .ta-table-wrap .ta-table { min-width: 680px; }
   .ta-table th { text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--text-3); font-weight: 700; padding: 12px 16px; border-bottom: 1px solid var(--border); background: var(--surface-3); }
   .ta-table td { padding: 14px 16px; font-size: 13.5px; border-bottom: 1px solid var(--border); color: var(--text); }
@@ -640,6 +677,8 @@ export const TOKENS = `
   .ta-progress-fill { height: 100%; border-radius: 99px; background: var(--grad); transition: width .3s ease; }
   .ta-tabs { display: flex; gap: 8px; border-bottom: 1px solid var(--border); overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: thin; margin-bottom: 20px; }
   .ta-tab { padding: 11px 8px; margin-right: 14px; font-size: 14px; font-weight: 700; color: var(--text-2); cursor: pointer; border-bottom: 2.5px solid transparent; white-space: nowrap; flex-shrink: 0; transition: all .15s ease; }
+  button.ta-tab { appearance: none; background: transparent; border-top: 0; border-right: 0; border-left: 0; font-family: inherit; }
+  button.ta-tab:focus-visible { outline: 2px solid var(--primary); outline-offset: -3px; }
   .ta-tab:hover { color: var(--text); }
   .ta-tab.active { color: var(--primary); border-color: var(--primary); }
   .ta-pill { padding: 6px 14px; border-radius: 999px; font-size: 12.5px; font-weight: 700; cursor: pointer; border: 1px solid var(--border); color: var(--text-2); background: var(--surface); transition: all .14s ease; }
@@ -1364,6 +1403,11 @@ function SearchResultRow({ icon: Icon, name, detail, type, onClick }) {
 export function TopBar({ title, sub, right, orgSelector, profileQuery, onNavigate, onSignOut }) {
   const openMenu = useContext(MobileMenuContext);
   const navFromContext = useContext(NavigationContext);
+  const currentWorkspace = useContext(WorkspaceContext);
+  const dashboardIsActive = useContext(ActiveDashboardContext);
+  const workspaceNav = currentWorkspace === "owner" ? SUPERADMIN_NAV : (NAV_BY_WORKSPACE[currentWorkspace] || []);
+  const availableScreens = workspaceNav.flatMap(group => group.items || [group]);
+  const canNavigateTo = target => availableScreens.some(item => item.key === target);
   const contextSignOut = useContext(SignOutContext);
   const handleNavigate = onNavigate || navFromContext;
   const handleSignOut = onSignOut || contextSignOut || performGlobalSignOut;
@@ -1416,37 +1460,40 @@ export function TopBar({ title, sub, right, orgSelector, profileQuery, onNavigat
   const scopedOrgId = orgSelector?.selectedOrgId || profileQuery?.data?.organization_id || ownProfileQuery.data?.organization_id || null;
 
   const studentsQuery = useSupabaseQuery(async () => {
-    if (!searchActive) return [];
+    if (!searchActive || !canNavigateTo("people")) return [];
     return scopedOrgId ? fetchUsersInOrg(scopedOrgId) : fetchOrgMembers();
-  }, [searchActive, scopedOrgId]);
+  }, [searchActive, scopedOrgId, currentWorkspace]);
 
   const coursesQuery = useSupabaseQuery(async () => {
-    if (!searchActive) return [];
+    if (!searchActive || !canNavigateTo("content")) return [];
     return fetchCourses();
-  }, [searchActive]);
+  }, [searchActive, currentWorkspace]);
 
   const cohortsQuery = useSupabaseQuery(async () => {
-    if (!searchActive || !scopedOrgId) return [];
+    if (!searchActive || !scopedOrgId || !canNavigateTo("cohorts")) return [];
     return fetchCohorts(scopedOrgId);
-  }, [searchActive, scopedOrgId]);
+  }, [searchActive, scopedOrgId, currentWorkspace]);
 
-  const studentResults = !searchActive ? [] : (studentsQuery.data || [])
+  const studentResults = !searchActive || !canNavigateTo("people") ? [] : (studentsQuery.data || [])
     .map(m => ({ id: m.id || m.user_id, name: m.name || m.display_name || "Unnamed user", sub: m.role || m.title || "Member" }))
     .filter(m => m.name.toLowerCase().includes(q) || (m.sub || "").toLowerCase().includes(q))
     .slice(0, 5);
 
-  const courseResults = !searchActive ? [] : (coursesQuery.data || [])
+  const courseResults = !searchActive || !canNavigateTo("content") ? [] : (coursesQuery.data || [])
     .filter(c => (c.title || "").toLowerCase().includes(q) || (c.category || "").toLowerCase().includes(q))
     .slice(0, 5);
 
-  const cohortResults = !searchActive ? [] : (cohortsQuery.data || [])
+  const cohortResults = !searchActive || !canNavigateTo("cohorts") ? [] : (cohortsQuery.data || [])
     .filter(c => (c.name || "").toLowerCase().includes(q) || (c.description || "").toLowerCase().includes(q))
     .slice(0, 5);
 
   const realResultsLoading = searchActive && (studentsQuery.loading || coursesQuery.loading || (!!scopedOrgId && cohortsQuery.loading));
   const totalRealResults = studentResults.length + courseResults.length + cohortResults.length;
 
-  const navResults = searchValue.trim() === "" ? [] : SEARCH_DATABASE.filter(item =>
+  const navigationItems = currentWorkspace === "owner"
+    ? availableScreens.map(item => ({ type: "Navigation", name: item.label, detail: "Platform owner workspace", targetScreen: item.key, icon: item.icon }))
+    : [...SEARCH_DATABASE.filter(item => canNavigateTo(item.targetScreen)), ...availableScreens.filter(item => !SEARCH_DATABASE.some(existing => existing.targetScreen === item.key)).map(item => ({ type: "Navigation", name: item.label, detail: "Open this page", targetScreen: item.key, icon: item.icon }))];
+  const navResults = searchValue.trim() === "" ? [] : navigationItems.filter(item =>
     (item.name || "").toLowerCase().includes(searchValue.toLowerCase()) ||
     (item.detail || "").toLowerCase().includes(searchValue.toLowerCase()) ||
     (item.type || "").toLowerCase().includes(searchValue.toLowerCase())
@@ -1470,13 +1517,14 @@ export function TopBar({ title, sub, right, orgSelector, profileQuery, onNavigat
     function handleOpenSearchCustom() {
       setIsSearchOpen(true);
     }
+    if (!dashboardIsActive) { setIsSearchOpen(false); return; }
     window.addEventListener("keydown", handleKeyDown);
     window.addEventListener("trainai-open-search", handleOpenSearchCustom);
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
       window.removeEventListener("trainai-open-search", handleOpenSearchCustom);
     };
-  }, []);
+  }, [dashboardIsActive]);
 
   return (
     <>

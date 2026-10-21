@@ -1,15 +1,10 @@
 import { supabase, getSupabaseClientForProject, SUPABASE_PROJECTS } from "../supabaseClient.js";
 import { startPaystackPayment, startStripePayment, PAYMENT_CONTEXTS } from "./payments.js";
 
-// demo_requests, organization_inquiries, and the get_booked_slots RPC all live
-// exclusively on the Organization DB (djikuoucsuhdiyrhsduz), never on the Sara
-// Foundation tenant. The exported `supabase` variable reflects the ACTIVE project
-// which changes depending on which user is signed in. A Sara Foundation user
-// visiting the public booking page would have activeProject = "sara_foundation"
-// and every insert would fail with "relation does not exist".
-// getDemoClient() always resolves to the Organization DB client specifically.
+// demo_requests, organization_inquiries, and get_booked_slots all live
+// on the unified primary database (jeobggrtxeybxvlwpxvn).
 function getDemoClient() {
-  return getSupabaseClientForProject(SUPABASE_PROJECTS.ORGANIZATION_DB) || supabase;
+  return supabase;
 }
 
 // Real backing tables/RPCs confirmed against the shared project's
