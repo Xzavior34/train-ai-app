@@ -12,6 +12,7 @@ const html='<!doctype html><html lang="en"><head><meta charset="UTF-8"><meta nam
 const mime={'.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.png':'image/png','.jpg':'image/jpeg','.svg':'image/svg+xml','.json':'application/json','.ico':'image/x-icon'};
 http.createServer((req,res)=>{
  const url=new URL(req.url,'http://127.0.0.1:5188');
+ if(url.pathname==='/audit-mobile'){res.setHeader('Content-Type','text/html; charset=utf-8');res.end('<!doctype html><html><head><title>390px responsive audit</title></head><body style="margin:0"><iframe title="390px mobile website" src="/" style="width:390px;height:844px;border:0"></iframe></body></html>');return;}
  let name;try{name=decodeURIComponent(url.pathname);}catch{res.writeHead(400);res.end();return;}
  for(const root of ['scripts/audit/.generated/website','public']){
   const base=path.resolve(root),file=path.resolve(base,'.'+name);

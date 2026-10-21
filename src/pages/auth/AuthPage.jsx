@@ -1132,6 +1132,10 @@ export default function AuthPage({
                 <div style={styles.label}>Choose account type</div>
                 <div
                   className={`role-picker-card ${accountType === "learner" ? "active" : ""}`}
+                  role="button"
+                  tabIndex={0}
+                  aria-pressed={accountType === "learner"}
+                  onKeyDown={event => { if (["Enter", " "].includes(event.key)) { event.preventDefault(); setAccountType("learner"); } }}
                   onClick={() => setAccountType("learner")}
                   style={{
                     marginTop: 8, padding: "12px 14px", borderRadius: 8, border: "1.5px solid #E2E8F0", background: "#FFFFFF",
@@ -1156,6 +1160,10 @@ export default function AuthPage({
 
                 <div
                   className={`role-picker-card ${accountType === "organization" ? "active" : ""}`}
+                  role="button"
+                  tabIndex={0}
+                  aria-pressed={accountType === "organization"}
+                  onKeyDown={event => { if (["Enter", " "].includes(event.key)) { event.preventDefault(); setAccountType("organization"); } }}
                   onClick={() => setAccountType("organization")}
                   style={{
                     marginTop: 8, padding: "12px 14px", borderRadius: 8, border: "1.5px solid #E2E8F0", background: "#FFFFFF",
