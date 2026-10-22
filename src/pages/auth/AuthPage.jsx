@@ -15,6 +15,7 @@ import {
 } from "../../lib/api/organizations.js";
 import { getRateLimitStatus, formatLockoutTime, MAX_PASSWORD_TRIALS } from "../../lib/authRateLimiter.js";
 import { supabase, getSupabaseClientForProject, resolveProjectForSignUp } from "../../lib/supabaseClient.js";
+import SeoHead from "../../components/common/SeoHead.jsx";
 
 export default function AuthPage({
   onSignIn, onSignUp, authError, initialEmail = "", initialMode = "",
@@ -570,6 +571,13 @@ export default function AuthPage({
 
   return (
     <div style={styles.outer}>
+      <SeoHead
+        title={`${mode === "signup" ? "Create an account" : mode === "recovery" ? "Reset your password" : "Sign in"} | Train AI`}
+        description="Secure account access for Train AI learners, instructors and organisation administrators."
+        path={mode === "signup" ? "/signup" : "/login"}
+        robots="noindex, nofollow"
+        schema={[]}
+      />
       <style>{`
         @keyframes authFadeUp { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
         .auth-card { animation: authFadeUp .2s ease; }

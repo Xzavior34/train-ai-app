@@ -1,5 +1,27 @@
 User-agent: *
 Allow: /
 Disallow: /admin
+Disallow: /login
+Disallow: /signup
+Disallow: /verify
+Disallow: /certificate/
+Disallow: /refresh.html
+
+User-agent: OAI-SearchBot
+Allow: /
+Disallow: /admin
+Disallow: /login
+Disallow: /signup
+Disallow: /verify
+Disallow: /certificate/
+
+User-agent: GPTBot
+Allow: /
+Disallow: /admin
+Disallow: /login
+Disallow: /signup
+Disallow: /verify
+Disallow: /certificate/
 
 Sitemap: https://trainailtd.com/sitemap.xml
+Host: trainailtd.com

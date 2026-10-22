@@ -1,0 +1,30 @@
+# Train AI
+
+Train AI is an AI learning and development platform for organisations.
+
+Canonical website: https://trainailtd.com/
+Contact: info@trainailtd.com
+
+## What Train AI does
+
+- Helps organisations deliver and manage courses.
+- Supports cohort, learner, instructor and learning community management.
+- Provides AI-assisted learning support.
+- Helps organisations track progress, skill gaps, readiness and development outcomes.
+
+## Who Train AI serves
+
+- Academies and training providers.
+- Foundations and social-impact organisations.
+- Businesses managing workforce learning and development.
+
+## Authoritative pages
+
+- About: https://trainailtd.com/about
+- Book a demo: https://trainailtd.com/book-demo
+- Course marketplace: https://trainailtd.com/marketplace
+- Contact: https://trainailtd.com/contact
+- Privacy: https://trainailtd.com/privacy-policy
+- Terms: https://trainailtd.com/terms-of-service
+
+Information in product interface previews is illustrative and should not be treated as a customer claim, case study or live usage statistic.

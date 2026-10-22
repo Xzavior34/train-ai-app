@@ -5,8 +5,6 @@ import { useAuth } from "./hooks/useAuth.js";
 import LoadingScreen from "./components/common/LoadingScreen.jsx";
 import ConsentBanner from "./components/common/ConsentBanner.jsx";
 import OfflineIndicator from "./components/common/OfflineIndicator.jsx";
-import CertificateVerificationPage from "./pages/public/CertificateVerificationPage.jsx";
-import MarketplacePage from "./pages/public/MarketplacePage.jsx";
 import { applyAccessibilityPrefs, getStoredAccessibilityPrefs } from "./components/common/AccessibilityPanel.jsx";
 import { fetchMyRoles, fetchMyPersonalization, saveMyPersonalization } from "./services/authService.js";
 import { resolveViewMode, getAvailableDashboards, DASHBOARDS } from "./lib/roleRouting.js";
@@ -21,6 +19,9 @@ const PlatformOwnerLoginScreen = lazy(() =>
 );
 const LandingPage = lazy(() => import("./pages/public/LandingPage.jsx"));
 const AppointmentBookingPage = lazy(() => import("./pages/public/AppointmentBookingPage.jsx"));
+const CertificateVerificationPage = lazy(() => import("./pages/public/CertificateVerificationPage.jsx"));
+const MarketplacePage = lazy(() => import("./pages/public/MarketplacePage.jsx"));
+const PublicInfoPage = lazy(() => import("./pages/public/PublicInfoPage.jsx"));
 const AuthPage = lazy(() => import("./pages/auth/AuthPage.jsx"));
 const MfaChallengeScreen = lazy(() => import("./pages/auth/MfaChallengeScreen.jsx"));
 const AcceptInvitationScreen = lazy(() => import("./pages/auth/AcceptInvitationScreen.jsx"));
@@ -402,6 +403,25 @@ export default function App() {
   }
 
   if (!session) {
+    if (["about", "privacy", "terms", "contact"].includes(publicView)) {
+      return (
+        <>
+          <OfflineIndicator mode={offlineMode} />
+          <PublicInfoPage
+            page={publicView}
+            onGoHome={() => {
+              try { window.history.pushState({}, "", "/"); } catch {}
+              setPublicView("landing");
+            }}
+            onBookDemo={() => {
+              try { window.history.pushState({}, "", "/book-demo"); } catch {}
+              setPublicView("book-demo");
+            }}
+          />
+          <ConsentBanner session={session} />
+        </>
+      );
+    }
     if (publicView === "marketplace") {
       return (
         <>
@@ -412,12 +432,12 @@ export default function App() {
               setPublicView("landing");
             }}
             onBookDemo={() => {
-              try { window.history.pushState({}, "", "?view=book-demo"); } catch {}
+              try { window.history.pushState({}, "", "/book-demo"); } catch {}
               setPublicView("book-demo");
             }}
             onSignIn={() => {
               setAuthInitialMode("signin");
-              try { window.history.pushState({}, "", "?view=auth&mode=signin"); } catch {}
+              try { window.history.pushState({}, "", "/login"); } catch {}
               setPublicView("auth");
             }}
           />
@@ -462,10 +482,10 @@ export default function App() {
               if (["signin", "signup"].includes(target)) {
                 const nextMode = target === "signup" ? "signup" : "signin";
                 setAuthInitialMode(nextMode);
-                try { window.history.pushState({}, "", `?view=auth&mode=${nextMode}`); } catch {}
+                try { window.history.pushState({}, "", nextMode === "signup" ? "/signup" : "/login"); } catch {}
                 setPublicView("auth");
               } else if (target === "marketplace") {
-                try { window.history.pushState({}, "", "?view=marketplace"); } catch {}
+                try { window.history.pushState({}, "", "/marketplace"); } catch {}
                 setPublicView("marketplace");
               } else {
                 try { window.history.pushState({}, "", "/"); } catch {}
@@ -488,15 +508,19 @@ export default function App() {
             if (["signin", "signup", "courses", "mentors"].includes(target)) {
               const nextMode = target === "signin" ? "signin" : "signup";
               setAuthInitialMode(nextMode);
-              try { window.history.pushState({}, "", `?view=auth&mode=${nextMode}`); } catch {}
+              try { window.history.pushState({}, "", nextMode === "signup" ? "/signup" : "/login"); } catch {}
               setPublicView("auth");
             } else if (target === "marketplace") {
-              try { window.history.pushState({}, "", "?view=marketplace"); } catch {}
+              try { window.history.pushState({}, "", "/marketplace"); } catch {}
               setPublicView("marketplace");
             } else if (target === "demo" || target === "book-demo") {
               if (data?.sector) setDemoSectorParam(data.sector);
-              try { window.history.pushState({}, "", "?view=book-demo"); } catch {}
+              try { window.history.pushState({}, "", "/book-demo"); } catch {}
               setPublicView("book-demo");
+            } else if (["about", "privacy", "terms", "contact"].includes(target)) {
+              const path = target === "privacy" ? "/privacy-policy" : target === "terms" ? "/terms-of-service" : `/${target}`;
+              try { window.history.pushState({}, "", path); } catch {}
+              setPublicView(target);
             } else {
               try { window.history.pushState({}, "", "/"); } catch {}
               setPublicView("landing");

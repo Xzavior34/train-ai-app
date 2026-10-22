@@ -2,12 +2,13 @@ import { useDialogFocus } from "../../lib/useDialogFocus.js";
 import React, { useRef, useEffect, useState } from "react";
 import {
   ArrowRight, BarChart3, BookOpen, Brain, Building2, Check, ChevronDown,
-  ChevronLeft, ChevronRight, GraduationCap, Heart, Instagram, Layers, Lock, Mail, Menu, MessageSquare, Target,
+  ChevronLeft, ChevronRight, GraduationCap, Heart, Instagram, Layers, Linkedin, Lock, Mail, Menu, MessageSquare, Target,
   UserCog, Users, X,
 } from "lucide-react";
 import { captureAttributionFromURL } from "../../lib/api/waitlist.js";
 import { trackReferralClickIfPresent } from "../../lib/api/organizations.js";
 import PlatformScreensTour from "./PlatformScreensTour.jsx";
+import SeoHead, { SITE_URL } from "../../components/common/SeoHead.jsx";
 
 const LEARNER_FEATURES = [
   [BookOpen, "Structured learning", "Complete assigned courses and follow a clear learning path without losing track of the next step."],
@@ -87,6 +88,56 @@ const LEGAL_CONTENT = {
   terms: ["Terms of Service", "Use of Train AI is governed by the agreement associated with an organisation's selected plan and implementation. For commercial or contractual enquiries, contact info@trainailtd.com."],
   cookie: ["Cookie Policy", "Train AI uses necessary browser storage for secure sessions and essential platform functions. Optional analytics and marketing storage are controlled through the site's consent preferences."],
 };
+
+const HOME_DESCRIPTION = "Train AI is an AI learning and workforce development platform for organisations delivering courses, cohorts, learning communities and measurable skills development.";
+const HOME_SCHEMA = [
+  {
+    "@type": "Organization",
+    "@id": `${SITE_URL}/#organisation`,
+    name: "Train AI Ltd",
+    alternateName: "Train AI",
+    url: `${SITE_URL}/`,
+    logo: `${SITE_URL}/train-ai-logo.png`,
+    email: "info@trainailtd.com",
+    sameAs: ["https://www.linkedin.com/company/trains-ai", "https://www.instagram.com/trainailtd/"],
+  },
+  {
+    "@type": "WebSite",
+    "@id": `${SITE_URL}/#website`,
+    url: `${SITE_URL}/`,
+    name: "Train AI",
+    description: HOME_DESCRIPTION,
+    publisher: { "@id": `${SITE_URL}/#organisation` },
+    inLanguage: "en-GB",
+  },
+  {
+    "@type": "SoftwareApplication",
+    "@id": `${SITE_URL}/#platform`,
+    name: "Train AI",
+    applicationCategory: "BusinessApplication",
+    applicationSubCategory: "Learning and development platform",
+    operatingSystem: "Web",
+    url: `${SITE_URL}/`,
+    description: HOME_DESCRIPTION,
+    publisher: { "@id": `${SITE_URL}/#organisation` },
+    featureList: [
+      "Course and learner management",
+      "Cohort and learning community management",
+      "Instructor and manager oversight",
+      "AI-supported learning",
+      "Skill-gap and workforce-readiness insights",
+    ],
+  },
+  {
+    "@type": "FAQPage",
+    "@id": `${SITE_URL}/#faq`,
+    mainEntity: FAQ_ITEMS.map(([name, text]) => ({
+      "@type": "Question",
+      name,
+      acceptedAnswer: { "@type": "Answer", text },
+    })),
+  },
+];
 
 function FeatureList({ features }) {
   return (
@@ -180,13 +231,15 @@ export default function LandingPage({ onNavigate }) {
     setMenuOpen(false);
     if (typeof onNavigate === "function") return onNavigate(target, data);
     if (target === "book-demo" || target === "demo") {
-      window.location.href = "/?view=book-demo";
+      window.location.href = "/book-demo";
     } else if (target === "marketplace") {
-      window.location.href = "/?view=marketplace";
+      window.location.href = "/marketplace";
     } else if (target === "signup") {
-      window.location.href = "/?view=auth&mode=signup";
+      window.location.href = "/signup";
+    } else if (["about", "privacy", "terms", "contact"].includes(target)) {
+      window.location.href = target === "privacy" ? "/privacy-policy" : target === "terms" ? "/terms-of-service" : `/${target}`;
     } else {
-      window.location.href = "/?view=auth&mode=signin";
+      window.location.href = "/login";
     }
   }
 
@@ -197,6 +250,12 @@ export default function LandingPage({ onNavigate }) {
 
   return (
     <div className="lp-page">
+      <SeoHead
+        title="AI Learning & Workforce Development Platform | Train AI"
+        description={HOME_DESCRIPTION}
+        path="/"
+        schema={HOME_SCHEMA}
+      />
       <style>{landingStyles}</style>
 
       <header className="lp-header">
@@ -205,16 +264,16 @@ export default function LandingPage({ onNavigate }) {
             <img src="/train-ai-logo.png" alt="Train AI" />
           </button>
           <nav className="lp-nav" aria-label="Main navigation">
-            <button onClick={() => scrollToSection("platform")}>Platform</button>
-            <button onClick={() => scrollToSection("screens")}>Have a look</button>
-            <button onClick={() => scrollToSection("organisations")}>Who it is for</button>
-            <button onClick={() => scrollToSection("pricing")}>Pricing</button>
-            <button onClick={() => navigate("marketplace")}>Marketplace</button>
-            <button onClick={() => scrollToSection("faq")}>FAQ</button>
+            <a href="#platform" onClick={(event) => { event.preventDefault(); scrollToSection("platform"); }}>Platform</a>
+            <a href="#screens" onClick={(event) => { event.preventDefault(); scrollToSection("screens"); }}>Have a look</a>
+            <a href="#organisations" onClick={(event) => { event.preventDefault(); scrollToSection("organisations"); }}>Who it is for</a>
+            <a href="#pricing" onClick={(event) => { event.preventDefault(); scrollToSection("pricing"); }}>Pricing</a>
+            <a href="/marketplace" onClick={(event) => { event.preventDefault(); navigate("marketplace"); }}>Marketplace</a>
+            <a href="#faq" onClick={(event) => { event.preventDefault(); scrollToSection("faq"); }}>FAQ</a>
           </nav>
           <div className="lp-header-actions">
-            <button className="lp-text-button" onClick={() => navigate("signin")}>Sign in</button>
-            <button className="lp-primary-button lp-small-button" onClick={() => navigate("book-demo")}>Book a demo</button>
+            <a className="lp-text-button" href="/login" onClick={(event) => { event.preventDefault(); navigate("signin"); }}>Sign in</a>
+            <a className="lp-primary-button lp-small-button" href="/book-demo" onClick={(event) => { event.preventDefault(); navigate("book-demo"); }}>Book a demo</a>
           </div>
           <button className="lp-menu-button" onClick={() => setMenuOpen((value) => !value)} aria-label="Toggle navigation" aria-expanded={menuOpen}>
             {menuOpen ? <X size={22} /> : <Menu size={22} />}
@@ -242,13 +301,13 @@ export default function LandingPage({ onNavigate }) {
               <h1>Manage learning. Support people. Measure what changes.</h1>
               <p className="lp-hero-description">Train AI gives organisations one place to deliver courses, run cohorts and learning communities, support learners and instructors, and understand development outcomes.</p>
               <div className="lp-hero-actions">
-                <button className="lp-primary-button" onClick={() => navigate("book-demo")}>Book a personalised demo <ArrowRight size={17} /></button>
-                <button className="lp-secondary-button" onClick={() => scrollToSection("platform")}>See the platform</button>
+                <a className="lp-primary-button" href="/book-demo" onClick={(event) => { event.preventDefault(); navigate("book-demo"); }}>Book a personalised demo <ArrowRight size={17} /></a>
+                <a className="lp-secondary-button" href="#platform" onClick={(event) => { event.preventDefault(); scrollToSection("platform"); }}>See the platform</a>
               </div>
               <p className="lp-sales-note">Built for organisational customers. Commercial terms are discussed after a product demo.</p>
             </div>
             <figure className="lp-hero-figure">
-              <img src="/images/train-ai-diverse-learners.jpg" alt="A diverse group of adult learners collaborating around a laptop" />
+              <img src="/images/train-ai-diverse-learners.jpg" alt="A diverse group of adult learners collaborating around a laptop" width="1400" height="788" fetchPriority="high" />
               <figcaption><strong>One connected learning operation</strong><span>Courses · Cohorts · Community · Intelligence</span></figcaption>
             </figure>
           </div>
@@ -274,7 +333,10 @@ export default function LandingPage({ onNavigate }) {
           </div>
         </section>
 
-        <PlatformScreensTour />
+        <div data-nosnippet="true">
+          <PlatformScreensTour />
+          <p className="lp-preview-note">Interface preview with illustrative names, activities and figures.</p>
+        </div>
 
         <section className="lp-section lp-outcomes-section">
           <div className="lp-shell lp-outcomes-grid">
@@ -429,29 +491,30 @@ export default function LandingPage({ onNavigate }) {
             </div>
             <div className="lp-footer-column">
               <h3>Platform</h3>
-              <button onClick={() => scrollToSection("screens")}>Have a look</button>
-              <button onClick={() => scrollToSection("platform")}>For learners</button>
-              <button onClick={() => scrollToSection("platform")}>For organisations</button>
-              <button onClick={() => scrollToSection("pricing")}>Pricing tiers</button>
-              <button onClick={() => navigate("book-demo")}>Book a demo</button>
+              <a href="#screens" onClick={(event) => { event.preventDefault(); scrollToSection("screens"); }}>Have a look</a>
+              <a href="#platform" onClick={(event) => { event.preventDefault(); scrollToSection("platform"); }}>For learners</a>
+              <a href="#platform" onClick={(event) => { event.preventDefault(); scrollToSection("platform"); }}>For organisations</a>
+              <a href="#pricing" onClick={(event) => { event.preventDefault(); scrollToSection("pricing"); }}>Pricing tiers</a>
+              <a href="/book-demo" onClick={(event) => { event.preventDefault(); navigate("book-demo"); }}>Book a demo</a>
             </div>
             <div className="lp-footer-column">
               <h3>Company</h3>
-              <button onClick={() => setLegalModal("about")}>About Train AI</button>
-              <button onClick={() => scrollToSection("organisations")}>Who it is for</button>
-              <button onClick={() => navigate("marketplace")}>Academy Marketplace</button>
-              <button onClick={() => (window.location.href = "/?verify=1")}>Verify Certificate</button>
-              <button onClick={() => scrollToSection("faq")}>Frequently asked questions</button>
-              <button onClick={() => navigate("signin")}>Customer sign in</button>
+              <a href="/about" onClick={(event) => { event.preventDefault(); navigate("about"); }}>About Train AI</a>
+              <a href="#organisations" onClick={(event) => { event.preventDefault(); scrollToSection("organisations"); }}>Who it is for</a>
+              <a href="/marketplace" onClick={(event) => { event.preventDefault(); navigate("marketplace"); }}>Academy Marketplace</a>
+              <a href="/verify">Verify Certificate</a>
+              <a href="#faq" onClick={(event) => { event.preventDefault(); scrollToSection("faq"); }}>Frequently asked questions</a>
+              <a href="/login" onClick={(event) => { event.preventDefault(); navigate("signin"); }}>Customer sign in</a>
             </div>
             <div className="lp-footer-column lp-footer-contact">
               <h3>Contact</h3>
               <a href="mailto:info@trainailtd.com"><Mail size={16} />info@trainailtd.com</a>
+              <a href="https://www.linkedin.com/company/trains-ai" target="_blank" rel="noreferrer"><Linkedin size={16} />LinkedIn <span>Train AI</span></a>
               <a href="https://www.instagram.com/trainailtd/" target="_blank" rel="noreferrer"><Instagram size={16} />Instagram <span>@trainailtd</span></a>
-              <button className="lp-footer-demo-link" onClick={() => navigate("book-demo")}>Schedule a product conversation <ArrowRight size={14} /></button>
+              <a className="lp-footer-demo-link" href="/book-demo" onClick={(event) => { event.preventDefault(); navigate("book-demo"); }}>Schedule a product conversation <ArrowRight size={14} /></a>
             </div>
           </div>
-          <div className="lp-footer-bottom"><span>© 2026 Train AI Ltd. All rights reserved.</span><div><button onClick={() => setLegalModal("privacy")}>Privacy</button><button onClick={() => setLegalModal("terms")}>Terms</button><button onClick={() => setLegalModal("cookie")}>Cookies</button></div></div>
+          <div className="lp-footer-bottom"><span>© 2026 Train AI Ltd. All rights reserved.</span><div><a href="/privacy-policy" onClick={(event) => { event.preventDefault(); navigate("privacy"); }}>Privacy</a><a href="/terms-of-service" onClick={(event) => { event.preventDefault(); navigate("terms"); }}>Terms</a><button onClick={() => setLegalModal("cookie")}>Cookies</button><a href="/contact" onClick={(event) => { event.preventDefault(); navigate("contact"); }}>Contact</a></div></div>
         </div>
       </footer>
 
@@ -470,13 +533,13 @@ export default function LandingPage({ onNavigate }) {
 const landingStyles = `
   :root{--lp-blue:#2459d3;--lp-blue-dark:#1945ad;--lp-ink:#101828;--lp-muted:#536174;--lp-line:#d9e0e8;--lp-soft:#f4f7fa;--lp-white:#fff}
   .lp-page{min-height:100vh;background:#fff;color:var(--lp-ink);font-family:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}.lp-page *{box-sizing:border-box}.lp-page button{font:inherit}.lp-shell{width:min(1160px,calc(100% - 40px));margin:0 auto}
-  .lp-header{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.96);border-bottom:1px solid var(--lp-line);backdrop-filter:blur(10px)}.lp-header-inner{width:min(1160px,calc(100% - 40px));height:70px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:30px}.lp-logo-button{border:0;background:transparent;padding:0;cursor:pointer}.lp-logo-button img{display:block;width:auto;height:28px}.lp-nav{display:flex;align-items:center;gap:30px;margin-left:auto}.lp-nav button,.lp-text-button,.lp-footer button{border:0;background:transparent;color:#354154;padding:6px 0;cursor:pointer;font-size:14px;font-weight:600}.lp-nav button:hover,.lp-text-button:hover{color:var(--lp-blue)}.lp-header-actions{display:flex;align-items:center;gap:16px}
-  .lp-primary-button,.lp-secondary-button{min-height:44px;display:inline-flex;align-items:center;justify-content:center;gap:9px;border-radius:6px;padding:11px 18px;border:1px solid transparent;cursor:pointer;font-weight:750;font-size:14px;transition:background-color .2s ease,border-color .2s ease,color .2s ease,transform .2s ease,box-shadow .2s ease}.lp-primary-button{color:#fff;background:var(--lp-blue)}.lp-primary-button:hover{background:var(--lp-blue-dark);transform:translateY(-2px);box-shadow:0 8px 20px rgba(36,89,211,.2)}.lp-secondary-button{color:var(--lp-ink);background:#fff;border-color:#bfc8d4}.lp-secondary-button:hover{border-color:#7f8b9b;background:#f8fafc;transform:translateY(-2px)}.lp-small-button{min-height:38px;padding:8px 14px}.lp-menu-button{display:none;border:0;background:transparent;color:var(--lp-ink);padding:7px;cursor:pointer}.lp-mobile-nav{display:none}
+  .lp-header{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.96);border-bottom:1px solid var(--lp-line);backdrop-filter:blur(10px)}.lp-header-inner{width:min(1160px,calc(100% - 40px));height:70px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:30px}.lp-logo-button{border:0;background:transparent;padding:0;cursor:pointer}.lp-logo-button img{display:block;width:auto;height:28px}.lp-nav{display:flex;align-items:center;gap:30px;margin-left:auto}.lp-nav a,.lp-text-button,.lp-footer button{border:0;background:transparent;color:#354154;padding:6px 0;cursor:pointer;font-size:14px;font-weight:600;text-decoration:none}.lp-nav a:hover,.lp-text-button:hover{color:var(--lp-blue)}.lp-header-actions{display:flex;align-items:center;gap:16px}.lp-header-actions a{text-decoration:none}
+  .lp-primary-button,.lp-secondary-button{min-height:44px;display:inline-flex;align-items:center;justify-content:center;gap:9px;border-radius:6px;padding:11px 18px;border:1px solid transparent;cursor:pointer;font-weight:750;font-size:14px;text-decoration:none;transition:background-color .2s ease,border-color .2s ease,color .2s ease,transform .2s ease,box-shadow .2s ease}.lp-primary-button{color:#fff;background:var(--lp-blue)}.lp-primary-button:hover{background:var(--lp-blue-dark);transform:translateY(-2px);box-shadow:0 8px 20px rgba(36,89,211,.2)}.lp-secondary-button{color:var(--lp-ink);background:#fff;border-color:#bfc8d4}.lp-secondary-button:hover{border-color:#7f8b9b;background:#f8fafc;transform:translateY(-2px)}.lp-small-button{min-height:38px;padding:8px 14px}.lp-menu-button{display:none;border:0;background:transparent;color:var(--lp-ink);padding:7px;cursor:pointer}.lp-mobile-nav{display:none}
   .lp-hero{padding:72px 0 78px;border-bottom:1px solid var(--lp-line);overflow:hidden}.lp-hero-grid{display:grid;grid-template-columns:minmax(0,.94fr) minmax(0,1.06fr);align-items:center;gap:64px}.lp-kicker{margin:0 0 18px;color:var(--lp-blue);text-transform:uppercase;letter-spacing:.13em;font-size:12px;font-weight:800}.lp-hero h1{max-width:690px;margin:0;font-size:clamp(44px,5.4vw,70px);line-height:1.01;letter-spacing:-.052em;font-weight:790}.lp-hero-description{max-width:620px;margin:26px 0 0;color:var(--lp-muted);font-size:18px;line-height:1.65}.lp-hero-actions{display:flex;flex-wrap:wrap;gap:11px;margin-top:30px}.lp-sales-note{margin:17px 0 0;color:#6b7686;font-size:12.5px}.lp-hero-figure{margin:0;overflow:hidden}.lp-hero-figure img{display:block;width:100%;aspect-ratio:4/3;object-fit:cover;object-position:center;border-radius:4px;transition:transform .8s cubic-bezier(.2,.7,.2,1)}.lp-hero-figure:hover img{transform:scale(1.025)}.lp-hero-figure figcaption{display:flex;align-items:baseline;justify-content:space-between;gap:16px;padding:14px 0;border-bottom:1px solid var(--lp-line)}.lp-hero-figure strong{font-size:13px}.lp-hero-figure span{color:var(--lp-muted);font-size:12px;text-align:right}
   .lp-section{padding:88px 0;scroll-margin-top:70px}.lp-section-heading{max-width:760px;margin-bottom:46px}.lp-section-heading h2,.lp-outcomes-grid h2,.lp-demo-grid h2,.lp-faq-intro h2{margin:0;font-size:clamp(32px,4vw,50px);line-height:1.08;letter-spacing:-.04em;font-weight:760}.lp-section-heading>p:last-child,.lp-faq-intro>p:last-child{margin:20px 0 0;max-width:680px;color:var(--lp-muted);font-size:16px;line-height:1.65}.lp-heading-split{max-width:none;display:grid;grid-template-columns:1fr 1fr;column-gap:70px}.lp-heading-split .lp-kicker{grid-column:1/-1}.lp-heading-split>p:last-child{margin:2px 0 0}
   .lp-two-column-feature{display:grid;grid-template-columns:1fr 1fr;border:1px solid var(--lp-line)}.lp-feature-column{padding:38px}.lp-feature-column-dark{background:#132038;color:#fff}.lp-column-title{padding-bottom:28px;border-bottom:1px solid var(--lp-line)}.lp-feature-column-dark .lp-column-title{border-color:#344159}.lp-column-title span{color:var(--lp-blue);font-size:12px;text-transform:uppercase;letter-spacing:.12em;font-weight:800}.lp-feature-column-dark .lp-column-title span{color:#91b2ff}.lp-column-title h3{margin:10px 0 0;max-width:480px;font-size:27px;line-height:1.25;letter-spacing:-.025em}.lp-feature-list{display:grid}.lp-feature-row{display:grid;grid-template-columns:26px 1fr;gap:15px;padding:24px 0;border-bottom:1px solid var(--lp-line)}.lp-feature-row:last-child{border-bottom:0;padding-bottom:0}.lp-feature-column-dark .lp-feature-row{border-color:#344159}.lp-feature-row svg{color:var(--lp-blue);margin-top:2px}.lp-feature-column-dark .lp-feature-row svg{color:#91b2ff}.lp-feature-row h4{margin:0 0 6px;font-size:16px}.lp-feature-row p{margin:0;color:var(--lp-muted);font-size:14px;line-height:1.6}.lp-feature-column-dark .lp-feature-row p{color:#bdc8d9}
   .lp-outcomes-section{position:relative;overflow:hidden}.lp-outcomes-section::after{content:"";position:absolute;inset:0 0 0 56%;background:linear-gradient(90deg,var(--lp-soft),rgba(244,247,250,.78)),url("/images/train-ai-professional.jpg") center 42%/cover;opacity:.14;pointer-events:none}.lp-outcomes-section .lp-shell{position:relative;z-index:1}.lp-outcomes-section,.lp-pricing-section{background-color:var(--lp-soft);border-block:1px solid var(--lp-line)}.lp-outcomes-grid{display:grid;grid-template-columns:1fr 1fr;gap:90px}.lp-outcome-copy{padding-top:32px}.lp-outcome-copy p{margin:0 0 22px;color:#3e4b5d;font-size:17px;line-height:1.72}.lp-photo-ribbon{display:grid;grid-template-columns:.7fr 1.25fr .7fr;align-items:end;gap:12px;margin:-8px 0 48px}.lp-photo-ribbon-item{position:relative;margin:0;overflow:hidden;background:#e9eef4}.lp-photo-ribbon-item img{display:block;width:100%;height:220px;object-fit:cover}.lp-photo-ribbon-item-muted img{height:172px;filter:grayscale(1);opacity:.58}.lp-photo-ribbon-item-main figcaption{position:absolute;right:0;bottom:0;max-width:340px;padding:14px 16px;color:#fff;background:rgba(15,23,40,.86);font-size:12px;line-height:1.5}.lp-audience-list{border-top:1px solid var(--lp-line)}.lp-audience-row{display:grid;grid-template-columns:50px 38px minmax(210px,.65fr) 1fr;align-items:start;gap:24px;padding:30px 0;border-bottom:1px solid var(--lp-line)}.lp-audience-number{color:#8b96a5;font-size:12px;font-weight:700}.lp-audience-row svg{color:var(--lp-blue)}.lp-audience-row h3{margin:0;font-size:20px;letter-spacing:-.02em}.lp-audience-row p{margin:0;color:var(--lp-muted);font-size:15px;line-height:1.65}
-  .lp-showcase-container{margin:-8px 0 48px;width:100%}.lp-showcase-frame{position:relative;width:100%;height:380px;border-radius:12px;overflow:hidden;background:#101828;border:1px solid var(--lp-line);box-shadow:0 10px 30px rgba(0,0,0,.08)}.lp-showcase-img{width:100%;height:100%;object-fit:cover;object-position:center;transition:transform .5s ease,opacity .4s ease}.lp-showcase-overlay{position:absolute;inset:auto 0 0 0;background:linear-gradient(180deg,transparent 0%,rgba(15,23,40,.92) 100%);padding:24px 28px;display:flex;align-items:flex-end;justify-content:space-between;gap:20px}.lp-showcase-text strong{display:block;color:#fff;font-size:18px;font-weight:750;margin-bottom:4px}.lp-showcase-text span{display:block;color:#cbd5e1;font-size:13.5px;max-width:540px;line-height:1.5}.lp-showcase-controls{display:flex;align-items:center;gap:12px;flex-shrink:0}.lp-showcase-arrow{width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,.2);color:#fff;border:1px solid rgba(255,255,255,.3);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .2s ease;backdrop-filter:blur(6px)}.lp-showcase-arrow:hover{background:var(--lp-blue);border-color:var(--lp-blue);transform:scale(1.08)}.lp-showcase-dots{display:flex;align-items:center;gap:6px}.lp-showcase-dot{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.4);border:0;padding:0;cursor:pointer;transition:all .2s ease}.lp-showcase-dot.active{width:22px;border-radius:4px;background:#38bdf8}
+  .lp-preview-note{width:min(1160px,calc(100% - 40px));margin:-38px auto 42px;color:#718096;font-size:11px;text-align:right}.lp-showcase-container{margin:-8px 0 48px;width:100%}.lp-showcase-frame{position:relative;width:100%;height:380px;border-radius:12px;overflow:hidden;background:#101828;border:1px solid var(--lp-line);box-shadow:0 10px 30px rgba(0,0,0,.08)}.lp-showcase-img{width:100%;height:100%;object-fit:cover;object-position:center;transition:transform .5s ease,opacity .4s ease}.lp-showcase-overlay{position:absolute;inset:auto 0 0 0;background:linear-gradient(180deg,transparent 0%,rgba(15,23,40,.92) 100%);padding:24px 28px;display:flex;align-items:flex-end;justify-content:space-between;gap:20px}.lp-showcase-text strong{display:block;color:#fff;font-size:18px;font-weight:750;margin-bottom:4px}.lp-showcase-text span{display:block;color:#cbd5e1;font-size:13.5px;max-width:540px;line-height:1.5}.lp-showcase-controls{display:flex;align-items:center;gap:12px;flex-shrink:0}.lp-showcase-arrow{width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,.2);color:#fff;border:1px solid rgba(255,255,255,.3);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .2s ease;backdrop-filter:blur(6px)}.lp-showcase-arrow:hover{background:var(--lp-blue);border-color:var(--lp-blue);transform:scale(1.08)}.lp-showcase-dots{display:flex;align-items:center;gap:6px}.lp-showcase-dot{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.4);border:0;padding:0;cursor:pointer;transition:all .2s ease}.lp-showcase-dot.active{width:22px;border-radius:4px;background:#38bdf8}
   .lp-currency-selector-bar{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin:0 0 24px;padding:12px 18px;background:#fff;border:1px solid var(--lp-line);border-radius:8px}.lp-currency-label{font-size:13px;font-weight:700;color:var(--lp-muted)}.lp-currency-pill-group{display:flex;align-items:center;gap:6px;flex-wrap:wrap}.lp-currency-pill{padding:6px 14px;border-radius:20px;border:1px solid var(--lp-line);background:#f8fafc;color:#475569;font-size:12.5px;font-weight:700;cursor:pointer;transition:all .2s ease}.lp-currency-pill:hover{background:#edf2f7;color:var(--lp-ink)}.lp-currency-pill.active{background:var(--lp-blue);color:#fff;border-color:var(--lp-blue);box-shadow:0 2px 8px rgba(36,89,211,.25)}
   .lp-pricing-table{display:grid;grid-template-columns:repeat(3,1fr);border:1px solid var(--lp-line);background:#fff;border-radius:8px;overflow:hidden}.lp-pricing-tier{display:flex;flex-direction:column;min-height:560px;padding:32px;border-right:1px solid var(--lp-line);position:relative}.lp-pricing-tier-enterprise{border-right:0;background:#101d36;color:#fff}.lp-tier-heading{display:flex;align-items:baseline;justify-content:space-between;padding-bottom:16px;border-bottom:1px solid var(--lp-line)}.lp-pricing-tier-enterprise .lp-tier-heading{border-color:#2a3b5a}.lp-tier-heading span{color:#8894a4;font-size:12px;font-weight:700}.lp-tier-heading h3{margin:0;font-size:24px;letter-spacing:-.02em}
   .lp-tier-price-block{padding:20px 0 16px;border-bottom:1px solid var(--lp-line)}.lp-pricing-tier-enterprise .lp-tier-price-block{border-color:#2a3b5a}.lp-tier-price-row{display:flex;align-items:baseline;gap:8px}.lp-tier-amount{font-size:32px;font-weight:800;letter-spacing:-.03em;color:var(--lp-ink)}.lp-pricing-tier-enterprise .lp-tier-amount{color:#38bdf8}.lp-tier-period{font-size:13px;color:var(--lp-muted);font-weight:600}.lp-pricing-tier-enterprise .lp-tier-period{color:#94a3b8}
@@ -487,7 +550,7 @@ const landingStyles = `
   .lp-tier-features{display:grid;gap:12px;padding:0;margin:0 0 28px;list-style:none}.lp-tier-features li{display:flex;align-items:flex-start;gap:9px;font-size:13px;line-height:1.4}.lp-tier-features li svg{flex:0 0 auto;color:var(--lp-blue);margin-top:1px}.lp-pricing-tier-enterprise .lp-tier-features li svg{color:#38bdf8}.lp-pricing-tier button{margin-top:auto;width:100%}.lp-pricing-note{margin:20px 0 0;color:#6b7686;font-size:12.5px;text-align:center}
 
   .lp-demo-section{color:#fff;background:var(--lp-blue)}.lp-demo-grid{display:grid;grid-template-columns:1fr .8fr;gap:90px;align-items:end}.lp-demo-section .lp-kicker{color:#c8d7ff}.lp-demo-grid p:not(.lp-kicker){margin:0 0 24px;color:#e2e9fb;font-size:16px;line-height:1.7}.lp-light-button{color:var(--lp-blue-dark);background:#fff}.lp-light-button:hover{color:#fff;background:#132038}.lp-faq-grid{display:grid;grid-template-columns:.72fr 1fr;gap:90px}.lp-faq-list{border-top:1px solid var(--lp-line)}.lp-faq-item{border-bottom:1px solid var(--lp-line)}.lp-faq-item button{width:100%;display:flex;align-items:center;justify-content:space-between;gap:20px;padding:22px 0;border:0;background:transparent;color:var(--lp-ink);text-align:left;cursor:pointer;font-weight:700;transition:color .2s ease}.lp-faq-item button:hover{color:var(--lp-blue)}.lp-faq-item button svg{color:#687486;transition:transform .2s ease}.lp-faq-item p{margin:-4px 36px 22px 0;color:var(--lp-muted);font-size:14px;line-height:1.68;animation:lp-answer-in .28s ease both}
-  .lp-footer{padding:58px 0 24px;color:#fff;background:#0f1728}.lp-footer-main{display:grid;grid-template-columns:1.55fr repeat(3,1fr);gap:60px;padding-bottom:46px}.lp-footer-brand img{display:block;height:36px;width:auto;filter:brightness(0) invert(1)}.lp-footer-brand p{margin:18px 0 10px;color:#fff;font-size:15px;font-weight:700}.lp-footer-brand span{display:block;max-width:320px;color:#9eabba;font-size:13px;line-height:1.65}.lp-footer-column{display:flex;flex-direction:column;align-items:flex-start;gap:12px}.lp-footer-column h3{margin:0 0 7px;color:#fff;font-size:12px;text-transform:uppercase;letter-spacing:.11em}.lp-footer-column button,.lp-footer-column a{display:inline-flex;align-items:center;gap:8px;border:0;background:transparent;color:#b9c4d3;padding:0;text-align:left;text-decoration:none;cursor:pointer;font-size:13px;font-weight:500;line-height:1.5}.lp-footer-column button:hover,.lp-footer-column a:hover{color:#fff}.lp-footer-contact a span{color:#8290a3}.lp-footer-column .lp-footer-demo-link{margin-top:8px;color:#fff;font-weight:700}.lp-footer-bottom{display:flex;align-items:center;justify-content:space-between;gap:30px;padding-top:22px;border-top:1px solid #2d394d;color:#8793a5;font-size:12px}.lp-footer-bottom>div{display:flex;flex-wrap:wrap;gap:24px}.lp-footer button{color:#d7deea}.lp-footer-bottom button{border:0;background:transparent;padding:0;color:#8793a5;cursor:pointer;font-size:12px;font-weight:500}.lp-footer-bottom button:hover{color:#fff}.lp-modal-overlay{position:fixed;inset:0;z-index:100;display:grid;place-items:center;padding:20px;background:rgba(15,23,40,.68)}.lp-modal{position:relative;width:min(520px,100%);padding:34px;background:#fff;border:1px solid var(--lp-line);border-radius:6px}.lp-modal>svg{color:var(--lp-blue)}.lp-modal h2{margin:14px 0 10px;font-size:24px}.lp-modal p{margin:0;color:var(--lp-muted);line-height:1.7}.lp-modal-close{position:absolute;top:14px;right:14px;border:0;background:transparent;cursor:pointer;color:#687486}
+  .lp-footer{padding:58px 0 24px;color:#fff;background:#0f1728}.lp-footer-main{display:grid;grid-template-columns:1.55fr repeat(3,1fr);gap:60px;padding-bottom:46px}.lp-footer-brand img{display:block;height:36px;width:auto;filter:brightness(0) invert(1)}.lp-footer-brand p{margin:18px 0 10px;color:#fff;font-size:15px;font-weight:700}.lp-footer-brand span{display:block;max-width:320px;color:#9eabba;font-size:13px;line-height:1.65}.lp-footer-column{display:flex;flex-direction:column;align-items:flex-start;gap:12px}.lp-footer-column h3{margin:0 0 7px;color:#fff;font-size:12px;text-transform:uppercase;letter-spacing:.11em}.lp-footer-column button,.lp-footer-column a{display:inline-flex;align-items:center;gap:8px;border:0;background:transparent;color:#b9c4d3;padding:0;text-align:left;text-decoration:none;cursor:pointer;font-size:13px;font-weight:500;line-height:1.5}.lp-footer-column button:hover,.lp-footer-column a:hover{color:#fff}.lp-footer-contact a span{color:#8290a3}.lp-footer-column .lp-footer-demo-link{margin-top:8px;color:#fff;font-weight:700}.lp-footer-bottom{display:flex;align-items:center;justify-content:space-between;gap:30px;padding-top:22px;border-top:1px solid #2d394d;color:#8793a5;font-size:12px}.lp-footer-bottom>div{display:flex;flex-wrap:wrap;gap:24px}.lp-footer button{color:#d7deea}.lp-footer-bottom button,.lp-footer-bottom a{border:0;background:transparent;padding:0;color:#8793a5;cursor:pointer;font-size:12px;font-weight:500;text-decoration:none}.lp-footer-bottom button:hover,.lp-footer-bottom a:hover{color:#fff}.lp-modal-overlay{position:fixed;inset:0;z-index:100;display:grid;place-items:center;padding:20px;background:rgba(15,23,40,.68)}.lp-modal{position:relative;width:min(520px,100%);padding:34px;background:#fff;border:1px solid var(--lp-line);border-radius:6px}.lp-modal>svg{color:var(--lp-blue)}.lp-modal h2{margin:14px 0 10px;font-size:24px}.lp-modal p{margin:0;color:var(--lp-muted);line-height:1.7}.lp-modal-close{position:absolute;top:14px;right:14px;border:0;background:transparent;cursor:pointer;color:#687486}
   .lp-motion-ready .lp-hero-copy{animation:lp-hero-copy-in .72s cubic-bezier(.2,.7,.2,1) both}.lp-motion-ready .lp-hero-figure{animation:lp-hero-visual-in .82s .1s cubic-bezier(.2,.7,.2,1) both}.lp-motion-ready .lp-reveal{opacity:0;transform:translateY(26px);transition:opacity .62s ease,transform .62s cubic-bezier(.2,.7,.2,1)}.lp-motion-ready .lp-reveal.lp-reveal-visible{opacity:1;transform:none}.lp-motion-ready .lp-audience-row:nth-child(2),.lp-motion-ready .lp-pricing-tier:nth-child(2){transition-delay:.08s}.lp-motion-ready .lp-audience-row:nth-child(3),.lp-motion-ready .lp-pricing-tier:nth-child(3){transition-delay:.16s}
   @keyframes lp-hero-copy-in{from{opacity:0;transform:translateY(22px)}to{opacity:1;transform:none}}@keyframes lp-hero-visual-in{from{opacity:0;transform:translateX(28px) scale(.985)}to{opacity:1;transform:none}}@keyframes lp-answer-in{from{opacity:0;transform:translateY(-5px)}to{opacity:1;transform:none}}
   @media(max-width:900px){.lp-nav,.lp-header-actions{display:none}.lp-menu-button{display:inline-flex}.lp-mobile-nav{display:grid;gap:3px;padding:8px 20px 18px;border-top:1px solid var(--lp-line);background:#fff;animation:lp-mobile-menu-in .24s ease both}.lp-mobile-nav>button:not(.lp-primary-button){border:0;background:transparent;padding:12px 0;text-align:left;color:var(--lp-ink);font-weight:650}.lp-hero-grid,.lp-heading-split,.lp-outcomes-grid,.lp-demo-grid,.lp-faq-grid{grid-template-columns:1fr;gap:34px}.lp-hero-copy{max-width:720px}.lp-two-column-feature,.lp-pricing-table{grid-template-columns:1fr}.lp-showcase-frame{height:300px}.lp-showcase-overlay{flex-direction:column;align-items:flex-start;gap:14px}.lp-feature-column-dark{border-top:1px solid var(--lp-line)}.lp-pricing-tier{min-height:auto;border-right:0;border-bottom:1px solid var(--lp-line)}.lp-pricing-tier:last-child{border-bottom:0}.lp-pricing-tier>p{min-height:0}.lp-pricing-tier button{margin-top:12px}.lp-footer-main{grid-template-columns:1.4fr 1fr 1fr;gap:38px}.lp-footer-contact{grid-column:2/4}}@keyframes lp-mobile-menu-in{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:none}}

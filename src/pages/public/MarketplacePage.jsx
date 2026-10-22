@@ -9,6 +9,18 @@ import {
   fetchInstructorSeatPlans,
   calculateMarketplaceSplit
 } from "../../lib/api/marketplace.js";
+import SeoHead, { SITE_URL } from "../../components/common/SeoHead.jsx";
+
+const MARKETPLACE_DESCRIPTION = "Explore courses and instructor access for academies using the Train AI learning platform, alongside private organisational training workspaces.";
+const MARKETPLACE_SCHEMA = [{
+  "@type": "CollectionPage",
+  "@id": `${SITE_URL}/marketplace#webpage`,
+  url: `${SITE_URL}/marketplace`,
+  name: "Train AI Academy Marketplace",
+  description: MARKETPLACE_DESCRIPTION,
+  isPartOf: { "@id": `${SITE_URL}/#website` },
+  about: { "@id": `${SITE_URL}/#platform` },
+}];
 
 export default function MarketplacePage({ onGoHome, onBookDemo, onSignIn }) {
   const [tab, setTab] = useState("courses"); // courses | plans
@@ -62,6 +74,7 @@ export default function MarketplacePage({ onGoHome, onBookDemo, onSignIn }) {
         fontFamily: "var(--font-sans, 'Plus Jakarta Sans', sans-serif)",
       }}
     >
+      <SeoHead title="AI & Technology Course Marketplace | Train AI" description={MARKETPLACE_DESCRIPTION} path="/marketplace" schema={MARKETPLACE_SCHEMA} />
       {/* Header Bar */}
       <nav
         style={{

@@ -4,6 +4,7 @@ import {
   Building2, Calendar, BookOpen, ArrowLeft, ExternalLink, Printer
 } from "lucide-react";
 import { verifyPublicCertificate } from "../../lib/api/certificates.js";
+import SeoHead from "../../components/common/SeoHead.jsx";
 
 export default function CertificateVerificationPage({ certCode, onGoHome }) {
   const [loading, setLoading] = useState(true);
@@ -44,6 +45,13 @@ export default function CertificateVerificationPage({ certCode, onGoHome }) {
         alignItems: "center",
       }}
     >
+      <SeoHead
+        title="Verify a certificate | Train AI"
+        description="Verify a Train AI certificate using its certificate code."
+        path="/verify"
+        robots="noindex, nofollow"
+        schema={[]}
+      />
       <div style={{ maxWidth: 640, width: "100%" }}>
         {/* Navigation & Brand Bar */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 32 }}>

@@ -11,9 +11,15 @@ export function parsePublicLocation(location) {
   }
   const orgTarget = params.get("join") || params.get("org") || params.get("workspace") || params.get("ref_org");
   let view = "landing";
-  if (params.get("view") === "book-demo" || params.get("demo") === "true" || params.get("book") === "demo") view = "book-demo";
+  if (params.get("view") === "book-demo" || params.get("demo") === "true" || params.get("book") === "demo" || path === "/book-demo") view = "book-demo";
   else if (params.get("view") === "marketplace" || path === "/marketplace") view = "marketplace";
+  else if (path === "/about") view = "about";
+  else if (path === "/privacy-policy" || path === "/privacy") view = "privacy";
+  else if (path === "/terms-of-service" || path === "/terms") view = "terms";
+  else if (path === "/contact") view = "contact";
+  else if (path === "/login" || path === "/signin") view = "auth";
+  else if (path === "/signup" || path === "/register") view = "auth";
   else if (params.get("view") === "auth" || orgTarget) view = "auth";
   return { view, certCode: certCode || null, inviteToken: params.get("invite") || params.get("token") || params.get("invite_token") || null,
-    authMode: ["signin", "signup"].includes(params.get("mode")) ? params.get("mode") : orgTarget ? "signup" : "", orgTarget };
+    authMode: ["signin", "signup"].includes(params.get("mode")) ? params.get("mode") : ["/signup", "/register"].includes(path) || orgTarget ? "signup" : "", orgTarget };
 }

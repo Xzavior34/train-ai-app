@@ -20,6 +20,18 @@ import {
   XCircle,
 } from "lucide-react";
 import { submitDemoRequest, fetchBookedSlots } from "../../lib/api/waitlist.js";
+import SeoHead, { SITE_URL } from "../../components/common/SeoHead.jsx";
+
+const DEMO_DESCRIPTION = "Book a personalised Train AI product demo for your academy, foundation or business and review courses, cohorts, communities and workforce intelligence.";
+const DEMO_SCHEMA = [{
+  "@type": "Service",
+  "@id": `${SITE_URL}/book-demo#service`,
+  name: "Train AI personalised product demo",
+  description: DEMO_DESCRIPTION,
+  provider: { "@id": `${SITE_URL}/#organisation` },
+  url: `${SITE_URL}/book-demo`,
+  serviceType: "Learning and development platform demonstration",
+}];
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
@@ -358,6 +370,7 @@ export default function AppointmentBookingPage({ onBack, onNavigate, initialSect
 
   return (
     <div style={S.outer}>
+      <SeoHead title="Book an AI Learning Platform Demo | Train AI" description={DEMO_DESCRIPTION} path="/book-demo" schema={DEMO_SCHEMA} />
       <style>{`
         .apt-date-btn {
           border: 1.5px solid #E2E8F0; background: #FFFFFF; color: #0F172A;

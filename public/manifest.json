@@ -3,7 +3,7 @@
   "name": "Train AI - AI Learning and Development for Organisations",
   "short_name": "Train AI",
   "description": "Deliver courses, manage cohorts and learning communities, support learners and instructors, and measure development outcomes in one platform.",
-  "lang": "en-US",
+  "lang": "en-GB",
   "dir": "ltr",
   "start_url": "/",
   "scope": "/",
@@ -153,9 +153,6 @@
     },
     {
       "origin": "https://train-ai-app.vercel.app"
-    },
-    {
-      "origin": "https://trainai.app"
     }
   ],
   "launch_handler": {

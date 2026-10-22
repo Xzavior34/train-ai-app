@@ -34,6 +34,27 @@ test('OAuth code and public routes remain distinct, including path-based certifi
  assert.equal(parsePublicLocation({pathname:'/',search:'?workspace=academy'}).authMode,'signup');
  assert.equal(parsePublicLocation({pathname:'/',search:''}).certCode,null);
  assert.equal(parsePublicLocation({pathname:'/',search:'?view=book-demo'}).view,'book-demo');
+ assert.equal(parsePublicLocation({pathname:'/book-demo',search:''}).view,'book-demo');
+ assert.equal(parsePublicLocation({pathname:'/about',search:''}).view,'about');
+ assert.equal(parsePublicLocation({pathname:'/privacy-policy',search:''}).view,'privacy');
+ assert.equal(parsePublicLocation({pathname:'/terms-of-service',search:''}).view,'terms');
+ assert.equal(parsePublicLocation({pathname:'/contact',search:''}).view,'contact');
+ assert.equal(parsePublicLocation({pathname:'/login',search:''}).view,'auth');
+ assert.equal(parsePublicLocation({pathname:'/signup',search:''}).authMode,'signup');
+});
+test('SEO files use one canonical domain and expose only public pages for indexing',()=>{
+ const index=fs.readFileSync('index.html','utf8');
+ const robots=fs.readFileSync('public/robots.txt','utf8');
+ const sitemap=fs.readFileSync('public/sitemap.xml','utf8');
+ const vercel=JSON.parse(fs.readFileSync('vercel.json','utf8'));
+ assert.match(index,/rel="canonical" href="https:\/\/trainailtd\.com\/"/);
+ assert.doesNotMatch(index,/meta name="keywords"/);
+ assert.match(index,/SoftwareApplication/);
+ assert.match(robots,/User-agent: OAI-SearchBot/);
+ assert.match(sitemap,/https:\/\/trainailtd\.com\/book-demo/);
+ assert.match(sitemap,/https:\/\/trainailtd\.com\/about/);
+ assert.doesNotMatch(sitemap,/\/verify</);
+ assert(vercel.redirects.some(rule=>rule.has?.some(condition=>condition.type==='host'&&condition.value==='www.trainailtd.com')));
 });
 test('Credit entitlements come from configured prices in every supported currency',()=>{
  for(const pkg of CREDIT_PACKAGES)for(const currency of ['NGN','USD','GBP','EUR']){
