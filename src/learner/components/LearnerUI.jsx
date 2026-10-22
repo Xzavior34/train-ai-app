@@ -3,8 +3,8 @@ import React, { useState, useEffect, useContext, useRef, useMemo, createContext 
 import {
   Home, BookOpen, Zap, Plus, Users, Settings, ArrowLeft, GraduationCap, Bookmark, Clock, CheckCircle2,
   Repeat, ChevronRight, ChevronDown, ChevronUp, Bell, Flame, MessageSquare, Calendar,
-  Compass, ShieldCheck, LogOut, Search, Award, BarChart3, HelpCircle, Layers, Mail, Trophy, UserCheck, Radio, Star,
-  PanelLeftClose, PanelLeftOpen, Video
+  Compass, ShieldCheck, LogOut, Search, Award, BarChart3, HelpCircle, Layers, Mail, Trophy, UserCheck, Star,
+  PanelLeftClose, PanelLeftOpen
 } from "lucide-react";
 import { performGlobalSignOut } from "../../services/authService.js";
 
@@ -43,8 +43,15 @@ export const TOKENS = `
     --radius: 10px;
     --radius-sm: 6px;
     --shadow-card: 0 1px 3px 0 rgba(15, 23, 42, 0.04), 0 2px 8px -1px rgba(15, 23, 42, 0.02);
-    --shadow-hover: 0 4px 16px -2px rgba(15, 23, 42, 0.06), 0 2px 6px -1px rgba(15, 23, 42, 0.02);
+    --shadow-hover: 0 2px 8px -3px rgba(15, 23, 42, 0.10);
     --shadow-btn: none;
+    --glass-surface: #FFFFFF;
+    --glass-elevated: #F8FAFC;
+    --glass-border: #E2E8F0;
+    --glass-specular: transparent;
+    --glass-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+    --glass-blur-sm: none;
+    --glass-blur-md: none;
     --font: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     font-family: var(--font);
     color: var(--text);
@@ -70,6 +77,13 @@ export const TOKENS = `
     --warning-border: rgba(245, 158, 11, 0.35);
     --danger-bg: rgba(239, 68, 68, 0.18);
     --danger-border: rgba(239, 68, 68, 0.35);
+    --glass-surface: #121829;
+    --glass-elevated: #1B243B;
+    --glass-border: rgba(255, 255, 255, 0.12);
+    --glass-specular: transparent;
+    --glass-shadow: none;
+    --glass-blur-sm: none;
+    --glass-blur-md: none;
   }
   .tai-app-outer { min-height: 100vh; min-height: 100dvh; background: var(--bg); display:flex; flex-direction:column; width: 100%; box-sizing: border-box; }
   
@@ -94,8 +108,8 @@ export const TOKENS = `
   .tai-header-search input { border: none; background: transparent; outline: none; width: 100%; font-size: 12px; font-family: inherit; color: var(--text); }
   
   .tai-header-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
-  .tai-streak-pill { display: flex; align-items: center; gap: 5px; padding: 4px 8px; border-radius: 6px; background: rgba(255, 247, 237, 0.9); border: 1px solid rgba(255, 237, 213, 0.9); color: #EA580C; font-size: 11.5px; font-weight: 700; cursor: pointer; flex-shrink: 0; }
-  .tai-credits-pill { display: flex; align-items: center; gap: 5px; padding: 4px 8px; border-radius: 6px; background: rgba(238, 242, 255, 0.9); border: 1px solid rgba(224, 231, 255, 0.9); color: #2563EB; font-size: 11.5px; font-weight: 700; cursor: pointer; flex-shrink: 0; }
+  .tai-streak-pill { display: flex; align-items: center; gap: 5px; padding: 2px 0; background: transparent; border: 0; color: #C2410C; font-size: 11.5px; font-weight: 700; cursor: pointer; flex-shrink: 0; }
+  .tai-credits-pill { display: flex; align-items: center; gap: 5px; padding: 2px 0; background: transparent; border: 0; color: #2563EB; font-size: 11.5px; font-weight: 700; cursor: pointer; flex-shrink: 0; }
   .tai-workspace-pill { display: flex; align-items: center; gap: 5px; padding: 4px 8px; border-radius: 6px; background: var(--glass-surface); border: 1px solid var(--glass-border); color: var(--text); font-size: 11.5px; font-weight: 700; cursor: pointer; transition: all .16s ease; flex-shrink: 0; box-shadow: inset 0 1px 0 var(--glass-specular); }
   .tai-workspace-pill:hover { background: var(--glass-elevated); border-color: rgba(59, 130, 246, 0.35); }
   
@@ -124,7 +138,7 @@ export const TOKENS = `
     box-sizing: border-box;
   }
 
-  /* Refined Learner Desktop Sidebar with Liquid Glass */
+  /* Desktop navigation: solid, deliberate, and separate from page content. */
   .tai-desktop-sidebar { display: none; }
   @media (min-width: 900px) {
     .tai-desktop-sidebar {
@@ -135,11 +149,11 @@ export const TOKENS = `
       position: sticky;
       top: 54px;
       height: calc(100vh - 54px);
-      background: var(--glass-surface);
-      backdrop-filter: var(--glass-blur-md);
-      -webkit-backdrop-filter: var(--glass-blur-md);
-      border-right: 1px solid var(--glass-border);
-      padding: 16px 10px;
+      background: var(--surface);
+      backdrop-filter: none;
+      -webkit-backdrop-filter: none;
+      border-right: 1px solid var(--border);
+      padding: 14px 10px;
       box-sizing: border-box;
       z-index: 40;
       overflow-y: auto;
@@ -173,6 +187,15 @@ export const TOKENS = `
       gap: 4px;
       flex: 1;
     }
+    .tai-sidebar-nav-list { display:flex; flex-direction:column; gap:4px; flex:1; }
+    .tai-category-header {
+      display:flex; align-items:center; justify-content:space-between; gap:8px;
+      padding:9px 10px; border-radius:7px; color:var(--text-2); cursor:pointer;
+      font-size:13px; font-weight:700; border:1px solid transparent;
+    }
+    .tai-category-header:hover { background:var(--surface-2); color:var(--text); }
+    .tai-category-header.category-active { background:var(--primary-tint); color:var(--primary); }
+    .tai-category-label { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
     .tai-category-group {
       display: flex;
       flex-direction: column;
@@ -246,7 +269,7 @@ export const TOKENS = `
       font-weight: 700;
       padding: 1px 6px;
       border-radius: 99px;
-      box-shadow: 0 2px 6px rgba(37, 99, 235, 0.35);
+      box-shadow: none;
     }
     .tai-badge-danger {
       background: var(--danger);
@@ -254,7 +277,7 @@ export const TOKENS = `
     .tai-sidebar-footer {
       margin-top: auto;
       padding-top: 12px;
-      border-top: 1px solid var(--glass-border);
+      border-top: 1px solid var(--border);
       display: flex;
       flex-direction: column;
       gap: 4px;
@@ -266,16 +289,16 @@ export const TOKENS = `
       width: 100%;
       height: 32px;
       border-radius: 6px;
-      border: 1px solid var(--glass-border);
-      background: var(--glass-surface);
+      border: 1px solid var(--border);
+      background: var(--surface);
       color: var(--text-2);
       cursor: pointer;
-      backdrop-filter: blur(8px);
+      backdrop-filter: none;
       transition: all .15s ease;
       margin-bottom: 6px;
     }
     .tai-toggle-sidebar-btn:hover {
-      background: var(--glass-elevated);
+      background: var(--surface-2);
       color: var(--primary);
       border-color: rgba(59, 130, 246, 0.35);
       transform: translateY(-1px);
@@ -337,8 +360,19 @@ export const TOKENS = `
   .tai-card-hover:hover {
     border-color: rgba(59, 130, 246, 0.4);
     box-shadow: var(--shadow-hover);
-    transform: translateY(-2px);
+    transform: translateY(-1px);
   }
+
+  .tai-hero-card, .tai-community-hero-card {
+    background: linear-gradient(115deg, #0F1F44 0%, #163B7A 58%, #2563EB 100%);
+    border-color: transparent;
+    box-shadow: none;
+    color:#FFFFFF;
+  }
+  .tai-hero-card .tai-hero-title, .tai-community-hero-card .tai-community-hero-title { color:#FFFFFF; }
+  .tai-hero-card .tai-hero-desc, .tai-community-hero-card .tai-community-hero-desc { color:rgba(255,255,255,.78); }
+  .tai-hero-subcard { background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.18); color:#FFFFFF; }
+  .tai-community-hero-card { min-height:112px; padding:22px 24px !important; }
 
   .tai-row { display:flex; align-items:center; }
   .tai-between { justify-content:space-between; }
@@ -417,13 +451,13 @@ export const TOKENS = `
     border-top: 1px solid var(--border);
     display: flex; justify-content: space-around; align-items: center;
     padding: 8px 14px max(10px, env(safe-area-inset-bottom)); z-index: 100;
-    box-shadow: 0 -4px 16px rgba(15, 23, 42, 0.06);
+    box-shadow: 0 -1px 4px rgba(15, 23, 42, 0.08);
     transition: background .25s ease, border-color .25s ease, box-shadow .25s ease;
   }
   .tai.dark .tai-navbar {
     background: var(--surface);
     border-top: 1px solid var(--border);
-    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 -1px 4px rgba(0, 0, 0, 0.22);
   }
   .tai-navitem {
     display: flex; flex-direction: row; align-items: center; justify-content: center;
@@ -452,8 +486,8 @@ export const TOKENS = `
     background: var(--primary);
     color: #FFFFFF;
     padding: 8px 18px;
-    box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3);
-    transform: translateY(-1px);
+    box-shadow: none;
+    transform: none;
   }
   .tai-navitem.active .tai-navitem-icon-wrap {
     transform: scale(1.05);
@@ -524,6 +558,7 @@ export const TOKENS = `
     .tai-roadmap-item { padding: 7px 4px !important; }
     .tai-roadmap-item-title { font-size: 10px !important; }
     .tai-roadmap-item-status { font-size: 8.5px !important; }
+    .tai-community-hero-card { min-height:0; padding:16px !important; }
   }
   @media (max-width: 480px) {
     .tai-global-header { padding: 0 12px; height: 52px; width: 100%; max-width: 100%; box-sizing: border-box; }
@@ -1187,103 +1222,17 @@ export function QuickWinCard({ title, duration, points, onClick }) {
 // path builder) now only surfaces as a filter on the All Courses screen.
 
 export function ScheduleView({ push, back }) {
-  const SESSIONS = [
-    {
-      id: "live-now",
-      title: "UI Critique & System Architecture Review",
-      track: "Design & UX",
-      time: "Live Now (10:00 AM - 11:30 AM)",
-      instructor: "Cohort Lead",
-      isLive: true,
-      attendees: 18,
-      avatar: null
-    },
-    {
-      id: "live-2",
-      title: "Full-Stack GenAI: Vector Embeddings & Supabase",
-      track: "AI & Engineering",
-      time: "Tomorrow at 02:00 PM UTC",
-      instructor: "Engineering Mentor",
-      isLive: false,
-      attendees: 24,
-      avatar: null
-    },
-    {
-      id: "live-3",
-      title: "Axon AI Prompting & Autonomous Workflows",
-      track: "AI Tools",
-      time: "Thursday at 04:30 PM UTC",
-      instructor: "Technical Specialist",
-      isLive: false,
-      attendees: 31,
-      avatar: null
-    }
-  ];
-
   return (
     <div className="tai-fade-in" style={{ display: "flex", flexDirection: "column", gap: 20 }}>
       <TopBar title="Schedule & Live Sessions" sub="Join live mentor workshops, critiques, and cohort sessions" onBack={back} />
 
-      <div className="tai-col tai-gap14">
-        {SESSIONS.map((sess) => (
-          <div
-            key={sess.id}
-            className="tai-card tai-card-hover"
-            style={{
-              padding: 22,
-              borderRadius: 10,
-              background: sess.isLive ? "#0F172A" : "var(--surface)",
-              color: sess.isLive ? "#fff" : "var(--text)",
-              border: sess.isLive ? "1px solid #1E293B" : "1px solid var(--border)",
-              boxShadow: sess.isLive ? "0 10px 30px rgba(15,23,42,0.25)" : "var(--shadow-card)"
-            }}
-          >
-            <div className="tai-row tai-between" style={{ flexWrap: "wrap", gap: 10 }}>
-              <div className="tai-row tai-gap10">
-                <span className="tai-tag" style={{
-                  background: sess.isLive ? "rgba(239,68,68,0.25)" : "var(--primary-tint)",
-                  color: sess.isLive ? "#F87171" : "var(--primary)",
-                  border: sess.isLive ? "1px solid rgba(239,68,68,0.4)" : "1px solid #DBEAFE",
-                  fontWeight: 800,
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: 5
-                }}>
-                  {sess.isLive ? <><Radio size={12} color="#F87171" /> LIVE NOW</> : "UPCOMING"}
-                </span>
-                <span style={{ fontSize: 12, opacity: 0.8, fontWeight: 600 }}>{sess.track}</span>
-              </div>
-
-              <span style={{ fontSize: 12.5, fontWeight: 700, color: sess.isLive ? "#F87171" : "var(--primary)" }}>
-                {sess.time}
-              </span>
-            </div>
-
-            <h3 style={{ fontSize: 17, fontWeight: 800, margin: "12px 0 4px", color: sess.isLive ? "#fff" : "var(--text)" }}>
-              {sess.title}
-            </h3>
-
-            <div className="tai-row tai-between tai-mt16" style={{ flexWrap: "wrap", gap: 12 }}>
-              <div className="tai-row tai-gap10">
-                <Avatar initials={sess.instructor.slice(0, 2)} size={38} src={sess.avatar} />
-                <div>
-                  <div style={{ fontSize: 13.5, fontWeight: 700 }}>{sess.instructor}</div>
-                  <div style={{ fontSize: 11.5, opacity: 0.75 }}>Instructor • {sess.attendees} learners registered</div>
-                </div>
-              </div>
-
-              <button
-                className="tai-btn tai-btn-primary tai-btn-sm"
-                style={{ padding: "10px 20px" }}
-                onClick={() => {
-                  window.open("https://meet.google.com", "_blank");
-                }}
-              >
-                <Video size={14} /> {sess.isLive ? "Join Live Stream Room" : "Add to Calendar"}
-              </button>
-            </div>
-          </div>
-        ))}
+      <div className="tai-card" style={{ textAlign: "center", padding: "40px 20px" }}>
+        <Calendar size={30} color="var(--text-3)" style={{ margin: "0 auto 12px" }} />
+        <div style={{ fontWeight: 800, fontSize: 16, color: "var(--text)" }}>No published live sessions</div>
+        <p style={{ color: "var(--text-2)", fontSize: 13, lineHeight: 1.55, maxWidth: 460, margin: "8px auto 0" }}>
+          Live sessions will appear here after an instructor schedules them for your cohort.
+        </p>
+        <button className="tai-btn tai-btn-outline tai-mt16" style={{ margin: "16px auto 0" }} onClick={() => push?.("cohort")}>View cohort</button>
       </div>
     </div>
   );

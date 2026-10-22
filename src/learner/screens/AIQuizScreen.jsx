@@ -30,6 +30,7 @@ export function AIQuizScreen({
   quizAttemptsQuery, quizHistory, weakAreas, session, showToast, submitQuizAnswers,
   generateAIQuiz, awardAIQuizCompletionPoints, credits, consumeCredit, onBuyCredits, onRequestCredits,
   coachMessages = [], coachMessagesLoading, coachInput, setCoachInput, coachSending, onSendCoachMessage,
+  coachConversations = [], activeCoachConversationId, onSelectCoachConversation, onCreateCoachConversation,
   gamificationStatsQuery,
 }) {
   const DAILY_QUIZ_GOAL = 3;
@@ -49,8 +50,9 @@ export function AIQuizScreen({
   const practiceStreakDays = gamificationStatsQuery?.data?.streak_days ?? null;
   const [copiedMessageId, setCopiedMessageId] = useState(null);
   const [showHistory, setShowHistory] = useState(false);
-  const activeThreadId = "current";
-  const chatThreads = coachMessages.length ? [{ id: "current", title: "Current AI conversation", date: "", messagesCount: coachMessages.length, snippet: coachMessages[0]?.content || coachMessages[0]?.text || "Your saved messages" }] : [];
+  const [showEarlierMessages, setShowEarlierMessages] = useState(false);
+  const chatThreads = coachConversations;
+  const visibleCoachMessages = showEarlierMessages ? coachMessages : coachMessages.slice(-12);
 
   const currentQuiz = (quizzesQuery.data || []).find(q => q.id === quizTopic) || quizzesQuery.data?.[0];
   const questions = activeQuizSource === "ai" ? (aiQuiz?.questions || []) : (selectedQuizQuestionsQuery?.data || []);
@@ -66,8 +68,14 @@ export function AIQuizScreen({
   function handleStartNewChat() {
     if (setCoachInput) setCoachInput("");
     setShowHistory(false);
+    setShowEarlierMessages(false);
+    onCreateCoachConversation?.();
   }
-  function handleSelectThread() { setShowHistory(false); }
+  function handleSelectThread(thread) {
+    if (thread?.id) onSelectCoachConversation?.(thread.id);
+    setShowHistory(false);
+    setShowEarlierMessages(false);
+  }
 
   const chatBottomRef = useRef(null);
 
@@ -320,7 +328,7 @@ export function AIQuizScreen({
 
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 220px), 1fr))", gap: 10 }}>
                 {chatThreads.map(thread => {
-                  const isSelected = activeThreadId === thread.id;
+                  const isSelected = activeCoachConversationId === thread.id;
                   return (
                     <div
                       key={thread.id}
@@ -339,10 +347,12 @@ export function AIQuizScreen({
                         <div style={{ fontWeight: 800, fontSize: 13, color: isSelected ? "var(--primary)" : "var(--text)", minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                           {thread.title}
                         </div>
-                        <span style={{ fontSize: 11, color: "var(--text-3)", flexShrink: 0 }}>{thread.date}</span>
+                        <span style={{ fontSize: 11, color: "var(--text-3)", flexShrink: 0 }}>
+                          {thread.lastMessageAt ? new Date(thread.lastMessageAt).toLocaleDateString(undefined, { month: "short", day: "numeric" }) : ""}
+                        </span>
                       </div>
                       <div style={{ fontSize: 11.5, color: "var(--text-2)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                        {thread.snippet}
+                        {thread.snippet || "No messages yet"}
                       </div>
                       <div className="tai-row tai-between" style={{ marginTop: 6, fontSize: 11, color: "var(--text-3)" }}>
                         <span>{thread.messagesCount} messages</span>
@@ -431,7 +441,17 @@ export function AIQuizScreen({
               </div>
             )}
 
-            {coachMessages.map((m) => {
+            {coachMessages.length > visibleCoachMessages.length && !showEarlierMessages && (
+              <button
+                type="button"
+                className="tai-btn tai-btn-outline tai-btn-sm"
+                style={{ alignSelf: "center" }}
+                onClick={() => setShowEarlierMessages(true)}
+              >
+                View {coachMessages.length - visibleCoachMessages.length} earlier messages
+              </button>
+            )}
+            {visibleCoachMessages.map((m) => {
               const isUser = m.role === "user";
               return (
                 <div

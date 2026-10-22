@@ -1,5 +1,3 @@
-import { HAS_DATABASE } from "./demoMode.js";
-
 const STORAGE_KEY = "trainai_mock_data_enabled";
 const CHANGE_EVENT = "trainai_mock_data_changed";
 
@@ -26,13 +24,7 @@ export function isRealDatabaseId(id) {
  * Always returns false when Supabase database is connected.
  */
 export function isMockDataEnabled() {
-  if (HAS_DATABASE) return false;
-  try {
-    const val = localStorage.getItem(STORAGE_KEY);
-    return val === "true";
-  } catch {
-    return false;
-  }
+  return false;
 }
 
 /**
@@ -41,8 +33,8 @@ export function isMockDataEnabled() {
  */
 export function setMockDataEnabled(enabled) {
   try {
-    localStorage.setItem(STORAGE_KEY, enabled ? "true" : "false");
-    window.dispatchEvent(new CustomEvent(CHANGE_EVENT, { detail: { enabled } }));
+    localStorage.setItem(STORAGE_KEY, "false");
+    window.dispatchEvent(new CustomEvent(CHANGE_EVENT, { detail: { enabled: false } }));
   } catch (err) {
     console.error("Could not set mock data preference:", err);
   }
@@ -82,14 +74,7 @@ export function purgeAllMockData() {
  * Restore mock data for testing and sandbox previews
  */
 export function restoreMockData() {
-  try {
-    localStorage.setItem(STORAGE_KEY, "true");
-    window.dispatchEvent(new CustomEvent(CHANGE_EVENT, { detail: { enabled: true } }));
-    return true;
-  } catch (err) {
-    console.error("Could not restore mock data:", err);
-    return false;
-  }
+  return purgeAllMockData();
 }
 
 /**

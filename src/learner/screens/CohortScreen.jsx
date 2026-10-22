@@ -388,7 +388,7 @@ export function CohortScreen({
               Started: {cohort?.starts_at ? new Date(cohort.starts_at).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" }) : "Cohort Launch"} &bull; Ends: {cohort?.ends_at ? new Date(cohort.ends_at).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" }) : "6 Weeks from Start"}
             </span>
             <span>
-              📚 Assigned Curriculum: {completedAssignedCount} of {assignedCourses.length} Courses Completed ({assignedCompletionRate}%)
+              Assigned Curriculum: {completedAssignedCount} of {assignedCourses.length} Courses Completed ({assignedCompletionRate}%)
             </span>
           </div>
         </div>

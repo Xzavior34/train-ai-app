@@ -12,7 +12,7 @@ export default function CommunityHero({ user, onCreatePost }) {
       className="tai-card tai-community-hero-card anim-fluid-entrance"
       style={{
         borderRadius: 14,
-        padding: '14px 16px',
+        padding: '22px 24px',
         position: 'relative',
         overflow: 'hidden',
         boxSizing: 'border-box',
@@ -33,15 +33,15 @@ export default function CommunityHero({ user, onCreatePost }) {
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0, flex: '1 1 240px' }}>
           <div
             style={{
-              width: 44,
-              height: 44,
-              borderRadius: 12,
-              background: 'linear-gradient(135deg, #2563EB 0%, #4F46E5 100%)',
+              width: 48,
+              height: 48,
+              borderRadius: 10,
+              background: 'rgba(255,255,255,0.14)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               color: '#FFFFFF',
-              boxShadow: '0 4px 12px rgba(37, 99, 235, 0.28)',
+              border: '1px solid rgba(255,255,255,0.18)',
               flexShrink: 0,
             }}
           >
@@ -52,7 +52,7 @@ export default function CommunityHero({ user, onCreatePost }) {
             <h1
               className="tai-community-hero-title"
               style={{
-                fontSize: 'clamp(17px, 2.2vw, 21px)',
+                fontSize: 'clamp(20px, 2.4vw, 26px)',
                 fontWeight: 900,
                 letterSpacing: '-0.025em',
                 margin: '0 0 2px',
@@ -64,7 +64,7 @@ export default function CommunityHero({ user, onCreatePost }) {
             <p
               className="tai-community-hero-desc"
               style={{
-                fontSize: 12.5,
+                fontSize: 13.5,
                 margin: 0,
                 lineHeight: 1.4,
               }}
@@ -87,7 +87,7 @@ export default function CommunityHero({ user, onCreatePost }) {
               display: 'inline-flex',
               alignItems: 'center',
               gap: 6,
-              boxShadow: '0 2px 8px rgba(37, 99, 235, 0.25)',
+              boxShadow: 'none',
               flexShrink: 0,
             }}
           >

@@ -322,7 +322,7 @@ export function HomeScreen({
                         <div style={{ width: `${progressInfo.percent}%`, height: "100%", background: "linear-gradient(90deg, #10B981 0%, #34D399 100%)", borderRadius: 3, transition: "width 0.4s ease" }} />
                       </div>
                       <div className="tai-row tai-between" style={{ marginTop: 6, fontSize: 10.5, color: "var(--text-3)" }}>
-                        <span>📚 Assigned Curriculum: {assignedCompleted} of {assignedList.length} Courses Completed</span>
+                        <span>Assigned Curriculum: {assignedCompleted} of {assignedList.length} Courses Completed</span>
                         <span>{cohort?.ends_at ? `Ends ${new Date(cohort.ends_at).toLocaleDateString(undefined, { month: "short", day: "numeric" })}` : `${progressInfo.daysRemaining} Days Left`}</span>
                       </div>
                     </div>

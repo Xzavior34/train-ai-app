@@ -40,6 +40,7 @@ import {
   fetchOrCreateAIConversation, fetchAIChatMessages, sendAIChatMessage, requestAIReply, generateContextualAIFallback
 } from "../lib/api/schemaHelper.js";
 import { updateUserAvatar, fetchOrgBranding } from "../lib/api/platform.js";
+import { fetchMyAIConversations, createAIConversation } from "../lib/api/live/learnerMiscLive.js";
 import { CheckCircle2, Search } from "lucide-react";
 
 // Paystack/Stripe redirect the browser back to this same page (no router in
@@ -288,11 +289,24 @@ export default function TrainAILearnerApp({ isActive = true, onSwitchToPlatform,
   // screen === "ai" the same way the other screen-specific queries above are.
   const [coachInput, setCoachInput] = useState("");
   const [coachSending, setCoachSending] = useState(false);
+  const [activeCoachConversationId, setActiveCoachConversationId] = useState(null);
+  const coachConversationsQuery = useSupabaseQuery(async () => {
+    if (!session?.user?.id || screen !== "ai") return [];
+    return fetchMyAIConversations(session.user.id);
+  }, [session?.user?.id, screen === "ai"]);
   const aiConversationQuery = useSupabaseQuery(async () => {
     if (!session?.user?.id || screen !== "ai") return null;
+    if (activeCoachConversationId) return { id: activeCoachConversationId };
     return fetchOrCreateAIConversation(session.user.id);
-  }, [session?.user?.id, screen === "ai"]);
-  const coachConversationId = aiConversationQuery.data?.id || null;
+  }, [session?.user?.id, screen === "ai", activeCoachConversationId]);
+  const coachConversationId = activeCoachConversationId || aiConversationQuery.data?.id || null;
+
+  useEffect(() => {
+    const conversations = coachConversationsQuery.data || [];
+    if (!activeCoachConversationId && conversations[0]?.id) {
+      setActiveCoachConversationId(conversations[0].id);
+    }
+  }, [coachConversationsQuery.data, activeCoachConversationId]);
   const coachMessagesQuery = useSupabaseQuery(async () => {
     if (!coachConversationId) return [];
     return fetchAIChatMessages(coachConversationId);
@@ -387,10 +401,12 @@ export default function TrainAILearnerApp({ isActive = true, onSwitchToPlatform,
       if (!convId) {
         const conv = await fetchOrCreateAIConversation(currentUserId);
         convId = conv?.id || `conv_${currentUserId}_coach`;
+        setActiveCoachConversationId(convId);
       }
 
       await sendAIChatMessage({ conversationId: convId, userId: currentUserId, content, role: "user" });
       coachMessagesQuery.refetch();
+      coachConversationsQuery.refetch();
 
       if (orgAISettings?.enabled === false) {
         // AI Coach turned off for this organization entirely - don't call
@@ -420,6 +436,18 @@ export default function TrainAILearnerApp({ isActive = true, onSwitchToPlatform,
     } finally {
       setCoachSending(false);
     }
+  }
+
+  async function handleCreateCoachConversation() {
+    if (!session?.user?.id) return;
+    const conversation = await createAIConversation(session.user.id);
+    if (!conversation?.id) {
+      showToast("Could not start a new AI conversation. Please try again.");
+      return;
+    }
+    setActiveCoachConversationId(conversation.id);
+    setCoachInput("");
+    await coachConversationsQuery.refetch();
   }
 
   // Which quiz source is currently active: only AI-generated quizzes now
@@ -900,6 +928,10 @@ export default function TrainAILearnerApp({ isActive = true, onSwitchToPlatform,
                   coachMessages={coachMessagesQuery.data || []} coachMessagesLoading={coachMessagesQuery.loading}
                   coachInput={coachInput} setCoachInput={setCoachInput} coachSending={coachSending}
                   onSendCoachMessage={handleSendCoachMessage}
+                  coachConversations={coachConversationsQuery.data || []}
+                  activeCoachConversationId={coachConversationId}
+                  onSelectCoachConversation={setActiveCoachConversationId}
+                  onCreateCoachConversation={handleCreateCoachConversation}
                   gamificationStatsQuery={gamificationStatsQuery}
                 />
               )}

@@ -524,20 +524,7 @@ export function useLearnerData(session, screen, params) {
         progress: enrollment ? Math.round(enrollment.progress_percentage || 0) : fallback.progress
       };
     }
-    return {
-      id: id,
-      title: "Course Curriculum",
-      tagline: "Comprehensive course modules and video lessons.",
-      category: "Specialization",
-      level: "intermediate",
-      hours: 18,
-      lessons: 4,
-      enrolled: false,
-      progress: 0,
-      source: "internal",
-      instructor: "Curriculum Specialist",
-      grad: gradForIndex(0)
-    };
+    return undefined;
   }
 
   const courseLessonsQuery = useSupabaseQuery(async () => {
