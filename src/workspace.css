@@ -77,8 +77,29 @@
 .ta .ta-sidebar-tool:focus-visible { outline:2px solid var(--primary); outline-offset:2px; }
 .ta .ta-sidebar-minimized .ta-sidebar-tools { flex-wrap:wrap; }
 .ta .ta-sidebar-minimized .ta-sidebar-tool { flex-basis:100%; }
-.ta .ta-workforce-page .ta-sidebar-layout { grid-template-columns:minmax(0, 1.3fr) minmax(0, 1fr); }
-.ta .ta-workforce-page .ta-sidebar-layout > * { min-width:0; }
+.ta .ta-workforce-assessment-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; align-items:stretch; }
+.ta .ta-workforce-assessment-grid > * { min-width:0; }
 .ta .ta-workforce-page .ta-row.ta-between { flex-wrap:wrap; gap:12px; }
 .ta .ta-workforce-page .ta-sub { white-space:normal; overflow-wrap:anywhere; }
-@media (max-width: 1100px) { .ta .ta-workforce-page .ta-sidebar-layout { grid-template-columns:minmax(0, 1fr); } }
+@media (max-width: 1100px) { .ta .ta-workforce-assessment-grid { grid-template-columns:minmax(0, 1fr); } }
+
+/* Card collections share one rhythm, without changing chat, tables or forms. */
+:is(.ta, .tai) { --workspace-card-gap:16px; }
+.ta .ta-content,
+.ta .ta-sidebar-layout,
+.tai .tai-dashboard-grid,
+.tai .tai-fade-in[style*="display: flex"]:has(> .tai-card),
+.tai .tai-community-columns { gap:var(--workspace-card-gap) !important; }
+.ta :is(.ta-content, .ta-sidebar-layout) :is(.ta-grid, .ta-card-grid, [style*="display: grid"], [style*="display: flex"]):has(> .ta-card),
+.tai :is(.tai-fade-in, .tai-dashboard-grid, .tai-community-columns) :is(.tai-grid2, .tai-grid3, .tai-grid4, [style*="display: grid"], [style*="display: flex"]):has(> .tai-card) {
+  gap:var(--workspace-card-gap) !important;
+  min-width:0;
+}
+.ta .ta-sidebar-layout > *, .tai .tai-dashboard-grid > * { min-width:0; }
+.ta :is(.ta-grid, .ta-card-grid) > .ta-card,
+.tai :is(.tai-grid2, .tai-grid3, .tai-grid4) > .tai-card { min-width:0; margin-block:0; }
+.ta .ta-card > .ta-empty, .tai .tai-card > .tai-empty { padding-block:20px; }
+@media (max-width:899px) {
+  :is(.ta, .tai) { --workspace-card-gap:12px; }
+  .ta .ta-card > .ta-empty, .tai .tai-card > .tai-empty { padding-block:16px; }
+}

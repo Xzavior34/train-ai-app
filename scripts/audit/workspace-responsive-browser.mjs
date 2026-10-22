@@ -38,13 +38,25 @@ try {
       await page.waitForTimeout(350);
       const state = await page.evaluate(() => {
         const hero = [...document.querySelectorAll('.ta-hero-banner')].find(el => el.getClientRects().length);
+        const assessment = document.querySelector('.ta-workforce-assessment-grid');
+        let cardSpacing = null;
+        if (assessment) {
+          const cards = [...assessment.children].map(el => el.getBoundingClientRect());
+          const next = assessment.nextElementSibling.getBoundingClientRect();
+          const bounds = assessment.getBoundingClientRect();
+          cardSpacing = { columns: getComputedStyle(assessment).gridTemplateColumns.split(' ').length,
+            nextGap: Math.round(next.top - bounds.bottom), fullWidth: Math.abs(next.width - bounds.width) < 2,
+            pairedHeight: Math.abs(cards[0].height - cards[1].height) < 2 };
+        }
         return { overflow: document.documentElement.scrollWidth > innerWidth + 2,
+          cardSpacing,
           heroShadow: hero ? getComputedStyle(hero).boxShadow : null,
           crash: /Something went wrong|Application error|Could not verify your workspace access/.test(document.body.innerText) };
       });
       results.push({ role, width, ...state });
       await page.screenshot({ path: `docs/audit/learner-cleanup/${role}-${width}.png` });
       if (state.overflow || state.crash || (state.heroShadow && state.heroShadow !== 'none') || errors.length) throw Error(JSON.stringify({ role, width, ...state, errors }));
+      if (state.cardSpacing && (!state.cardSpacing.fullWidth || state.cardSpacing.nextGap > 20 || state.cardSpacing.nextGap < 10 || (width === 1440 && !state.cardSpacing.pairedHeight))) throw Error('Unbalanced assessment card spacing: ' + JSON.stringify(state));
     }
     await context.close();
   }

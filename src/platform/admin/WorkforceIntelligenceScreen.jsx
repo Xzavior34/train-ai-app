@@ -417,7 +417,7 @@ export function WorkforceIntelligenceScreen({ orgId, orgSelector, currentUserId 
         </div>
 
         {/* Skill Profile Radar / Matrix & Promotion Criteria Checklist */}
-        <div className="ta-sidebar-layout">
+        <div className="ta-card-grid ta-workforce-assessment-grid">
 
           {/* Skill Profile Breakdown */}
           <div className="ta-card" style={{ padding: 22 }}>
@@ -455,8 +455,6 @@ export function WorkforceIntelligenceScreen({ orgId, orgSelector, currentUserId 
           </div>
 
           {/* Promotion Criteria & AI Recommendation */}
-          <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
-            
             {/* Promotion Criteria Checklist */}
             <div className="ta-card" style={{ padding: 22 }}>
               <div className="ta-row ta-between" style={{ paddingBottom: 14, borderBottom: "1px solid var(--border)" }}>
@@ -500,6 +498,7 @@ export function WorkforceIntelligenceScreen({ orgId, orgSelector, currentUserId 
               </div>
             </div>
 
+        </div>
             {/* Growth Recommendation Card */}
             <div className="ta-card" style={{ padding: 22, 
               background: "var(--surface-2)",
@@ -553,9 +552,6 @@ export function WorkforceIntelligenceScreen({ orgId, orgSelector, currentUserId 
               </div>
             </div>
 
-          </div>
-
-        </div>
         </>
         )}
 
