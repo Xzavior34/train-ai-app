@@ -164,7 +164,7 @@ export default function LandingPage({ onNavigate }) {
   const showcasePhotos = [
     { src: "/images/train-ai-diverse-learners.jpg", title: "Organisation-led learning", caption: "Bring courses, cohorts, learner support and reporting into one managed workspace." },
     { src: "/images/train-ai-women-tech.jpg", title: "Academy and instructor delivery", caption: "Host courses for independent learners or manage structured cohorts through organisation access." },
-    { src: "/images/train-ai-diverse-team.jpg", title: "Workforce and foundation programmes", caption: "Track participation, progress, skill development and programme outcomes in one place." },
+    { src: "/images/train-ai-professional.jpg", title: "Workforce and foundation programmes", caption: "Track participation, progress, skill development and programme outcomes in one place." },
     { src: "/images/train-ai-white-team.jpg", title: "Cohort learning and mentorship", caption: "Coordinate scheduled learning, instructor support, mentorship and learner progress." },
   ];
 
@@ -303,7 +303,7 @@ export default function LandingPage({ onNavigate }) {
               <p className="lp-sales-note">Built for organisational customers. Commercial terms are discussed after a product demo.</p>
             </div>
             <figure className="lp-hero-figure">
-              <img src="/images/train-ai-diverse-learners.jpg" alt="A diverse group of adult learners collaborating around a laptop" width="1400" height="788" fetchPriority="high" />
+              <img src="/images/train-ai-diverse-team.jpg" alt="A diverse team of professionals, including Black colleagues, collaborating around a table" width="1200" height="800" fetchPriority="high" />
               <figcaption><strong>One connected learning operation</strong><span>Courses · Cohorts · Community · Intelligence</span></figcaption>
             </figure>
           </div>
