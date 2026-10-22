@@ -35,7 +35,7 @@ export function CohortsScreen({ orgId, onOpenCohort, orgSelector, setScreen, cur
   const cohorts = cohortsQuery.data || [];
   const sessionsQuery = useSupabaseQuery(async () => fetchUpcomingOrgSessions(orgId || "demo-org-id"), [orgId]);
   const upcomingSessions = sessionsQuery.data || [];
-  const instructorsQuery = useSupabaseQuery(async () => fetchOrgInstructors(orgId || "demo-org-id"), [orgId]);
+  const instructorsQuery = useSupabaseQuery(async () => fetchOrgInstructors(orgId || "demo-org-id"), [orgId], { enabled: newCohortOpen });
   const orgInstructors = instructorsQuery.data || [];
 
   async function handleCreateCohort(e) {

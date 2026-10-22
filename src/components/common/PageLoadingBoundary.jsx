@@ -49,30 +49,30 @@ export function PageSkeleton({ layout = "dashboard", label = "Loading page", pad
 // Keep screens mounted while their initial queries run. Unmounting them would
 // restart the requests. Later feature refreshes use their local skeletons and
 // never hide a page containing an in-progress form or an open discussion.
-export function PageLoadingBoundary({ children, screen, loading = false, padded = true, onOpenMenu }) {
+export function PageLoadingBoundary({ children, screen, loading = false, padded = true, onOpenMenu, waitForQueries = true }) {
   const pending = useRef(new Set());
   const finished = useRef(false);
   const [version, setVersion] = useState(0);
   const [initial, setInitial] = useState(true);
   const report = useCallback((id, busy) => {
-    if (finished.current) return;
+    if (finished.current || !waitForQueries) return;
     const had = pending.current.has(id);
     if (busy) pending.current.add(id); else pending.current.delete(id);
     if (had !== busy) setVersion(value => value + 1);
-  }, []);
+  }, [waitForQueries]);
   useEffect(() => {
-    if (!loading && pending.current.size === 0) {
+    if (!loading && (!waitForQueries || pending.current.size === 0)) {
       // Allow dependent queries started by parent effects to report before
       // declaring the page ready (for example, course -> lessons -> progress).
       const frame = requestAnimationFrame(() => {
-        if (pending.current.size === 0) {
+        if (!waitForQueries || pending.current.size === 0) {
           finished.current = true;
           setInitial(false);
         }
       });
       return () => cancelAnimationFrame(frame);
     }
-  }, [version, loading]);
+  }, [version, loading, waitForQueries]);
   return <PageLoadingContext.Provider value={report}>
     <div className="tai-screen-loading-boundary" aria-busy={initial}>
       {initial && <PageSkeleton layout={skeletonLayoutFor(screen)} padded={padded} onOpenMenu={onOpenMenu} />}

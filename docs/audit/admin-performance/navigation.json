@@ -1,0 +1,56 @@
+[
+  {
+    "role": "admin",
+    "page": "Users & Access",
+    "dataDelayMs": 6000,
+    "headerMs": 333
+  },
+  {
+    "role": "admin",
+    "page": "Courses",
+    "dataDelayMs": 6000,
+    "headerMs": 438
+  },
+  {
+    "role": "admin",
+    "page": "Cohorts",
+    "dataDelayMs": 6000,
+    "headerMs": 259
+  },
+  {
+    "role": "admin",
+    "page": "Seats & Licensing",
+    "dataDelayMs": 6000,
+    "headerMs": 616
+  },
+  {
+    "role": "admin",
+    "page": "Settings Hub",
+    "dataDelayMs": 6000,
+    "headerMs": 188
+  },
+  {
+    "role": "owner",
+    "page": "Organizations",
+    "dataDelayMs": 6000,
+    "headerMs": 195
+  },
+  {
+    "role": "owner",
+    "page": "Demo Requests",
+    "dataDelayMs": 6000,
+    "headerMs": 455
+  },
+  {
+    "role": "owner",
+    "page": "Access Control",
+    "dataDelayMs": 6000,
+    "headerMs": 474
+  },
+  {
+    "role": "owner",
+    "page": "Platform Settings",
+    "dataDelayMs": 6000,
+    "headerMs": 407
+  }
+]

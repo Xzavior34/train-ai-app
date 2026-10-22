@@ -241,10 +241,9 @@ export default function TrainAIPlatformApp({ session, isActive = true, onSwitchT
 
             <div className="ta-main">
               <Suspense fallback={<PageSkeleton layout={skeletonLayoutFor(screen)} onOpenMenu={() => setMobileOpen(true)} />}>
-              <PageLoadingBoundary key={`${workspace}:${screen}:${effectiveOrgId || "none"}`} screen={screen}
+              <PageLoadingBoundary key={`${workspace}:${screen}:${effectiveOrgId || "none"}`} screen={screen} waitForQueries={false}
                 onOpenMenu={() => setMobileOpen(true)}
-                loading={!workspaceReady
-                  || (workspace === "mentor" && screen === "community" && (mentorStudyGroupsQuery.loading || mentorCohortsForCommunityQuery.loading || mentorLeaderboardQuery.loading))}>
+                loading={!workspaceReady}>
               {workspaceReady && <>
               {workspace === "admin" && (
                 <>

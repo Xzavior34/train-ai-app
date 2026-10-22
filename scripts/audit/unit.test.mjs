@@ -6,6 +6,27 @@ import {stripTypeScriptTypes} from 'node:module';
 import {validateDemoInput} from '../../supabase/functions/_shared/demoValidation.js';
 import {normalizeCreditBalance} from '../../src/learner/utils/creditBalance.js';
 import {checkWorkspaceAccess} from '../../src/lib/workspaceAccess.js';
+import {sharePendingRead} from '../../src/lib/pendingReads.js';
+
+test('Concurrent reads share work only within the same account, tenant and client', async () => {
+  const client = {}, otherClient = {};
+  let calls = 0, finish;
+  const read = () => { calls++; return new Promise(resolve => { finish = resolve; }); };
+  const first = sharePendingRead(client, 'user-a:org-a', read);
+  const same = sharePendingRead(client, 'user-a:org-a', read);
+  assert.equal(first, same);
+  await Promise.resolve(); assert.equal(calls, 1); finish('members');
+  assert.equal(await same, 'members');
+  await sharePendingRead(client, 'user-a:org-a', async () => { calls++; });
+  await Promise.all([
+    sharePendingRead(client, 'user-b:org-a', async () => { calls++; }),
+    sharePendingRead(client, 'user-a:org-b', async () => { calls++; }),
+    sharePendingRead(otherClient, 'user-a:org-a', async () => { calls++; }),
+  ]);
+  assert.equal(calls, 5);
+  await assert.rejects(sharePendingRead(client, 'failed', async () => { throw Error('offline'); }), /offline/);
+  assert.equal(await sharePendingRead(client, 'failed', async () => 'recovered'), 'recovered');
+});
 
 test('Workspace checks recover from temporary network failures without retrying access denials', async () => {
   const waits = [];

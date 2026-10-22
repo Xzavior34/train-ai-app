@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useContext, useId } from "react";
+import { useState, useEffect, useCallback, useContext, useId, useRef } from "react";
 import { PageLoadingContext } from "../components/common/PageLoadingContext.js";
 
 // Small shared pattern so every screen wired to Supabase handles
@@ -7,18 +7,27 @@ import { PageLoadingContext } from "../components/common/PageLoadingContext.js";
 // on error). `deps` works like useEffect's dependency array.
 // Secondary cards can set blocksPage:false and display their local skeleton
 // without holding the entire page behind the full-page loading boundary.
-export function useSupabaseQuery(fetcher, deps = [], { blocksPage = true } = {}) {
+export function useSupabaseQuery(fetcher, deps = [], { blocksPage = true, enabled = true } = {}) {
   const [data, setData] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(enabled);
   const [error, setError] = useState(null);
   const [reloadToken, setReloadToken] = useState(0);
+  const previouslyEnabled = useRef(enabled);
+  const pending = enabled && (loading || !previouslyEnabled.current);
   const reportPageLoading = useContext(PageLoadingContext);
   const queryId = useId();
-  useEffect(() => { reportPageLoading?.(queryId, blocksPage && loading); }, [reportPageLoading, queryId, loading, blocksPage]);
+  useEffect(() => { reportPageLoading?.(queryId, blocksPage && pending); }, [reportPageLoading, queryId, pending, blocksPage]);
   useEffect(() => () => reportPageLoading?.(queryId, false), [reportPageLoading, queryId]);
 
   useEffect(() => {
     let cancelled = false;
+    previouslyEnabled.current = enabled;
+    if (!enabled) {
+      setLoading(false);
+      setData(null);
+      setError(null);
+      return;
+    }
     setLoading(true);
     setData(null);
     setError(null);
@@ -28,9 +37,9 @@ export function useSupabaseQuery(fetcher, deps = [], { blocksPage = true } = {})
       .finally(() => { if (!cancelled) setLoading(false); });
     return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [...deps, reloadToken]);
+  }, [...deps, reloadToken, enabled]);
 
   const refetch = useCallback(() => setReloadToken((t) => t + 1), []);
 
-  return { data, loading, error, refetch };
+  return { data, loading: pending, error, refetch };
 }

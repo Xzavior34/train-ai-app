@@ -1,4 +1,5 @@
 import { supabase, activeProject } from "../supabaseClient.js";
+import { sharePendingRead } from "../pendingReads.js";
 import { fetchProfilesByUserIds } from "./schemaHelper.js";
 import { isRealDatabaseId, isMockDataEnabled } from "../mockDataManager.js";
 import { resolveOrganizationId } from "./dataReferences.js";
@@ -296,6 +297,15 @@ function generateDemoOrgMembers(organizationId, baseOrigin) {
 }
 
 export async function fetchOrgMembers(organizationId) {
+  if (!supabase?.auth?.getSession) return loadOrgMembers(organizationId);
+  const { data, error } = await supabase.auth.getSession();
+  if (error) throw error;
+  const userId = data?.session?.user?.id;
+  if (!userId) return loadOrgMembers(organizationId);
+  return sharePendingRead(supabase, JSON.stringify([userId, organizationId || null]), () => loadOrgMembers(organizationId));
+}
+
+async function loadOrgMembers(organizationId) {
   if (supabase && (!organizationId || organizationId === "demo-org-id")) return [];
   const baseOrigin =
     typeof window !== "undefined" && window.location?.origin && window.location.origin.startsWith("http")
@@ -430,14 +440,9 @@ export async function fetchOrgMembers(organizationId) {
     });
   }
 
-  let directoryRows = [];
-  if (resolvedOrgUuid) {
-    const { data: rpcRows, error: rpcError } = await supabase.rpc("list_organization_users", {
-      p_organization_id: resolvedOrgUuid,
-    });
-    if (!rpcError) directoryRows = rpcRows || [];
-  }
-  const directoryByUserId = Object.fromEntries(directoryRows.map((row) => [row.user_id, row]));
+  const directoryRead = resolvedOrgUuid
+    ? supabase.rpc("list_organization_users", { p_organization_id: resolvedOrgUuid }).then(r => r, error => ({ error }))
+    : Promise.resolve({ data: [] });
 
   // 2. Query user_profiles and organization_members in parallel
   let query = supabase.from("user_profiles").select("*").order("last_active_at", { ascending: false });
@@ -450,11 +455,14 @@ export async function fetchOrgMembers(organizationId) {
     omQuery = omQuery.eq("organization_id", resolvedOrgUuid);
   }
 
-  const [upResult, omResult, orgRowsResult] = await Promise.all([
+  const [upResult, omResult, orgRowsResult, directoryResult] = await Promise.all([
     query.then((r) => r, error => ({ data: [], error })),
     omQuery.then((r) => r, error => ({ data: [], error })),
     supabase.from("organizations").select("id, name, slug").then((r) => r, () => ({ data: [] })),
+    directoryRead,
   ]);
+  const directoryRows = directoryResult.error ? [] : directoryResult.data || [];
+  const directoryByUserId = Object.fromEntries(directoryRows.map(row => [row.user_id, row]));
   if (upResult.error && omResult.error && !directoryRows.length && !rosterMembers.length && !clickMembers.length) {
     throw new Error("Could not load organization members. Please retry.");
   }
@@ -2288,62 +2296,57 @@ export async function fetchCohortsWithStats(organizationId) {
     const { data: cohorts, error } = await query;
     if (error) throw error;
     if (!cohorts || cohorts.length === 0) return [];
-    const cohortResults = await Promise.all((cohorts || []).map(async (c) => {
-      try {
-        let instructor = null;
-        const [{ count: members }, { count: courses }, { data: memberRows }] = await Promise.all([
-          supabase.from("cohort_members").select("id", { count: "exact", head: true }).eq("cohort_id", c.id).then(r => r, () => ({ count: 0 })),
-          supabase.from("cohort_courses").select("id", { count: "exact", head: true }).eq("cohort_id", c.id).then(r => r, () => ({ count: 0 })),
-          supabase.from("cohort_members").select("user_id").eq("cohort_id", c.id).then(r => r, () => ({ data: [] })),
-        ]);
-        const userIds = (memberRows || []).map(m => m.user_id);
-        let progress = 0;
-        if (userIds.length) {
-          const enrollments = await safeInQuery("course_enrollments", "progress_percentage", "user_id", userIds).catch(() => []);
-          if (enrollments && enrollments.length) progress = Math.round(enrollments.reduce((a, e) => a + (e.progress_percentage || 0), 0) / enrollments.length);
-
-          // Find assigned instructor in cohort_members with mentor role or created_by
-          const { data: mentorRoles } = await supabase
-            .from("user_roles")
-            .select("user_id, role")
-            .in("user_id", userIds)
-            .eq("role", "mentor")
-            .limit(1);
-          const leadInstructorId = mentorRoles?.[0]?.user_id || (c.created_by && userIds.includes(c.created_by) ? c.created_by : null);
-          if (leadInstructorId) {
-            const { data: prof } = await supabase.from("user_profiles").select("id, display_name").eq("id", leadInstructorId).maybeSingle();
-            if (prof) instructor = { id: prof.id, name: prof.display_name, email: prof.email };
-          }
-        }
-        if (!instructor && c.created_by) {
-          const { data: prof } = await supabase.from("user_profiles").select("id, display_name, email").eq("id", c.created_by).maybeSingle();
-          if (prof) instructor = { id: prof.id, name: prof.display_name, email: prof.email };
-        }
-        return {
-          ...c,
-          start: c.starts_at ? new Date(c.starts_at).toLocaleDateString() : "TBD",
-          end: c.ends_at ? new Date(c.ends_at).toLocaleDateString() : "TBD",
-          startsAt: c.starts_at || null,
-          endsAt: c.ends_at || null,
-          members: members || 0,
-          courses: courses || 0,
-          learningProgress: progress,
-        };
-      } catch {
-        return {
-          ...c,
-          start: c.starts_at ? new Date(c.starts_at).toLocaleDateString() : "TBD",
-          end: c.ends_at ? new Date(c.ends_at).toLocaleDateString() : "TBD",
-          startsAt: c.starts_at || null,
-          endsAt: c.ends_at || null,
-          members: 0,
-          courses: 0,
-          learningProgress: 0,
-          instructor: null,
-        };
+    // Read each dataset once for the whole list, rather than making a new
+    // chain of member/course/role/profile requests for every cohort.
+    const cohortIds = cohorts.map(c => c.id);
+    const [memberRows, courseRows] = await Promise.all([
+      safeInQuery("cohort_members", "cohort_id, user_id", "cohort_id", cohortIds),
+      safeInQuery("cohort_courses", "cohort_id", "cohort_id", cohortIds),
+    ]);
+    const userIds = [...new Set(memberRows.map(row => row.user_id).filter(Boolean))];
+    const [enrollments, roles] = await Promise.all([
+      safeInQuery("course_enrollments", "user_id, progress_percentage", "user_id", userIds),
+      safeInQuery("user_roles", "user_id, role", "user_id", userIds),
+    ]);
+    const mentorIds = new Set(roles.filter(row => row.role === "mentor").map(row => row.user_id));
+    const profileIds = [...new Set([...mentorIds, ...cohorts.map(c => c.created_by).filter(Boolean)])];
+    const profiles = await safeInQuery("user_profiles", "id, display_name, email", "id", profileIds);
+    const profileById = new Map(profiles.map(profile => [profile.id, profile]));
+    const membersByCohort = new Map();
+    const coursesByCohort = new Map();
+    const progressByUser = new Map();
+    for (const row of memberRows) {
+      if (!membersByCohort.has(row.cohort_id)) membersByCohort.set(row.cohort_id, []);
+      membersByCohort.get(row.cohort_id).push(row.user_id);
+    }
+    for (const row of courseRows) coursesByCohort.set(row.cohort_id, (coursesByCohort.get(row.cohort_id) || 0) + 1);
+    for (const row of enrollments) {
+      const progress = progressByUser.get(row.user_id) || { total: 0, count: 0 };
+      progress.total += Number(row.progress_percentage) || 0;
+      progress.count++;
+      progressByUser.set(row.user_id, progress);
+    }
+    return cohorts.map(c => {
+      const members = membersByCohort.get(c.id) || [];
+      let total = 0, count = 0;
+      for (const userId of members) {
+        const progress = progressByUser.get(userId);
+        if (progress) { total += progress.total; count += progress.count; }
       }
-    }));
-    return cohortResults;
+      const instructorId = members.find(userId => mentorIds.has(userId)) || c.created_by;
+      const profile = profileById.get(instructorId);
+      return {
+        ...c,
+        start: c.starts_at ? new Date(c.starts_at).toLocaleDateString() : "TBD",
+        end: c.ends_at ? new Date(c.ends_at).toLocaleDateString() : "TBD",
+        startsAt: c.starts_at || null,
+        endsAt: c.ends_at || null,
+        members: members.length,
+        courses: coursesByCohort.get(c.id) || 0,
+        learningProgress: count ? Math.round(total / count) : 0,
+        instructor: profile ? { id: profile.id, name: profile.display_name, email: profile.email } : null,
+      };
+    });
   } catch {
     throw new Error("Could not load cohorts. Please retry.");
   }

@@ -138,8 +138,8 @@ export function ContentScreen({ orgId, orgSelector, setScreen, selectedCourseId,
   // "Apply for a course" - staff side (see supabase/migrations/0100_course_applications.sql).
   // RLS already scopes fetchCourseApplications to whatever this admin/instructor
   // is allowed to see, so this is safe to load unconditionally per active course.
-  const applicationsQuery = useSupabaseQuery(async () => (activeCourse ? fetchCourseApplications(activeCourse.id) : []), [activeCourse?.id]);
-  const assessmentAttemptsQuery = useSupabaseQuery(async () => (activeCourse ? fetchAssessmentAttemptsForCourse(activeCourse.id) : []), [activeCourse?.id]);
+  const applicationsQuery = useSupabaseQuery(async () => (activeCourse ? fetchCourseApplications(activeCourse.id) : []), [activeCourse?.id], { enabled: !!activeCourse && (activeTab === "applications") });
+  const assessmentAttemptsQuery = useSupabaseQuery(async () => (activeCourse ? fetchAssessmentAttemptsForCourse(activeCourse.id) : []), [activeCourse?.id], { enabled: !!activeCourse && (activeTab === "assessment") });
   // Real assessment creation - a real, confirmed gap: only grading of
   // already-existing attempts existed here before this; nothing anywhere
   // let anyone actually create an assessment with real questions. The
@@ -148,15 +148,15 @@ export function ContentScreen({ orgId, orgSelector, setScreen, selectedCourseId,
   // c.instructor_id = auth.uid() (the real course owner) or an org admin -
   // real enforcement happens there, this UI doesn't need its own
   // role-gating on top of it.
-  const assessmentQuery = useSupabaseQuery(async () => (activeCourse ? fetchAssessmentForCourseWithQuestions(activeCourse.id) : null), [activeCourse?.id]);
+  const assessmentQuery = useSupabaseQuery(async () => (activeCourse ? fetchAssessmentForCourseWithQuestions(activeCourse.id) : null), [activeCourse?.id], { enabled: !!activeCourse && (activeTab === "assessment") });
   const [newQTitle, setNewQTitle] = useState("");
   const [newQOptions, setNewQOptions] = useState(["", "", "", ""]);
   const [newQCorrect, setNewQCorrect] = useState("");
   const [creatingAssessment, setCreatingAssessment] = useState(false);
   const [addingQuestion, setAddingQuestion] = useState(false);
 
-  const certRequestsQuery = useSupabaseQuery(async () => (activeCourse ? fetchCertificateRequestsForCourse(activeCourse.id) : []), [activeCourse?.id]);
-  const certTemplateQuery = useSupabaseQuery(async () => (activeCourse ? fetchCertificateForCourse(activeCourse.id) : null), [activeCourse?.id]);
+  const certRequestsQuery = useSupabaseQuery(async () => (activeCourse ? fetchCertificateRequestsForCourse(activeCourse.id) : []), [activeCourse?.id], { enabled: !!activeCourse && (activeTab === "certificates") });
+  const certTemplateQuery = useSupabaseQuery(async () => (activeCourse ? fetchCertificateForCourse(activeCourse.id) : null), [activeCourse?.id], { enabled: !!activeCourse && (activeTab === "certificates") });
   const pendingCertCount = (certRequestsQuery.data || []).filter((r) => r.status === "pending").length;
   const [certTitle, setCertTitle] = useState("Certificate of Completion");
   const [certPassingScore, setCertPassingScore] = useState("70");
@@ -175,12 +175,12 @@ export function ContentScreen({ orgId, orgSelector, setScreen, selectedCourseId,
     }
   }, [certTemplateQuery.data]);
   const pendingApplications = (applicationsQuery.data || []).filter(a => a.status === "pending");
-  const enrolledLearnersQuery = useSupabaseQuery(async () => (activeCourse ? fetchCourseEnrolledLearners(activeCourse.id) : []), [activeCourse?.id]);
-  const materialsQuery = useSupabaseQuery(async () => (activeCourse ? fetchCourseMaterials(activeCourse.id) : []), [activeCourse?.id]);
+  const enrolledLearnersQuery = useSupabaseQuery(async () => (activeCourse ? fetchCourseEnrolledLearners(activeCourse.id) : []), [activeCourse?.id], { enabled: !!activeCourse && (activeTab === "learners" || activeTab === "certificates") });
+  const materialsQuery = useSupabaseQuery(async () => (activeCourse ? fetchCourseMaterials(activeCourse.id) : []), [activeCourse?.id], { enabled: !!activeCourse && (activeTab === "materials") });
   const [materialTitle, setMaterialTitle] = useState("");
   const [materialUrl, setMaterialUrl] = useState("");
   const [addingMaterial, setAddingMaterial] = useState(false);
-  const qualityReviewQuery = useSupabaseQuery(async () => (activeCourse ? fetchCourseQualityReview(activeCourse.id) : null), [activeCourse?.id]);
+  const qualityReviewQuery = useSupabaseQuery(async () => (activeCourse ? fetchCourseQualityReview(activeCourse.id) : null), [activeCourse?.id], { enabled: !!activeCourse && (activeTab === "overview") });
   const [reviewStatus, setReviewStatus] = useState("approved");
   const [reviewScore, setReviewScore] = useState("");
   const [reviewNotes, setReviewNotes] = useState("");
@@ -821,6 +821,7 @@ export function ContentScreen({ orgId, orgSelector, setScreen, selectedCourseId,
                   </div>
                 </div>
 
+                {assessmentQuery.loading && <LoadingSkeleton label="Loading assessment..." rows={3} />}
                 {!assessmentQuery.loading && !assessmentQuery.data && (
                   <div className="ta-row ta-gap8">
                     <button
@@ -950,7 +951,7 @@ export function ContentScreen({ orgId, orgSelector, setScreen, selectedCourseId,
             {activeTab === "certificates" && (
               <div className="ta-col ta-gap16">
                 {/* Visual Creative Studio for Certificate Templates */}
-                <OrgCertificateStudio
+                {certTemplateQuery.loading ? <LoadingSkeleton label="Loading certificate template..." rows={3} /> : certTemplateQuery.error ? <div role="alert">Could not load the certificate template. <button className="ta-btn ta-btn-outline" onClick={certTemplateQuery.refetch}>Retry</button></div> : <OrgCertificateStudio
                   course={activeCourse}
                   initialTemplate={certTemplateQuery.data}
                   showToast={showToast}
@@ -966,7 +967,7 @@ export function ContentScreen({ orgId, orgSelector, setScreen, selectedCourseId,
                     if (result.success) certTemplateQuery.refetch();
                     return result;
                   }}
-                />
+                />}
 
                 <div className="ta-card" style={{ marginTop: 8 }}>
                   <div style={{ fontWeight: 800, fontSize: 16, color: "var(--text)" }}>Give Certificate Directly</div>

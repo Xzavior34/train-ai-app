@@ -567,18 +567,18 @@ export function PeopleScreen({ orgId, orgSelector, setScreen, currentUserId }) {
 
   const membersQuery = useSupabaseQuery(async () => fetchOrgMembers(orgId || "demo-org-id"), [orgId]);
   const cohortsQuery = useSupabaseQuery(async () => fetchCohorts(orgId || "demo-org-id"), [orgId]);
-  const instructorsQuery = useSupabaseQuery(async () => fetchOrgInstructorsMonitor(orgId || "demo-org-id"), [orgId]);
-  const invitationsQuery = useSupabaseQuery(async () => orgId ? fetchPendingInvitations(orgId) : [], [orgId]);
+  const instructorsQuery = useSupabaseQuery(async () => fetchOrgInstructorsMonitor(orgId || "demo-org-id"), [orgId], { enabled: tab === "applications" });
+  const invitationsQuery = useSupabaseQuery(async () => orgId ? fetchPendingInvitations(orgId) : [], [orgId], { enabled: tab === "invites" || inviteOpen });
   const progressQuery = useSupabaseQuery(async () => orgId ? fetchOrgLearnerProgressOverview(orgId) : [], [orgId]);
-  const kpisQuery = useSupabaseQuery(async () => fetchOrgPeopleKpis(orgId || "demo-org-id"), [orgId]);
-  const joinRequestsQuery = useSupabaseQuery(async () => orgId ? fetchPendingOrgJoinRequests(orgId) : [], [orgId]);
-  const seatsQuery = useSupabaseQuery(async () => orgId ? fetchOrgSeatsSummary(orgId) : null, [orgId]);
+  const kpisQuery = useSupabaseQuery(async () => fetchOrgPeopleKpis(orgId || "demo-org-id"), [orgId], { enabled: tab === "all" });
+  const joinRequestsQuery = useSupabaseQuery(async () => orgId ? fetchPendingOrgJoinRequests(orgId) : [], [orgId], { enabled: tab === "approvals" });
+  const seatsQuery = useSupabaseQuery(async () => orgId ? fetchOrgSeatsSummary(orgId) : null, [orgId], { enabled: tab === "invites" || inviteOpen });
   // Instructor applications: mentors rows in this org that aren't active yet.
-  const applicationsQuery = useSupabaseQuery(async () => orgId ? fetchMentorApplications(orgId) : [], [orgId]);
-  const rolePermsQuery = useSupabaseQuery(async () => orgId ? fetchOrgRolePermissions(orgId) : [], [orgId]);
+  const applicationsQuery = useSupabaseQuery(async () => orgId ? fetchMentorApplications(orgId) : [], [orgId], { enabled: tab === "mentorapps" });
+  const rolePermsQuery = useSupabaseQuery(async () => orgId ? fetchOrgRolePermissions(orgId) : [], [orgId], { enabled: tab === "privileges" });
   // DSAR requests have no org_id column in the schema - this queue is
   // platform-wide by design, not scoped to the current org.
-  const dsarQuery = useSupabaseQuery(async () => fetchAllDSARRequests(), []);
+  const dsarQuery = useSupabaseQuery(async () => fetchAllDSARRequests(), [], { enabled: tab === "dsar" });
 
   const members = membersQuery.data || [];
   const instructors = instructorsQuery.data || [];
@@ -768,13 +768,13 @@ export function PeopleScreen({ orgId, orgSelector, setScreen, currentUserId }) {
           tabs={[
             { k: "all", label: `Users (${members.length})` },
             { k: "link_users", label: `🔗 Joined via Link (${linkMembers.length})` },
-            { k: "approvals", label: `Pending Approvals (${joinRequests.length})` },
+            { k: "approvals", label: joinRequestsQuery.data ? `Pending Approvals (${joinRequests.length})` : "Pending Approvals" },
             { k: "progress", label: `Progress${behindCount > 0 ? ` (${behindCount} behind)` : ""}` },
-            { k: "mentorapps", label: `Instructor Applications (${applications.length})` },
-            { k: "applications", label: `Instructor Monitor (${instructors.length})` },
+            { k: "mentorapps", label: applicationsQuery.data ? `Instructor Applications (${applications.length})` : "Instructor Applications" },
+            { k: "applications", label: instructorsQuery.data ? `Instructor Monitor (${instructors.length})` : "Instructor Monitor" },
             { k: "privileges", label: "Privileges & Roles" },
-            { k: "invites", label: `Invitations (${invitations.length})` },
-            { k: "dsar", label: `Data Requests (${pendingDsarCount})` },
+            { k: "invites", label: invitationsQuery.data ? `Invitations (${invitations.length})` : "Invitations" },
+            { k: "dsar", label: dsarQuery.data ? `Data Requests (${pendingDsarCount})` : "Data Requests" },
           ]}
         />
 
@@ -1062,7 +1062,7 @@ export function PeopleScreen({ orgId, orgSelector, setScreen, currentUserId }) {
                       const progress = hasProgress ? progressByMemberId[m.id] : 0;
                       const attendance = null; // no real attendance/session-checkin data exists in the schema yet
                       const riskTone = !hasProgress ? "default" : progress >= 70 ? "success" : progress >= 40 ? "warning" : "danger";
-                      const riskLabel = !hasProgress ? "No enrollments" : progress >= 70 ? "On Track" : progress >= 40 ? "Needs Attention" : "High Risk";
+                      const riskLabel = progressQuery.loading ? "Loading progress..." : progressQuery.error ? "Unavailable" : !hasProgress ? "No enrollments" : progress >= 70 ? "On Track" : progress >= 40 ? "Needs Attention" : "High Risk";
                       const initials = (m.display_name || "U").split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase();
 
                       return (
@@ -1157,7 +1157,7 @@ export function PeopleScreen({ orgId, orgSelector, setScreen, currentUserId }) {
                               <div style={{ width: "100%", maxWidth: 140 }}>
                                 <div className="ta-row ta-between" style={{ fontSize: 11, marginBottom: 4 }}>
                                   <span>Overall Progress</span>
-                                  <span style={{ fontWeight: 700 }}>{hasProgress ? `${progress}%` : `${m.overallProgress ? Math.round(m.overallProgress) : 0}%`}</span>
+                                  <span style={{ fontWeight: 700 }}>{progressQuery.loading ? "..." : progressQuery.error ? "Unavailable" : hasProgress ? `${progress}%` : `${m.overallProgress ? Math.round(m.overallProgress) : 0}%`}</span>
                                 </div>
                                 <div style={{ width: "100%", height: 6, background: "var(--surface-2)", borderRadius: 4, overflow: "hidden" }}>
                                   <div style={{ width: `${hasProgress ? progress : (m.overallProgress || 0)}%`, height: "100%", background: riskTone === "success" ? "#10B981" : riskTone === "warning" ? "#F59E0B" : "#EF4444", borderRadius: 4 }} />

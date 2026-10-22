@@ -99,6 +99,7 @@ export function SettingsHubScreen({ orgId, profileQuery, orgSelector, setScreen,
   }, [aiSettingsQuery.data]);
 
   async function handleSaveAISettings(patch) {
+    if (aiSettingsQuery.loading || aiSettingsQuery.error) { showToast("Please wait for AI settings to load."); return; }
     if (!orgId) return;
     setSavingAI(true);
     try {
@@ -132,6 +133,7 @@ export function SettingsHubScreen({ orgId, profileQuery, orgSelector, setScreen,
   }, [aiInsightsSettingsQuery.data]);
 
   async function handleSaveAIInsightsSettings(patch) {
+    if (aiInsightsSettingsQuery.loading || aiInsightsSettingsQuery.error) { showToast("Please wait for insight settings to load."); return; }
     if (!orgId) return;
     setSavingInsights(true);
     try {
@@ -160,6 +162,7 @@ export function SettingsHubScreen({ orgId, profileQuery, orgSelector, setScreen,
   }, [leaderboardSettingsQuery.data]);
 
   async function handleToggleLeaderboard() {
+    if (leaderboardSettingsQuery.loading || leaderboardSettingsQuery.error) { showToast("Please wait for leaderboard settings to load."); return; }
     if (!orgId) return;
     const next = !leaderboardEnabled;
     setLeaderboardEnabled(next);
@@ -193,6 +196,7 @@ export function SettingsHubScreen({ orgId, profileQuery, orgSelector, setScreen,
   }, [gamificationSettingsQuery.data]);
 
   async function handleToggleGamification() {
+    if (gamificationSettingsQuery.loading || gamificationSettingsQuery.error) { showToast("Please wait for gamification settings to load."); return; }
     if (!orgId) return;
     const next = !gamificationEnabled;
     setGamificationEnabled(next);
@@ -310,7 +314,7 @@ export function SettingsHubScreen({ orgId, profileQuery, orgSelector, setScreen,
                     <button
                       key={tier}
                       className={(org?.subscription_tier === tier || (tier === "basic" && org?.subscription_tier === "starter") || (tier === "intermediate" && org?.subscription_tier === "growth")) && org?.status === "active" ? "ta-btn ta-btn-ghost" : "ta-btn ta-btn-primary"}
-                      disabled={payingTier === tier || ((org?.subscription_tier === tier || (tier === "basic" && org?.subscription_tier === "starter") || (tier === "intermediate" && org?.subscription_tier === "growth")) && org?.status === "active")}
+                      disabled={basicPriceQuery.loading || intermediatePriceQuery.loading || !!basicPriceQuery.error || !!intermediatePriceQuery.error || payingTier === tier || ((org?.subscription_tier === tier || (tier === "basic" && org?.subscription_tier === "starter") || (tier === "intermediate" && org?.subscription_tier === "growth")) && org?.status === "active")}
                       onClick={() => handleUpgrade(tier)}
                     >
                       {(org?.subscription_tier === tier || (tier === "basic" && org?.subscription_tier === "starter") || (tier === "intermediate" && org?.subscription_tier === "growth")) && org?.status === "active"
@@ -342,7 +346,7 @@ export function SettingsHubScreen({ orgId, profileQuery, orgSelector, setScreen,
                   <input className="ta-input" style={{ width: 100 }} type="number" min="1" placeholder="Seats" value={seatsToBuy} onChange={(e) => setSeatsToBuy(e.target.value)} />
                   <button
                     className="ta-btn ta-btn-primary"
-                    disabled={purchasingSeats || !seatsToBuy || Number(seatsToBuy) <= 0}
+                    disabled={seatPriceQuery.loading || !!seatPriceQuery.error || purchasingSeats || !seatsToBuy || Number(seatsToBuy) <= 0}
                     onClick={async () => {
                       setPurchasingSeats(true);
                       try {

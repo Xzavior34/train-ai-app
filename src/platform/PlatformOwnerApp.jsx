@@ -161,7 +161,7 @@ export default function PlatformOwnerApp({
 
               <div className="ta-main">
                 <Suspense fallback={<PageSkeleton layout={skeletonLayoutFor(screen)} onOpenMenu={() => setMobileOpen(true)} />}>
-                <PageLoadingBoundary key={`${screen}:${selectedOrgId || "all"}`} screen={screen} loading={profileQuery.loading || allOrgsQuery.loading} onOpenMenu={() => setMobileOpen(true)}>
+                <PageLoadingBoundary key={`${screen}:${selectedOrgId || "all"}`} screen={screen} waitForQueries={false} loading={profileQuery.loading || allOrgsQuery.loading} onOpenMenu={() => setMobileOpen(true)}>
                 {!profileQuery.loading && !allOrgsQuery.loading && <>
                 {screen === "overview" && <OverviewScreen orgSelector={orgSelector} onNavigate={(scr) => setScreen(scr)} />}
                 {screen === "demos" && <DemoRequestsScreen orgSelector={orgSelector} />}

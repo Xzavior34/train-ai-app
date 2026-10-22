@@ -63,11 +63,12 @@ try {
       const nav = page.locator(role === 'learner' ? '.tai-sub-item, .tai-category-header' : '.ta-sidebar .ta-nav-item').filter({ hasText: new RegExp('^' + label.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '$') });
       if (!await nav.count()) { results.push({ role, page: label, skipped: 'Not available in fixture navigation' }); continue; }
       await nav.click();
-      const observed = await page.locator('.tai-page-skeleton:visible').first().waitFor({ timeout: 1800 }).then(() => true, () => false);
-      if (!observed && role !== 'learner') throw Error(role + ' did not show its loading layout: ' + label);
+      const skeleton = page.locator('.tai-page-skeleton:visible').first();
+      const observedLayout = await skeleton.waitFor({ timeout: role === 'learner' ? 1800 : 150 }).then(() => skeleton.getAttribute('data-skeleton-layout', { timeout: 100 }).catch(() => null), () => null);
+      if (role !== 'learner') await page.locator('.ta-main:visible .ta-screen-content:not([hidden])').waitFor();
       // Learner catalog/community data may already be cached by the parent.
       // Do not demand an artificial delay when there is no request to wait for.
-      const layout = observed ? await page.locator('.tai-page-skeleton:visible').first().getAttribute('data-skeleton-layout') : 'cached';
+      const layout = observedLayout || (role === 'learner' ? 'cached' : 'progressive');
       for (const width of label === 'Leaderboard & Ranks' ? [1440, 390, 360] : [1440]) {
         await page.setViewportSize({ width, height: 1000 });
         const overflow = await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 2);

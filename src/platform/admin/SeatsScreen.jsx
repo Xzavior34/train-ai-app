@@ -90,6 +90,7 @@ export function SeatsScreen({ orgId, orgSelector, setScreen, userEmail, defaultT
   const [grantSubmitting, setGrantSubmitting] = useState(false);
 
   async function handleBuy() {
+    if (ngnPriceQuery.loading || usdPriceQuery.loading || ngnPriceQuery.error || usdPriceQuery.error) { showToast("Please wait for seat pricing to load before paying."); return; }
     const qty = Number(quantity);
     if (!qty || qty <= 0) { showToast("Enter how many seats you need."); return; }
     if (!userEmail) { showToast("No billing email on your account - add one in Settings first."); return; }
@@ -407,7 +408,7 @@ export function SeatsScreen({ orgId, orgSelector, setScreen, userEmail, defaultT
                 </div>
               </div>
 
-              <button className="ta-btn ta-btn-primary ta-mt16" disabled={starting || !quantity || Number(quantity) <= 0} onClick={handleBuy}>
+              <button className="ta-btn ta-btn-primary ta-mt16" disabled={starting || ngnPriceQuery.loading || usdPriceQuery.loading || !!ngnPriceQuery.error || !!usdPriceQuery.error || !quantity || Number(quantity) <= 0} onClick={handleBuy}>
                 <CreditCard size={15} />
                 {starting ? "Redirecting to checkout..." : `Pay ${money(chosen.symbol, total)} for ${Number(quantity) || 0} seat${Number(quantity) === 1 ? "" : "s"}`}
               </button>

@@ -35,6 +35,17 @@ test('Connected member directory ignores local sample signups and visitors',asyn
  assert.equal(f.api.getReferralSignupsRoster(org).length,0);assert.equal(f.api.getLinkClicksRoster(org).length,0);
  assert.equal((await f.api.fetchOrgMembers(org)).length,0);
 });
+
+test('Cohort summaries batch related reads and retain accurate counts and progress', async () => {
+ const cohorts = Array.from({length:12},(_,i)=>({id:'cohort-'+i,organization_id:org,name:'Cohort '+i,created_by:otherUser}));
+ const f=fixture({tables:{cohorts,cohort_members:cohorts.map(c=>({cohort_id:c.id,user_id:user})),cohort_courses:cohorts.flatMap(c=>[{cohort_id:c.id},{cohort_id:c.id}]),course_enrollments:[{user_id:user,progress_percentage:20},{user_id:user,progress_percentage:80}],user_profiles:[{id:otherUser,display_name:'Instructor',email:'instructor@example.invalid'}]}});
+ const rows=await f.api.fetchCohortsWithStats(org);
+ assert.equal(rows.length,12);
+ for(const row of rows){assert.equal(row.members,1);assert.equal(row.courses,2);assert.equal(row.learningProgress,50);assert.equal(row.instructor.name,'Instructor');}
+ assert.equal(f.calls.filter(call=>call.table).length,6,'Twelve cohorts should use six batched reads, not a request chain per cohort');
+ const failed=fixture({tables:{cohorts},failTable:'cohort_members'});
+ await assert.rejects(failed.api.fetchCohortsWithStats(org),/Could not load cohorts/);
+});
 test('Screenshot sample learner never reaches a UUID database call',async()=>{
  const f=fixture();const data=await f.api.fetchMemberLearningTrack('user-dt-learner-priya',org);
  assert.match(data.unavailableReason,/no saved learning record/);assert.equal(f.calls.length,0);

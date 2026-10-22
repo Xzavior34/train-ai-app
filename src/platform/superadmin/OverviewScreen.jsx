@@ -131,7 +131,7 @@ export function OverviewScreen({ orgSelector, onNavigate }) {
                 Train AI Platform Overview
               </h1>
               <p className="ta-hero-desc" style={{ fontSize: 13, margin: 0, maxWidth: 680, lineHeight: 1.5 }}>
-                Active orchestration across {effectiveTotalOrgs} tenant institution{effectiveTotalOrgs === 1 ? "" : "s"}, supporting {effectiveTotalUsers.toLocaleString()} enrolled learner{effectiveTotalUsers === 1 ? "" : "s"} with live Supabase database backing.
+                Active orchestration across {statsQuery.loading ? "..." : effectiveTotalOrgs} tenant institution{effectiveTotalOrgs === 1 ? "" : "s"}, supporting {statsQuery.loading ? "..." : effectiveTotalUsers.toLocaleString()} enrolled learner{effectiveTotalUsers === 1 ? "" : "s"} with live Supabase database backing.
               </p>
             </div>
 
@@ -164,7 +164,7 @@ export function OverviewScreen({ orgSelector, onNavigate }) {
               </div>
               <div className="tai-hero-subcard" style={{ padding: "8px 14px", borderRadius: 10, textAlign: "center" }}>
                 <div style={{ fontSize: 10.5, opacity: 0.8, fontWeight: 700 }}>Active Tenants</div>
-                <div style={{ fontSize: 15, fontWeight: 900, color: "#3B82F6" }}>{effectiveTotalOrgs}</div>
+                <div style={{ fontSize: 15, fontWeight: 900, color: "#3B82F6" }}>{statsQuery.loading ? "..." : effectiveTotalOrgs}</div>
               </div>
             </div>
           </div>
@@ -182,7 +182,7 @@ export function OverviewScreen({ orgSelector, onNavigate }) {
               <Building2 size={20} color="#2563EB" />
             </div>
             <div style={{ fontSize: 28, fontWeight: 900, color: "var(--text)", marginTop: 10, letterSpacing: "-0.02em" }}>
-              {effectiveTotalOrgs}
+              {statsQuery.loading ? "..." : effectiveTotalOrgs}
             </div>
             <div className="ta-row ta-between" style={{ fontSize: 12, marginTop: 10, gap: 8, flexWrap: "wrap" }}>
               <span className="ta-row" style={{ gap: 4, color: "var(--success)", fontWeight: 700 }}>
@@ -201,7 +201,7 @@ export function OverviewScreen({ orgSelector, onNavigate }) {
               <Users size={20} color="#2563EB" />
             </div>
             <div style={{ fontSize: 28, fontWeight: 900, color: "var(--text)", marginTop: 10, letterSpacing: "-0.02em" }}>
-              {effectiveTotalUsers.toLocaleString()}
+              {statsQuery.loading ? "..." : effectiveTotalUsers.toLocaleString()}
             </div>
             <div className="ta-row ta-between" style={{ fontSize: 12, marginTop: 10, gap: 8, flexWrap: "wrap" }}>
               <span className="ta-row" style={{ gap: 4, color: "var(--success)", fontWeight: 700 }}>
@@ -218,7 +218,7 @@ export function OverviewScreen({ orgSelector, onNavigate }) {
               <Layers size={20} color="#059669" />
             </div>
             <div style={{ fontSize: 28, fontWeight: 900, color: "var(--text)", marginTop: 10, letterSpacing: "-0.02em" }}>
-              {effectiveTotalCourses}
+              {statsQuery.loading ? "..." : effectiveTotalCourses}
             </div>
             <div className="ta-row ta-between" style={{ fontSize: 12, marginTop: 10, gap: 8, flexWrap: "wrap" }}>
               <span className="ta-row" style={{ gap: 4, color: "var(--primary)", fontWeight: 700 }}>
@@ -235,7 +235,7 @@ export function OverviewScreen({ orgSelector, onNavigate }) {
               <Activity size={20} color="#D97706" />
             </div>
             <div style={{ fontSize: 28, fontWeight: 900, color: "var(--text)", marginTop: 10, letterSpacing: "-0.02em" }}>
-              {effectiveActiveInWeek.toLocaleString()}
+              {statsQuery.loading ? "..." : effectiveActiveInWeek.toLocaleString()}
             </div>
             <div className="ta-row ta-between" style={{ fontSize: 12, marginTop: 10, gap: 8, flexWrap: "wrap" }}>
               <span className="ta-row" style={{ gap: 4, color: "var(--success)", fontWeight: 700 }}>
