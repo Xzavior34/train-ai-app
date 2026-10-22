@@ -22,7 +22,6 @@ Contact: info@trainailtd.com
 
 - About: https://trainailtd.com/about
 - Book a demo: https://trainailtd.com/book-demo
-- Course marketplace: https://trainailtd.com/marketplace
 - Contact: https://trainailtd.com/contact
 - Privacy: https://trainailtd.com/privacy-policy
 - Terms: https://trainailtd.com/terms-of-service

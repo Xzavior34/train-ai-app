@@ -20,7 +20,6 @@ const PlatformOwnerLoginScreen = lazy(() =>
 const LandingPage = lazy(() => import("./pages/public/LandingPage.jsx"));
 const AppointmentBookingPage = lazy(() => import("./pages/public/AppointmentBookingPage.jsx"));
 const CertificateVerificationPage = lazy(() => import("./pages/public/CertificateVerificationPage.jsx"));
-const MarketplacePage = lazy(() => import("./pages/public/MarketplacePage.jsx"));
 const PublicInfoPage = lazy(() => import("./pages/public/PublicInfoPage.jsx"));
 const AuthPage = lazy(() => import("./pages/auth/AuthPage.jsx"));
 const MfaChallengeScreen = lazy(() => import("./pages/auth/MfaChallengeScreen.jsx"));
@@ -426,28 +425,6 @@ export default function App() {
         </>
       );
     }
-    if (publicView === "marketplace") {
-      return (
-        <>
-          <OfflineIndicator mode={offlineMode} />
-          <MarketplacePage
-            onGoHome={() => {
-              try { window.history.pushState({}, "", "/"); } catch {}
-              setPublicView("landing");
-            }}
-            onBookDemo={() => {
-              try { window.history.pushState({}, "", "/book-demo"); } catch {}
-              setPublicView("book-demo");
-            }}
-            onSignIn={() => {
-              setAuthInitialMode("signin");
-              try { window.history.pushState({}, "", "/login"); } catch {}
-              setPublicView("auth");
-            }}
-          />
-        </>
-      );
-    }
     if (publicView === "auth") {
       return (
         <>
@@ -488,9 +465,6 @@ export default function App() {
                 setAuthInitialMode(nextMode);
                 try { window.history.pushState({}, "", nextMode === "signup" ? "/signup" : "/login"); } catch {}
                 setPublicView("auth");
-              } else if (target === "marketplace") {
-                try { window.history.pushState({}, "", "/marketplace"); } catch {}
-                setPublicView("marketplace");
               } else {
                 try { window.history.pushState({}, "", "/"); } catch {}
                 setPublicView("landing");
@@ -514,9 +488,6 @@ export default function App() {
               setAuthInitialMode(nextMode);
               try { window.history.pushState({}, "", nextMode === "signup" ? "/signup" : "/login"); } catch {}
               setPublicView("auth");
-            } else if (target === "marketplace") {
-              try { window.history.pushState({}, "", "/marketplace"); } catch {}
-              setPublicView("marketplace");
             } else if (target === "demo" || target === "book-demo") {
               if (data?.sector) setDemoSectorParam(data.sector);
               try { window.history.pushState({}, "", "/book-demo"); } catch {}

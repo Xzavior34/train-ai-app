@@ -232,8 +232,6 @@ export default function LandingPage({ onNavigate }) {
     if (typeof onNavigate === "function") return onNavigate(target, data);
     if (target === "book-demo" || target === "demo") {
       window.location.href = "/book-demo";
-    } else if (target === "marketplace") {
-      window.location.href = "/marketplace";
     } else if (target === "signup") {
       window.location.href = "/signup";
     } else if (["about", "privacy", "terms", "contact"].includes(target)) {
@@ -268,7 +266,6 @@ export default function LandingPage({ onNavigate }) {
             <a href="#screens" onClick={(event) => { event.preventDefault(); scrollToSection("screens"); }}>Have a look</a>
             <a href="#organisations" onClick={(event) => { event.preventDefault(); scrollToSection("organisations"); }}>Who it is for</a>
             <a href="#pricing" onClick={(event) => { event.preventDefault(); scrollToSection("pricing"); }}>Pricing</a>
-            <a href="/marketplace" onClick={(event) => { event.preventDefault(); navigate("marketplace"); }}>Marketplace</a>
             <a href="#faq" onClick={(event) => { event.preventDefault(); scrollToSection("faq"); }}>FAQ</a>
           </nav>
           <div className="lp-header-actions">
@@ -285,7 +282,6 @@ export default function LandingPage({ onNavigate }) {
             <button onClick={() => scrollToSection("screens")}>Have a look</button>
             <button onClick={() => scrollToSection("organisations")}>Who it is for</button>
             <button onClick={() => scrollToSection("pricing")}>Pricing</button>
-            <button onClick={() => navigate("marketplace")}>Marketplace</button>
             <button onClick={() => scrollToSection("faq")}>FAQ</button>
             <button onClick={() => navigate("signin")}>Sign in</button>
             <button className="lp-primary-button" onClick={() => navigate("book-demo")}>Book a demo</button>
@@ -501,7 +497,6 @@ export default function LandingPage({ onNavigate }) {
               <h3>Company</h3>
               <a href="/about" onClick={(event) => { event.preventDefault(); navigate("about"); }}>About Train AI</a>
               <a href="#organisations" onClick={(event) => { event.preventDefault(); scrollToSection("organisations"); }}>Who it is for</a>
-              <a href="/marketplace" onClick={(event) => { event.preventDefault(); navigate("marketplace"); }}>Academy Marketplace</a>
               <a href="/verify">Verify Certificate</a>
               <a href="#faq" onClick={(event) => { event.preventDefault(); scrollToSection("faq"); }}>Frequently asked questions</a>
               <a href="/login" onClick={(event) => { event.preventDefault(); navigate("signin"); }}>Customer sign in</a>

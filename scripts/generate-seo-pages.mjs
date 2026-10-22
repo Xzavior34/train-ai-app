@@ -22,13 +22,6 @@ const pages = [
     summary: "Review your learning model, cohort structure, learner support and reporting needs with the Train AI team.",
   },
   {
-    route: "marketplace",
-    title: "Training Course Marketplace | Train AI",
-    description: "Explore published learning programmes from training providers using the Train AI course marketplace.",
-    heading: "Explore training courses on Train AI",
-    summary: "Discover published learning programmes from academies and training providers using the Train AI platform.",
-  },
-  {
     route: "contact",
     title: "Contact Train AI | Platform and Account Support",
     description: "Contact Train AI about organisational learning delivery, cohort management, workforce development or platform support.",

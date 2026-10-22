@@ -30,7 +30,7 @@ test('OAuth code and public routes remain distinct, including path-based certifi
  assert.equal(parsePublicLocation({pathname:'/',search:'?code=oauth-code'}).certCode,null);
  assert.equal(parsePublicLocation({pathname:'/certificate/TA%20CODE',search:''}).certCode,'TA CODE');
  assert.equal(parsePublicLocation({pathname:'/verify',search:''}).certCode,'1');
- assert.equal(parsePublicLocation({pathname:'/marketplace/',search:''}).view,'marketplace');
+ assert.equal(parsePublicLocation({pathname:'/marketplace/',search:''}).view,'landing');
  assert.equal(parsePublicLocation({pathname:'/',search:'?workspace=academy'}).authMode,'signup');
  assert.equal(parsePublicLocation({pathname:'/',search:''}).certCode,null);
  assert.equal(parsePublicLocation({pathname:'/',search:'?view=book-demo'}).view,'book-demo');
@@ -53,6 +53,7 @@ test('SEO files use one canonical domain and expose only public pages for indexi
  assert.match(robots,/User-agent: OAI-SearchBot/);
  assert.match(sitemap,/https:\/\/trainailtd\.com\/book-demo/);
  assert.match(sitemap,/https:\/\/trainailtd\.com\/about/);
+ assert.doesNotMatch(sitemap,/\/marketplace</);
  assert.doesNotMatch(sitemap,/\/verify</);
  assert(vercel.redirects.some(rule=>rule.has?.some(condition=>condition.type==='host'&&condition.value==='www.trainailtd.com')));
 });

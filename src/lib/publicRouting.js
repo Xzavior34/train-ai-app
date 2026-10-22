@@ -12,7 +12,6 @@ export function parsePublicLocation(location) {
   const orgTarget = params.get("join") || params.get("org") || params.get("workspace") || params.get("ref_org");
   let view = "landing";
   if (params.get("view") === "book-demo" || params.get("demo") === "true" || params.get("book") === "demo" || path === "/book-demo") view = "book-demo";
-  else if (params.get("view") === "marketplace" || path === "/marketplace") view = "marketplace";
   else if (path === "/about") view = "about";
   else if (path === "/privacy-policy" || path === "/privacy") view = "privacy";
   else if (path === "/terms-of-service" || path === "/terms") view = "terms";

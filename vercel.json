@@ -8,12 +8,16 @@
       "has": [{ "type": "host", "value": "www.trainailtd.com" }],
       "destination": "https://trainailtd.com/$1",
       "permanent": true
+    },
+    {
+      "source": "/marketplace",
+      "destination": "https://trainailtd.com/",
+      "permanent": true
     }
   ],
   "rewrites": [
     { "source": "/about", "destination": "/about/index.html" },
     { "source": "/book-demo", "destination": "/book-demo/index.html" },
-    { "source": "/marketplace", "destination": "/marketplace/index.html" },
     { "source": "/contact", "destination": "/contact/index.html" },
     { "source": "/privacy-policy", "destination": "/privacy-policy/index.html" },
     { "source": "/terms-of-service", "destination": "/terms-of-service/index.html" },
