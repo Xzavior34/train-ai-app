@@ -1,3 +1,4 @@
+import { LoadingSkeleton } from "./../../components/common/PageLoadingBoundary.jsx";
 import React, { useState } from "react";
 import { TopBar, Tag } from "../components/PlatformUI.jsx";
 import { CheckSquare, ChevronRight, ArrowRight } from "lucide-react";
@@ -27,7 +28,7 @@ export function AssessmentsScreen({ orgId, orgSelector, setScreen, setSelectedCo
         orgSelector={orgSelector}
       />
       <div className="ta-content" style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-        {coursesQuery.loading && <div className="ta-empty">Loading courses...</div>}
+        {coursesQuery.loading && <div className="ta-empty"><LoadingSkeleton label="Loading courses..." rows={3} /></div>}
         {!coursesQuery.loading && courses.length === 0 && (
           <div className="ta-empty">No published courses yet - assessments live inside a course's builder once one exists.</div>
         )}
@@ -73,7 +74,7 @@ function AssessmentCourseRow({ course, expanded, onToggle, onOpenGrading }) {
 
       {expanded && (
         <div style={{ padding: "0 18px 18px", borderTop: "1px solid var(--border)" }}>
-          {attemptsQuery.loading && <div className="ta-empty" style={{ marginTop: 12 }}>Loading attempts...</div>}
+          {attemptsQuery.loading && <div className="ta-empty" style={{ marginTop: 12 }}><LoadingSkeleton label="Loading attempts..." rows={3} /></div>}
           {!attemptsQuery.loading && attempts.length === 0 && (
             <div className="ta-empty" style={{ marginTop: 12 }}>No assessment attempts submitted yet for this course.</div>
           )}

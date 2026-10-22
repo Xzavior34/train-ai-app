@@ -1,3 +1,4 @@
+import { LoadingSkeleton } from "./../../components/common/PageLoadingBoundary.jsx";
 import React, { useContext, useState } from "react";
 import { TopBar, Tag, ToastContext, ProgressBar, StatCard, exportRowsAsCsv } from "../components/PlatformUI.jsx";
 import { ShieldCheck, RefreshCw, Download, AlertTriangle, CheckCircle2, Clock, Plus, X, Search, Trash2 } from "lucide-react";
@@ -315,7 +316,7 @@ export function ComplianceScreen({ orgId, orgSelector, setScreen, currentUserId 
               <div className="ta-card">
                 <div className="ta-label">Leaderboard • Top Performers</div>
                 <div className="ta-body" style={{ marginTop: 4, marginBottom: 4 }}>Ranked by average course progress</div>
-                {progressOverviewQuery.loading && <div className="ta-empty">Loading leaderboard...</div>}
+                {progressOverviewQuery.loading && <div className="ta-empty"><LoadingSkeleton label="Loading leaderboard..." rows={3} /></div>}
                 {!progressOverviewQuery.loading && leaderboard.length === 0 && <div className="ta-empty">No learners yet.</div>}
                 <div className="ta-col ta-gap8 ta-mt12">
                   {leaderboard.slice(0, 6).map((l, i) => (
@@ -345,7 +346,7 @@ export function ComplianceScreen({ orgId, orgSelector, setScreen, currentUserId 
             <div className="ta-card">
               <div className="ta-label">Progress by course</div>
               <div style={{ fontSize: 11.5, color: "var(--text-3)", marginTop: 2 }}>Click a course to see who's enrolled and their individual progress.</div>
-              {progressByCourseQuery.loading && <div className="ta-empty">Loading...</div>}
+              {progressByCourseQuery.loading && <div className="ta-empty"><LoadingSkeleton label="Loading..." rows={3} /></div>}
               {!progressByCourseQuery.loading && (progressByCourseQuery.data || []).length === 0 && <div className="ta-empty">No enrollments yet.</div>}
               <div className="ta-col ta-gap8 ta-mt12">
                 {(progressByCourseQuery.data || []).map((c) => {
@@ -362,7 +363,7 @@ export function ComplianceScreen({ orgId, orgSelector, setScreen, currentUserId 
                       </div>
                       {isOpen && (
                         <div style={{ padding: "0 10px 10px" }}>
-                          {expandedCourseRosterQuery.loading && <div className="ta-empty">Loading roster...</div>}
+                          {expandedCourseRosterQuery.loading && <div className="ta-empty"><LoadingSkeleton label="Loading roster..." rows={3} /></div>}
                           {!expandedCourseRosterQuery.loading && (expandedCourseRosterQuery.data || []).length === 0 && (
                             <div className="ta-empty">No one enrolled yet.</div>
                           )}
@@ -392,7 +393,7 @@ export function ComplianceScreen({ orgId, orgSelector, setScreen, currentUserId 
             <div className="ta-body" style={{ marginTop: 4, marginBottom: 4 }}>
               Based on real course completion by category - a completed, high-progress category counts as a demonstrated skill; a low-progress or untouched category is a gap. Click a learner to expand.
             </div>
-            {skillGapsQuery.loading && <div className="ta-empty">Loading skill gaps...</div>}
+            {skillGapsQuery.loading && <div className="ta-empty"><LoadingSkeleton label="Loading skill gaps..." rows={3} /></div>}
             {!skillGapsQuery.loading && (skillGapsQuery.data || []).length === 0 && <div className="ta-empty">No learners yet.</div>}
             <div className="ta-col ta-gap8 ta-mt12">
               {(skillGapsQuery.data || []).map((l) => (
@@ -464,7 +465,7 @@ export function ComplianceScreen({ orgId, orgSelector, setScreen, currentUserId 
               </tr>
             </thead>
             <tbody>
-              {complianceQuery.loading && <tr><td colSpan={7} className="ta-empty">Loading compliance status...</td></tr>}
+              {complianceQuery.loading && <tr><td colSpan={7} className="ta-empty"><LoadingSkeleton label="Loading compliance status..." rows={3} /></td></tr>}
               {!complianceQuery.loading && assignments.length === 0 && (
                 <tr><td colSpan={7} className="ta-empty">No compliance assignments yet. Assign a mandatory course to learners to see audit status here.</td></tr>
               )}
@@ -594,7 +595,7 @@ export function ComplianceScreen({ orgId, orgSelector, setScreen, currentUserId 
               />
             </div>
             <div style={{ maxHeight: 220, overflowY: "auto", border: "1px solid var(--border)", borderRadius: 8, padding: 6 }}>
-              {orgUsersQuery.loading && <div className="ta-empty" style={{ fontSize: 12 }}>Loading learners...</div>}
+              {orgUsersQuery.loading && <div className="ta-empty" style={{ fontSize: 12 }}><LoadingSkeleton label="Loading learners..." rows={3} /></div>}
               {!orgUsersQuery.loading && filteredLearners.length === 0 && (
                 <div className="ta-empty" style={{ fontSize: 12 }}>No learners found.</div>
               )}

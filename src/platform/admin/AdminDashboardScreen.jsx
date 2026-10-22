@@ -1,3 +1,4 @@
+import { LoadingSkeleton } from "./../../components/common/PageLoadingBoundary.jsx";
 import React, { useState, useContext } from "react";
 import { TopBar, StatCard, ProgressBar, Tag, ToastContext } from "../components/PlatformUI.jsx";
 import { AnalysisNotesCard } from "../components/AnalysisNotesCard.jsx";
@@ -444,7 +445,7 @@ export function AdminDashboardScreen({ orgId, profileQuery, setScreen, orgSelect
           <div className="ta-title">Activity Log</div>
           <div style={{ fontSize: 12, color: "var(--text-2)", marginTop: 4 }}>Recent admin actions within your own organization.</div>
           <div className="ta-col ta-gap8 ta-mt12">
-            {activityLogQuery.loading && <div className="ta-empty">Loading...</div>}
+            {activityLogQuery.loading && <div className="ta-empty"><LoadingSkeleton label="Loading..." rows={3} /></div>}
             {!activityLogQuery.loading && (activityLogQuery.data || []).length === 0 && <div className="ta-empty">No recorded activity yet.</div>}
             {(activityLogQuery.data || []).map((a) => (
               <div key={a.id} className="ta-row ta-between" style={{ padding: "8px 0", borderBottom: "1px solid var(--border)", gap: 10 }}>

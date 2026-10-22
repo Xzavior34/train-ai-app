@@ -1,3 +1,4 @@
+import { LoadingSkeleton } from "./../../components/common/PageLoadingBoundary.jsx";
 import { fetchOrCreateAIConversation, sendAIChatMessage, requestAIReply } from "../../lib/api/schemaHelper.js";
 import React, { useState, useEffect, useRef } from "react";
 import { TopBar, ProgressBar, Tag, Avatar, initialsOf } from "../components/LearnerUI.jsx";
@@ -681,7 +682,7 @@ export function LessonScreen({
               </div>
 
               {/* Render Notes List */}
-              {lessonNotesQuery?.loading && <div className="tai-empty" style={{ padding: "20px 0" }}>Loading your notes...</div>}
+              {lessonNotesQuery?.loading && <div className="tai-empty" style={{ padding: "20px 0" }}><LoadingSkeleton label="Loading your notes..." rows={3} /></div>}
               {(!lessonNotesQuery?.data || lessonNotesQuery.data.length === 0) && !lessonNotesQuery?.loading && (
                 <div className="tai-card" style={{ background: "var(--surface-2)", padding: "24px 16px", textAlign: "center" }}>
                   <FileText size={24} color="var(--text-3)" style={{ margin: "0 auto 8px" }} />
@@ -755,7 +756,7 @@ export function LessonScreen({
               {/* Q&A List - real course_discussion_messages rows for this lesson */}
               <div className="tai-col tai-gap10">
                 {lessonDiscussionQuery?.loading && (
-                  <div className="tai-empty" style={{ padding: "20px 0" }}>Loading Q&amp;A...</div>
+                  <div className="tai-empty" style={{ padding: "20px 0" }}><LoadingSkeleton label="Loading Q&amp;A..." rows={3} /></div>
                 )}
                 {!lessonDiscussionQuery?.loading && (lessonDiscussionQuery?.data?.messages || []).length === 0 && (
                   <div className="tai-empty" style={{ padding: "20px 0" }}>

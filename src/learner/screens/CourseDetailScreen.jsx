@@ -1,3 +1,4 @@
+import { LoadingSkeleton } from "./../../components/common/PageLoadingBoundary.jsx";
 import React, { useState } from "react";
 import { TopBar, Tag, ProgressBar, Avatar, timeAgo, initialsOf } from "../components/LearnerUI.jsx";
 import { Clock, Layers, Rocket, CheckCircle2, Lock, ChevronRight, Video, Edit3, Send, GraduationCap, Award, X, ArrowRight, Star, Users, ShieldCheck, FileText, MessageSquare } from "lucide-react";
@@ -230,7 +231,7 @@ export function CourseDetailScreen({
 
       {tab === "lessons" && (
         <div className="tai-mt6">
-          {courseLessonsQuery.loading && <div className="tai-card tai-empty">Loading lessons...</div>}
+          {courseLessonsQuery.loading && <div className="tai-card tai-empty"><LoadingSkeleton label="Loading lessons..." rows={3} /></div>}
           {!courseLessonsQuery.loading && lessons.length === 0 && (
             <div className="tai-card tai-empty">No lessons available for this course yet.</div>
           )}
@@ -412,7 +413,7 @@ function DiscussionTab({ discussionQuery, session, discussionInput, setDiscussio
         </div>
       </div>
 
-      {discussionQuery?.loading && <div className="tai-card tai-empty">Loading discussion...</div>}
+      {discussionQuery?.loading && <div className="tai-card tai-empty"><LoadingSkeleton label="Loading discussion..." rows={3} /></div>}
       {!discussionQuery?.loading && messages.length === 0 && (
         <div className="tai-card tai-empty">
           <MessageSquare size={22} color="var(--text-3)" />
@@ -479,7 +480,7 @@ function NotesTab({ course, notesQuery, session, newNoteText, setNewNoteText, ad
         </div>
       </div>
 
-      {notesQuery?.loading && <div className="tai-card tai-empty">Loading notes...</div>}
+      {notesQuery?.loading && <div className="tai-card tai-empty"><LoadingSkeleton label="Loading notes..." rows={3} /></div>}
       {!notesQuery?.loading && notes.length === 0 && (
         <div className="tai-card tai-empty">
           <FileText size={22} color="var(--text-3)" />
@@ -582,7 +583,7 @@ function AssessmentTab({ assessment, questionsQuery, myAttemptQuery, onSubmit })
   const myAttempt = myAttemptQuery?.data;
 
   if (questionsQuery?.loading || myAttemptQuery?.loading) {
-    return <div className="tai-mt16 tai-empty">Loading assessment...</div>;
+    return <div className="tai-mt16 tai-empty"><LoadingSkeleton label="Loading assessment..." rows={3} /></div>;
   }
 
   const DEFAULT_QUESTIONS = [];

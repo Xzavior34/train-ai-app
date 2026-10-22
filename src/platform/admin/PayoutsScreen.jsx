@@ -1,3 +1,4 @@
+import { LoadingSkeleton } from "./../../components/common/PageLoadingBoundary.jsx";
 import React, { useState, useContext, useMemo } from "react";
 import { TopBar, ToastContext, Tag, Avatar, Switch } from "../components/PlatformUI.jsx";
 import { Wallet, RefreshCw, Search, CheckCircle2, X, ShieldCheck, Users } from "lucide-react";
@@ -171,7 +172,7 @@ export function PayoutsScreen({ orgId, orgSelector, setScreen, currentUserId }) 
               <table className="ta-table">
                 <thead><tr><th>Instructor</th><th>Amount</th><th>Method</th><th>Status</th><th style={{ textAlign: "right" }}>Actions</th></tr></thead>
                 <tbody>
-                  {requestsQuery.loading && <tr><td colSpan={5} className="ta-empty">Loading payout requests...</td></tr>}
+                  {requestsQuery.loading && <tr><td colSpan={5} className="ta-empty"><LoadingSkeleton label="Loading payout requests..." rows={3} /></td></tr>}
                   {!requestsQuery.loading && filteredRequests.length === 0 && (
                     <tr><td colSpan={5} className="ta-empty">
                       {requests.length === 0
@@ -227,7 +228,7 @@ export function PayoutsScreen({ orgId, orgSelector, setScreen, currentUserId }) 
               anything already earned.
             </div>
 
-            {mentorsQuery.loading && <div className="ta-empty ta-mt12">Loading instructors...</div>}
+            {mentorsQuery.loading && <div className="ta-empty ta-mt12"><LoadingSkeleton label="Loading instructors..." rows={3} /></div>}
             {!mentorsQuery.loading && mentors.length === 0 && (
               <div className="ta-empty ta-mt12">
                 <Users size={26} style={{ opacity: 0.4, marginBottom: 8 }} />

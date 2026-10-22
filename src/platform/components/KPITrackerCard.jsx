@@ -1,3 +1,4 @@
+import { LoadingSkeleton } from "./../../components/common/PageLoadingBoundary.jsx";
 import React, { useState, useEffect } from "react";
 import {
   Activity, CheckCircle2, Clock, AlertTriangle, PlayCircle,
@@ -259,7 +260,7 @@ export function KPITrackerCard({ organizationId, showToast }) {
           <tbody>
             {loading && (
               <tr>
-                <td colSpan={7} className="ta-empty">Loading KPI activities...</td>
+                <td colSpan={7} className="ta-empty"><LoadingSkeleton label="Loading KPI activities..." rows={3} /></td>
               </tr>
             )}
             {!loading && filtered.length === 0 && (

@@ -1,3 +1,4 @@
+import { LoadingSkeleton } from "./../../components/common/PageLoadingBoundary.jsx";
 import React, { useState } from "react";
 import { TopBar, Avatar, Tag, timeAgo, initialsOf, ProgressBar } from "../components/LearnerUI.jsx";
 import {
@@ -60,7 +61,7 @@ export function CohortScreen({
     return (
       <div>
         <TopBar title="Cohort" onBack={back} />
-        <div className="tai-empty">Loading your cohort...</div>
+        <div className="tai-empty"><LoadingSkeleton label="Loading your cohort..." rows={3} /></div>
       </div>
     );
   }
@@ -454,7 +455,7 @@ export function CohortScreen({
       {tab === "chat" && (
         <div className="tai-col tai-gap14">
           {/* Read-only - only instructors/admins can post here (learners can read). */}
-          {cohortPostsQuery?.loading && <div className="tai-empty">Loading cohort chat...</div>}
+          {cohortPostsQuery?.loading && <div className="tai-empty"><LoadingSkeleton label="Loading cohort chat..." rows={3} /></div>}
           {!cohortPostsQuery?.loading && posts.length === 0 && (
             <div className="tai-empty">No announcements from your instructor yet.</div>
           )}
@@ -727,7 +728,7 @@ export function CohortScreen({
           ========================================================================= */}
       {tab === "resources" && (
         <div className="tai-col tai-gap14">
-          {cohortResourcesQuery?.loading && <div className="tai-empty">Loading resources...</div>}
+          {cohortResourcesQuery?.loading && <div className="tai-empty"><LoadingSkeleton label="Loading resources..." rows={3} /></div>}
           {!cohortResourcesQuery?.loading && resources.length === 0 && (
             <div className="tai-empty">No resources shared with your cohort yet.</div>
           )}
@@ -779,7 +780,7 @@ export function CohortScreen({
           ========================================================================= */}
       {tab === "members" && (
         <div className="tai-col tai-gap16">
-          {cohortMembersQuery?.loading && !members.length && <div className="tai-empty">Loading members...</div>}
+          {cohortMembersQuery?.loading && !members.length && <div className="tai-empty"><LoadingSkeleton label="Loading members..." rows={3} /></div>}
           {!cohortMembersQuery?.loading && members.length === 0 && (
             <div className="tai-empty">No members in this cohort yet.</div>
           )}

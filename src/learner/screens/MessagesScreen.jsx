@@ -1,3 +1,4 @@
+import { LoadingSkeleton } from "./../../components/common/PageLoadingBoundary.jsx";
 import React, { useState, useEffect } from "react";
 import { TopBar, Avatar, initialsOf } from "../components/LearnerUI.jsx";
 import { Send, ChevronLeft, Search, X, MessageSquare, CheckCheck, Users } from "lucide-react";
@@ -137,7 +138,7 @@ export function MessagesScreen({
           </div>
 
           <div style={{ flex: 1, overflowY: "auto" }}>
-            {threadsLoading && <div className="tai-empty" style={{ padding: 24, fontSize: 12.5 }}>Loading conversations...</div>}
+            {threadsLoading && <div className="tai-empty" style={{ padding: 24, fontSize: 12.5 }}><LoadingSkeleton label="Loading conversations..." rows={3} /></div>}
             {!threadsLoading && messageThreads.length === 0 && (
               <div className="tai-empty" style={{ padding: 24, fontSize: 12.5 }}>
                 No conversations yet. Message an instructor from Community or Instructors to start one.
@@ -215,7 +216,7 @@ export function MessagesScreen({
 
               {/* Messages Stream */}
               <div style={{ flex: 1, overflowY: "auto", padding: "18px 20px" }} className="tai-col tai-gap12">
-                {conversationLoading && <div className="tai-empty">Loading messages...</div>}
+                {conversationLoading && <div className="tai-empty"><LoadingSkeleton label="Loading messages..." rows={3} /></div>}
                 {!conversationLoading && currentMessages.length === 0 && (
                   <div className="tai-empty" style={{ padding: "32px 0", textAlign: "center" }}>
                     No messages in this conversation yet. Send a message to start the conversation!

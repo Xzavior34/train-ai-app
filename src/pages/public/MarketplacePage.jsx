@@ -1,3 +1,4 @@
+import { LoadingSkeleton } from "./../../components/common/PageLoadingBoundary.jsx";
 import { CourseImage } from "../../components/common/CourseImage.jsx";
 import { useDialogFocus } from "../../lib/useDialogFocus.js";
 import React, { useState, useEffect, useRef } from "react";
@@ -270,7 +271,7 @@ export default function MarketplacePage({ onGoHome, onBookDemo, onSignIn }) {
 
             {/* Course Grid */}
             {loading ? (
-              <div style={{ textAlign: "center", padding: 60, color: "#94A3B8" }}>Loading courses...</div>
+              <div style={{ textAlign: "center", padding: 60, color: "#94A3B8" }}><LoadingSkeleton label="Loading courses..." rows={3} /></div>
             ) : courses.length === 0 ? (
               <div style={{ textAlign: "center", padding: 60, color: "#94A3B8" }}>No courses found matching your criteria.</div>
             ) : (

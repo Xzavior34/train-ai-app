@@ -1,3 +1,4 @@
+import { LoadingSkeleton } from "./../../components/common/PageLoadingBoundary.jsx";
 import React, { useState, useContext } from "react";
 import { TopBar, Tag, ToastContext } from "../components/PlatformUI.jsx";
 import { LifeBuoy } from "lucide-react";
@@ -52,7 +53,7 @@ export function SupportQueueScreen({ currentUserId }) {
           <div className="ta-card" style={{ flex: 1, minWidth: "min(320px, 100%)", borderRadius: 10 }}>
             <div className="ta-title">All tickets ({tickets.length})</div>
             <div className="ta-col ta-gap8 ta-mt12">
-              {ticketsQuery.loading && <div className="ta-empty">Loading tickets...</div>}
+              {ticketsQuery.loading && <div className="ta-empty"><LoadingSkeleton label="Loading tickets..." rows={3} /></div>}
               {!ticketsQuery.loading && tickets.length === 0 && <div className="ta-empty">No support tickets yet.</div>}
               {tickets.map((t) => (
                 <div
@@ -127,7 +128,7 @@ export function SupportQueueScreen({ currentUserId }) {
             Feedback submitted from learner and organization profile screens.
           </div>
           <div className="ta-col ta-gap10 ta-mt14 anim-stagger">
-            {feedbackQuery.loading && <div className="ta-empty">Loading feedback...</div>}
+            {feedbackQuery.loading && <div className="ta-empty"><LoadingSkeleton label="Loading feedback..." rows={3} /></div>}
             {!feedbackQuery.loading && (feedbackQuery.data || []).length === 0 && <div className="ta-empty">No feedback submitted yet.</div>}
             {(feedbackQuery.data || []).map((f) => (
               <div key={f.id} style={{ padding: "12px 14px", background: "var(--surface-2)", borderRadius: 8, border: "1px solid var(--border)" }}>

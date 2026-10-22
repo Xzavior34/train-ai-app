@@ -1,3 +1,4 @@
+import { LoadingSkeleton } from "./../../components/common/PageLoadingBoundary.jsx";
 import React, { useState, useEffect } from "react";
 import { TopBar, Avatar, Tag } from "../components/LearnerUI.jsx";
 import {
@@ -316,7 +317,7 @@ export function MentorsScreen({
         />
 
         <div className="tai-label tai-mt16">Select Available Day</div>
-        {mentorAvailabilityQuery?.loading && <div style={{ fontSize: 12, color: "var(--text-2)", marginTop: 6 }}>Loading instructor schedule...</div>}
+        {mentorAvailabilityQuery?.loading && <div style={{ fontSize: 12, color: "var(--text-2)", marginTop: 6 }}><LoadingSkeleton label="Loading instructor schedule..." rows={3} /></div>}
         {!mentorAvailabilityQuery?.loading && !hasAvailability && (
           <div className="tai-mt8">
             <div style={{ fontSize: 12.5, color: "var(--text-2)" }}>

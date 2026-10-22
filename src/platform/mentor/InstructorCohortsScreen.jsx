@@ -1,3 +1,4 @@
+import { LoadingSkeleton } from "./../../components/common/PageLoadingBoundary.jsx";
 import { useAssignmentRefresh } from "../../lib/useAssignmentRefresh.js";
 import React, { useContext, useState } from "react";
 import { TopBar, ToastContext } from "../components/PlatformUI.jsx";
@@ -27,7 +28,7 @@ export function InstructorCohortsScreen({ currentUserId, cohortId, onOpenCohort,
   return <div className="ta-fade"><TopBar profileQuery={{ data: { ...profileQuery?.data, role: "Instructor", display_name: profileQuery?.data?.display_name || "Instructor" } }} title={cohortId ? data?.cohort?.name || "Teaching cohort" : "My teaching cohorts"} sub="Assigned cohorts, learner progress, resources and sessions" />
     <div className="ta-content">
       {cohortId && <button className="ta-btn ta-btn-outline" onClick={onBack}>Back to my cohorts</button>}
-      {query.loading ? <div className="ta-empty" role="status">Loading your assignments...</div> : query.error ? <div className="ta-empty" role="alert">{query.error} <button className="ta-btn ta-btn-outline" onClick={query.refetch}>Retry</button></div> : !cohortId ? <div className="ta-col ta-gap12">
+      {query.loading ? <div className="ta-empty" role="status"><LoadingSkeleton label="Loading your assignments..." rows={3} /></div> : query.error ? <div className="ta-empty" role="alert">{query.error} <button className="ta-btn ta-btn-outline" onClick={query.refetch}>Retry</button></div> : !cohortId ? <div className="ta-col ta-gap12">
         {!(data || []).length && <div className="ta-empty">No active teaching cohorts assigned. Ask your administrator to assign you as an instructor.</div>}
         {(data || []).map(cohort => <button key={cohort.id} className="ta-card ta-btn" onClick={() => onOpenCohort(cohort.id)} style={{ textAlign: "left", padding: 20 }}>{cohort.name} · Open teaching space</button>)}
       </div> : data && <>

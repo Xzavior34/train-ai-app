@@ -1,3 +1,4 @@
+import { LoadingSkeleton } from "./../../components/common/PageLoadingBoundary.jsx";
 import React, { useState, useContext } from "react";
 import { TopBar, Tag, ProgressBar, Avatar, ToastContext } from "../components/PlatformUI.jsx";
 import {
@@ -541,7 +542,7 @@ export function CohortDetailScreen({ orgId, cohortId, currentUserId, onBack, org
           </button>
         </div>
         {detailQuery.error && <div role="alert" className="ta-empty">{detailQuery.error} <button className="ta-btn ta-btn-outline" onClick={detailQuery.refetch}>Retry</button></div>}
-        {detailQuery.loading && <div className="ta-empty">Loading cohort...</div>}
+        {detailQuery.loading && <div className="ta-empty"><LoadingSkeleton label="Loading cohort..." rows={3} /></div>}
         {!detailQuery.loading && !cohort && <div className="ta-empty">Cohort not found.</div>}
         {cohort && !editingSettings && (
           <div className="ta-card" style={{ marginBottom: 16, padding: "16px 20px", borderRadius: 12, background: "var(--surface)", border: "1px solid var(--border)" }}>

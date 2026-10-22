@@ -1,3 +1,4 @@
+import { LoadingSkeleton } from "./../../components/common/PageLoadingBoundary.jsx";
 import { MemberLearningTrack } from "../components/MemberLearningTrack.jsx";
 import { ScrollableTabsBar, ScrollableTableWrap } from "../../components/common/ScrollableContent.jsx";
 import React, { useState, useEffect, useContext, useMemo, useRef } from "react";
@@ -244,7 +245,7 @@ export function MemberDetailModal({ member, orgId, cohorts, initialTab = "track"
       </div>
 
       {detailQuery.error && tab !== "track" && <div className="ta-empty" role="alert">{detailQuery.error} <button className="ta-btn ta-btn-outline" onClick={detailQuery.refetch}>Retry</button></div>}
-      {detailQuery.loading && <div className="ta-empty ta-mt16">Loading this member's record...</div>}
+      {detailQuery.loading && <div className="ta-empty ta-mt16"><LoadingSkeleton label="Loading this member's record..." rows={3} /></div>}
 
       {tab === "track" && <MemberLearningTrack orgId={orgId} userId={member.id} member={member} learningTrackQuery={detailQuery} />}
 
@@ -1282,7 +1283,7 @@ export function PeopleScreen({ orgId, orgSelector, setScreen, currentUserId }) {
                     </tr>
                   </thead>
                   <tbody>
-                    {membersQuery.loading && <tr><td colSpan={10} className="ta-empty">Loading members...</td></tr>}
+                    {membersQuery.loading && <tr><td colSpan={10} className="ta-empty"><LoadingSkeleton label="Loading members..." rows={3} /></td></tr>}
                     {!membersQuery.loading && filteredMembers.length === 0 && <tr><td colSpan={10} className="ta-empty">No members match your filters.</td></tr>}
                     {filteredMembers.map((m) => {
                       const hasProgress = Object.prototype.hasOwnProperty.call(progressByMemberId, m.id);
@@ -1450,7 +1451,7 @@ export function PeopleScreen({ orgId, orgSelector, setScreen, currentUserId }) {
                   </tr>
                 </thead>
                 <tbody>
-                  {dsarQuery.loading && <tr><td colSpan={5} className="ta-empty">Loading data requests...</td></tr>}
+                  {dsarQuery.loading && <tr><td colSpan={5} className="ta-empty"><LoadingSkeleton label="Loading data requests..." rows={3} /></td></tr>}
                   {!dsarQuery.loading && dsarRequests.length === 0 && (
                     <tr>
                       <td colSpan={5} className="ta-empty">
@@ -1611,7 +1612,7 @@ export function PeopleScreen({ orgId, orgSelector, setScreen, currentUserId }) {
                     </tr>
                   </thead>
                   <tbody>
-                    {membersQuery.loading && <tr><td colSpan={8} className="ta-empty">Loading link users...</td></tr>}
+                    {membersQuery.loading && <tr><td colSpan={8} className="ta-empty"><LoadingSkeleton label="Loading link users..." rows={3} /></td></tr>}
                     {!membersQuery.loading && linkFilteredMembers.length === 0 && (
                       <tr>
                         <td colSpan={8} className="ta-empty" style={{ padding: "32px 16px", textAlign: "center" }}>
@@ -1752,7 +1753,7 @@ export function PeopleScreen({ orgId, orgSelector, setScreen, currentUserId }) {
                     </tr>
                   </thead>
                   <tbody>
-                    {joinRequestsQuery.loading && <tr><td colSpan={6} className="ta-empty">Loading pending requests...</td></tr>}
+                    {joinRequestsQuery.loading && <tr><td colSpan={6} className="ta-empty"><LoadingSkeleton label="Loading pending requests..." rows={3} /></td></tr>}
                     {!joinRequestsQuery.loading && joinRequests.length === 0 && (
                       <tr>
                         <td colSpan={6} className="ta-empty">
@@ -1870,7 +1871,7 @@ export function PeopleScreen({ orgId, orgSelector, setScreen, currentUserId }) {
               <table className="ta-table" style={{ minWidth: 900 }}>
                 <thead><tr><th>Learner</th><th>Department</th><th>Assigned</th><th>Completed</th><th>Pending</th><th>Avg. progress</th><th>Pace</th></tr></thead>
                 <tbody>
-                  {progressQuery.loading && <tr><td colSpan={7} className="ta-empty">Loading learner progress...</td></tr>}
+                  {progressQuery.loading && <tr><td colSpan={7} className="ta-empty"><LoadingSkeleton label="Loading learner progress..." rows={3} /></td></tr>}
                   {!progressQuery.loading && sortedProgressRows.length === 0 && <tr><td colSpan={7} className="ta-empty">No learners in this organization yet.</td></tr>}
                   {sortedProgressRows.map(r => {
                     const meta = PACE_META[r.pace] || PACE_META.on_pace;
@@ -1914,7 +1915,7 @@ export function PeopleScreen({ orgId, orgSelector, setScreen, currentUserId }) {
               <table className="ta-table" style={{ minWidth: 840 }}>
                 <thead><tr><th>Applicant</th><th>Specialization</th><th>Rate</th><th>Submitted</th><th style={{ textAlign: "right" }}>Decision</th></tr></thead>
                 <tbody>
-                  {applicationsQuery.loading && <tr><td colSpan={5} className="ta-empty">Loading applications...</td></tr>}
+                  {applicationsQuery.loading && <tr><td colSpan={5} className="ta-empty"><LoadingSkeleton label="Loading applications..." rows={3} /></td></tr>}
                   {!applicationsQuery.loading && applications.length === 0 && (
                     <tr><td colSpan={5} className="ta-empty">
                       No pending instructor applications. Every instructor record in this organization is already active.
@@ -1989,7 +1990,7 @@ export function PeopleScreen({ orgId, orgSelector, setScreen, currentUserId }) {
               changed from their own record in the Users tab.
             </div>
 
-            {rolePermsQuery.loading && <div className="ta-empty ta-mt12">Loading permissions...</div>}
+            {rolePermsQuery.loading && <div className="ta-empty ta-mt12"><LoadingSkeleton label="Loading permissions..." rows={3} /></div>}
 
             {!rolePermsQuery.loading && (
               <ScrollableTableWrap label="Privileges and role matrix" style={{ marginTop: 12 }}>
@@ -2047,7 +2048,7 @@ export function PeopleScreen({ orgId, orgSelector, setScreen, currentUserId }) {
             <table className="ta-table" style={{ minWidth: 820 }}>
               <thead><tr><th>Instructor</th><th>Status</th><th>Sessions Completed</th><th>Rating</th><th style={{ textAlign: "right" }}>Actions</th></tr></thead>
               <tbody>
-                {instructorsQuery.loading && <tr><td colSpan={5} className="ta-empty">Loading instructors...</td></tr>}
+                {instructorsQuery.loading && <tr><td colSpan={5} className="ta-empty"><LoadingSkeleton label="Loading instructors..." rows={3} /></td></tr>}
                 {!instructorsQuery.loading && instructors.length === 0 && <tr><td colSpan={5} className="ta-empty">No instructors in this organization yet - promote one from the Users tab.</td></tr>}
                 {instructors.map(m => {
                   const memberRow = members.find((x) => x.id === m.user_id);
@@ -2090,7 +2091,7 @@ export function PeopleScreen({ orgId, orgSelector, setScreen, currentUserId }) {
               <table className="ta-table" style={{ minWidth: 820 }}>
                 <thead><tr><th>Email</th><th>Role</th><th>Sent</th><th>Expires</th><th style={{ textAlign: "right" }}>Actions</th></tr></thead>
                 <tbody>
-                  {invitationsQuery.loading && <tr><td colSpan={5} className="ta-empty">Loading invitations...</td></tr>}
+                  {invitationsQuery.loading && <tr><td colSpan={5} className="ta-empty"><LoadingSkeleton label="Loading invitations..." rows={3} /></td></tr>}
                   {!invitationsQuery.loading && invitations.length === 0 && <tr><td colSpan={5} className="ta-empty">No pending invitations.</td></tr>}
                   {invitations.map(i => (
                     <tr key={i.id}>

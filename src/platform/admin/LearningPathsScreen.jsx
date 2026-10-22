@@ -1,3 +1,4 @@
+import { LoadingSkeleton } from "./../../components/common/PageLoadingBoundary.jsx";
 import React, { useState, useContext, useMemo } from "react";
 import { TopBar, Tag, ToastContext, Switch, Avatar } from "../components/PlatformUI.jsx";
 import {
@@ -118,7 +119,7 @@ function PathBuilder({ path, orgId, onBack, onChanged }) {
             Learners work through these top to bottom. A locked step opens only once the step above it is complete.
           </div>
 
-          {stepsQuery.loading && <div className="ta-empty ta-mt12">Loading the sequence...</div>}
+          {stepsQuery.loading && <div className="ta-empty ta-mt12"><LoadingSkeleton label="Loading the sequence..." rows={3} /></div>}
           {!stepsQuery.loading && steps.length === 0 && (
             <div className="ta-empty ta-mt12">
               No courses in this path yet. Add the first one from the list below.
@@ -224,7 +225,7 @@ function PathBuilder({ path, orgId, onBack, onChanged }) {
             </div>
           </div>
 
-          {coursesQuery.loading && <div className="ta-empty ta-mt12">Loading courses...</div>}
+          {coursesQuery.loading && <div className="ta-empty ta-mt12"><LoadingSkeleton label="Loading courses..." rows={3} /></div>}
           {!coursesQuery.loading && addableCourses.length === 0 && (
             <div className="ta-empty ta-mt12">
               {allCourses.length === 0
@@ -281,7 +282,7 @@ function PathBuilder({ path, orgId, onBack, onChanged }) {
         </div>
 
         <div className="ta-col ta-gap6 ta-mt12" style={{ maxHeight: 280, overflowY: "auto" }}>
-          {membersQuery.loading && <div className="ta-empty">Loading members...</div>}
+          {membersQuery.loading && <div className="ta-empty"><LoadingSkeleton label="Loading members..." rows={3} /></div>}
           {!membersQuery.loading && filteredMembers.length === 0 && <div className="ta-empty">No members found.</div>}
           {filteredMembers.map((m) => (
             <label key={m.id} className="ta-row ta-gap10" style={{ padding: "8px 10px", background: "var(--surface-2)", borderRadius: 10, cursor: "pointer" }}>
@@ -544,7 +545,7 @@ export function LearningPathsScreen({ orgId, orgSelector, setScreen }) {
 
             <div className="ta-label ta-mt16">Add a course</div>
             <div className="ta-col ta-gap6 ta-mt6" style={{ maxHeight: 220, overflowY: "auto" }}>
-              {coursesQuery.loading && <div className="ta-empty">Loading courses...</div>}
+              {coursesQuery.loading && <div className="ta-empty"><LoadingSkeleton label="Loading courses..." rows={3} /></div>}
               {!coursesQuery.loading && courses.filter((c) => !selectedCourseIds.includes(c.id)).length === 0 && (
                 <div className="ta-empty">{courses.length === 0 ? "No courses exist yet. Create one in Content & Courses first." : "Every course is already in this path."}</div>
               )}
@@ -610,7 +611,7 @@ export function LearningPathsScreen({ orgId, orgSelector, setScreen }) {
         </div>
 
         <div className="ta-col ta-gap12">
-          {pathsQuery.loading && <div className="ta-empty">Loading learning paths...</div>}
+          {pathsQuery.loading && <div className="ta-empty"><LoadingSkeleton label="Loading learning paths..." rows={3} /></div>}
           {pathsQuery.error && <div className="ta-empty" role="alert">Could not load learning paths. <button className="ta-btn ta-btn-outline" onClick={pathsQuery.refetch}>Retry</button></div>}
           {!pathsQuery.loading && !pathsQuery.error && paths.length === 0 && (
             <div className="ta-empty">

@@ -1,3 +1,4 @@
+import { LoadingSkeleton } from "./../../components/common/PageLoadingBoundary.jsx";
 import React, { useContext, useState } from "react";
 import { TopBar, Avatar, Tag, Switch, ToastContext } from "../components/PlatformUI.jsx";
 import { ShieldCheck, UserCheck, Eye, Search } from "lucide-react";
@@ -66,7 +67,7 @@ function RolesPermissionsMatrix() {
             </tr>
           </thead>
           <tbody>
-            {matrixQuery.loading && <tr><td colSpan={RBAC_ROLES.length + 1} className="ta-empty">Loading permission matrix...</td></tr>}
+            {matrixQuery.loading && <tr><td colSpan={RBAC_ROLES.length + 1} className="ta-empty"><LoadingSkeleton label="Loading permission matrix..." rows={3} /></td></tr>}
             {!matrixQuery.loading && RBAC_PERMISSIONS.map(p => (
               <tr key={p.key}>
                 <td style={{ fontWeight: 600 }}>{p.label}</td>
@@ -284,7 +285,7 @@ export function AccessControlScreen() {
           <table className="ta-table ta-mt12">
             <thead><tr><th>User</th><th>Role</th><th>Actions</th></tr></thead>
             <tbody>
-              {superAdminsQuery.loading && <tr><td colSpan={3} className="ta-empty">Loading super admins...</td></tr>}
+              {superAdminsQuery.loading && <tr><td colSpan={3} className="ta-empty"><LoadingSkeleton label="Loading super admins..." rows={3} /></td></tr>}
               {!superAdminsQuery.loading && superAdmins.length === 0 && <tr><td colSpan={3} className="ta-empty">No super admins found.</td></tr>}
               {superAdmins.map(sa => (
                 <tr key={sa.userId}>
@@ -310,7 +311,7 @@ export function AccessControlScreen() {
             Enable payouts only for instructors who run their own academy and get paid directly - most org-employed instructors should stay disabled. Only the platform owner can change this.
           </div>
           <div className="ta-col ta-gap8 ta-mt12 anim-stagger">
-            {mentorsQuery.loading && <div className="ta-empty">Loading instructors...</div>}
+            {mentorsQuery.loading && <div className="ta-empty"><LoadingSkeleton label="Loading instructors..." rows={3} /></div>}
             {!mentorsQuery.loading && mentors.length === 0 && <div className="ta-empty">No instructors on the platform yet.</div>}
             {mentors.map((m) => (
               <div key={m.id} className="ta-row ta-between" style={{ padding: "9px 10px", background: "var(--surface-2)", borderRadius: 8, gap: 8 }}>

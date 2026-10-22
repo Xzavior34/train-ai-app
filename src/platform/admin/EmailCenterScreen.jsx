@@ -1,3 +1,4 @@
+import { LoadingSkeleton } from "./../../components/common/PageLoadingBoundary.jsx";
 import React, { useState, useContext, useMemo } from "react";
 import { TopBar, ToastContext, Tag, Avatar, Switch } from "../components/PlatformUI.jsx";
 import {
@@ -296,7 +297,7 @@ export function EmailCenterScreen({ orgId, orgSelector, setScreen, currentUserId
                     />
                   </div>
                   <div className="ta-col ta-gap6 ta-mt10" style={{ maxHeight: 240, overflowY: "auto" }}>
-                    {membersQuery.loading && <div className="ta-empty">Loading members...</div>}
+                    {membersQuery.loading && <div className="ta-empty"><LoadingSkeleton label="Loading members..." rows={3} /></div>}
                     {!membersQuery.loading && filteredForPicker.length === 0 && <div className="ta-empty">No members found.</div>}
                     {filteredForPicker.map((m) => (
                       <label key={m.id} className="ta-row ta-gap10" style={{ padding: "7px 10px", background: "var(--surface-2)", borderRadius: 8, cursor: "pointer" }}>
@@ -428,7 +429,7 @@ export function EmailCenterScreen({ orgId, orgSelector, setScreen, currentUserId
               <table className="ta-table">
                 <thead><tr><th>Subject</th><th>Audience</th><th>Sent</th><th>Opens</th><th>Clicks</th><th>Status</th><th>When</th></tr></thead>
                 <tbody>
-                  {campaignsQuery.loading && <tr><td colSpan={7} className="ta-empty">Loading campaign history...</td></tr>}
+                  {campaignsQuery.loading && <tr><td colSpan={7} className="ta-empty"><LoadingSkeleton label="Loading campaign history..." rows={3} /></td></tr>}
                   {!campaignsQuery.loading && campaigns.length === 0 && <tr><td colSpan={7} className="ta-empty">Nothing sent yet.</td></tr>}
                   {campaigns.map((c) => (
                     <tr key={c.id}>

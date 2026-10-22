@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Trophy, RefreshCw, Zap, Quote, Crown, Medal, Award, Flame, BookOpen, Target } from "lucide-react";
 import { Avatar, initialsOf } from "./LearnerUI.jsx";
 import { SkeletonCard } from "../../components/common/Skeleton.jsx";
+import { PageSkeleton } from "../../components/common/PageLoadingBoundary.jsx";
 
 const FALLBACK_AVATARS = [];
   /*
@@ -82,6 +83,8 @@ export function LeaderboardPanel({
   const second = learners[1] || null;
   const third = learners[2] || null;
   const restLearners = learners.slice(3);
+
+  if (loading) return <PageSkeleton layout="leaderboard" label="Loading rankings" padded={false} />;
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>

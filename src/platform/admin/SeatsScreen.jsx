@@ -1,3 +1,4 @@
+import { LoadingSkeleton } from "./../../components/common/PageLoadingBoundary.jsx";
 import React, { useState, useContext, useMemo } from "react";
 import { TopBar, ToastContext, Tag, Avatar, NavigationContext } from "../components/PlatformUI.jsx";
 import {
@@ -435,7 +436,7 @@ export function SeatsScreen({ orgId, orgSelector, setScreen, userEmail, defaultT
                 </span>
               </div>
 
-              {membersQuery.loading && <div className="ta-empty ta-mt12">Loading members...</div>}
+              {membersQuery.loading && <div className="ta-empty ta-mt12"><LoadingSkeleton label="Loading members..." rows={3} /></div>}
               {!membersQuery.loading && seatedMembers.length === 0 && (
                 <div className="ta-empty ta-mt12">No active members yet, so no seats are in use.</div>
               )}
@@ -493,7 +494,7 @@ export function SeatsScreen({ orgId, orgSelector, setScreen, userEmail, defaultT
                 <table className="ta-table">
                   <thead><tr><th>Date</th><th>Seats</th><th>Amount</th><th>Reference</th></tr></thead>
                   <tbody>
-                    {historyQuery.loading && <tr><td colSpan={4} className="ta-empty">Loading purchase history...</td></tr>}
+                    {historyQuery.loading && <tr><td colSpan={4} className="ta-empty"><LoadingSkeleton label="Loading purchase history..." rows={3} /></td></tr>}
                     {!historyQuery.loading && history.length === 0 && (
                       <tr><td colSpan={4} className="ta-empty">No seats have been purchased yet.</td></tr>
                     )}
@@ -607,7 +608,7 @@ export function SeatsScreen({ orgId, orgSelector, setScreen, userEmail, defaultT
               </div>
 
               {/* List of Requests */}
-              {creditRequestsQuery.loading && <div className="ta-empty ta-mt16">Loading credit requests...</div>}
+              {creditRequestsQuery.loading && <div className="ta-empty ta-mt16"><LoadingSkeleton label="Loading credit requests..." rows={3} /></div>}
               {!creditRequestsQuery.loading && filteredCreditRequests.length === 0 && (
                 <div className="ta-empty ta-mt16">
                   {creditRequests.length === 0

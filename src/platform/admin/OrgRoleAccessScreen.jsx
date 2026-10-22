@@ -1,3 +1,4 @@
+import { LoadingSkeleton } from "./../../components/common/PageLoadingBoundary.jsx";
 import React, { useContext, useState, useEffect } from "react";
 import { TopBar, ToastContext, Switch } from "../components/PlatformUI.jsx";
 import { ShieldCheck, Trophy, CheckCircle2, Lock } from "lucide-react";
@@ -121,7 +122,7 @@ export function OrgRoleAccessScreen({ orgId, orgSelector, currentUserId }) {
                 </tr>
               </thead>
               <tbody>
-                {settingsQuery.loading && <tr><td colSpan={4} className="ta-empty">Loading permissions...</td></tr>}
+                {settingsQuery.loading && <tr><td colSpan={4} className="ta-empty"><LoadingSkeleton label="Loading permissions..." rows={3} /></td></tr>}
                 {!settingsQuery.loading && ORG_RBAC_PERMISSIONS.map((perm) => (
                   <tr key={perm.key}>
                     <td style={{ fontWeight: 600 }}>{perm.label}</td>

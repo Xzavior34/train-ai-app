@@ -1,3 +1,4 @@
+import { LoadingSkeleton } from "./../../components/common/PageLoadingBoundary.jsx";
 import React, { useState, useEffect, useContext } from "react";
 import { TopBar, ToastContext, Switch, Tag, setGlobalThemeDark, getStoredThemeDark } from "../components/PlatformUI.jsx";
 import { Lock, ShieldCheck, Moon, Database, Trash2, RefreshCw, Building2, Save } from "lucide-react";
@@ -257,7 +258,7 @@ export function SettingsHubScreen({ orgId, profileQuery, orgSelector, setScreen,
         </div>
 
         {!orgId && <div className="ta-empty">No organization on your profile yet.</div>}
-        {orgId && orgQuery.loading && <div className="ta-empty">Loading organization settings...</div>}
+        {orgId && orgQuery.loading && <div className="ta-empty"><LoadingSkeleton label="Loading organization settings..." rows={3} /></div>}
         {orgId && orgQuery.error && <div className="ta-empty">Couldn't load organization: {orgQuery.error}</div>}
 
         {orgId && !orgQuery.loading && !orgQuery.error && (

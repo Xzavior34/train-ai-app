@@ -1,3 +1,4 @@
+import { LoadingSkeleton } from "./../../components/common/PageLoadingBoundary.jsx";
 import React, { useState, useMemo, useContext } from "react";
 import { TopBar, StatCard, Tag, exportRowsAsCsv, ProgressBar, ToastContext } from "../components/PlatformUI.jsx";
 import {
@@ -287,7 +288,7 @@ export function OverviewScreen({ orgSelector, onNavigate }) {
 
             {/* Bar Chart Visualization */}
             {enrollmentTrendQuery.loading && (
-              <div className="ta-empty" style={{ padding: "40px 0" }}>Loading enrollment trend telemetry...</div>
+              <div className="ta-empty" style={{ padding: "40px 0" }}><LoadingSkeleton label="Loading enrollment trend telemetry..." rows={3} /></div>
             )}
             {!enrollmentTrendQuery.loading && trendData.length === 0 && (
               <div className="ta-empty" style={{ padding: "40px 0" }}>No enrollment records recorded across tenants yet.</div>
@@ -335,7 +336,7 @@ export function OverviewScreen({ orgSelector, onNavigate }) {
 
             <div className="ta-col ta-gap16 anim-stagger" style={{ marginTop: 18 }}>
               {aiFeatureUsageQuery.loading && (
-                <div className="ta-empty" style={{ padding: "20px 0" }}>Loading AI telemetry...</div>
+                <div className="ta-empty" style={{ padding: "20px 0" }}><LoadingSkeleton label="Loading AI telemetry..." rows={3} /></div>
               )}
               {!aiFeatureUsageQuery.loading && aiFeatures.length === 0 && (
                 <div className="ta-empty" style={{ padding: "20px 0" }}>No AI usage events logged in this database yet.</div>
@@ -550,7 +551,7 @@ export function OverviewScreen({ orgSelector, onNavigate }) {
 
             <div className="ta-col ta-gap12 anim-stagger" style={{ marginTop: 14 }}>
               {activityQuery.loading && (
-                <div className="ta-empty">Loading recent activity...</div>
+                <div className="ta-empty"><LoadingSkeleton label="Loading recent activity..." rows={3} /></div>
               )}
               {activityQuery.error && (
                 <div className="ta-empty">Couldn't load recent activity: {activityQuery.error}</div>

@@ -1,3 +1,4 @@
+import { LoadingSkeleton } from "./../../components/common/PageLoadingBoundary.jsx";
 import React, { useContext, useState, useEffect } from "react";
 import { TopBar, Avatar, Tag, ToastContext, Switch } from "../components/PlatformUI.jsx";
 import { Check, X, Flag, Bot, ShieldCheck } from "lucide-react";
@@ -132,7 +133,7 @@ export function ModerationScreen({ orgSelector, setScreen, orgId, currentUserId 
         </div>
 
         <div className="ta-card">
-          {queueQuery.loading && <div className="ta-empty">Loading moderation queue...</div>}
+          {queueQuery.loading && <div className="ta-empty"><LoadingSkeleton label="Loading moderation queue..." rows={3} /></div>}
           {!queueQuery.loading && queue.length === 0 && <div className="ta-empty">Nothing flagged right now. The queue is clear.</div>}
           {!queueQuery.loading && queue.length > 0 && (
             <div className="ta-table-wrap">

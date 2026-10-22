@@ -1,4 +1,5 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useContext, useId } from "react";
+import { PageLoadingContext } from "../components/common/PageLoadingContext.js";
 
 // Small shared pattern so every screen wired to Supabase handles
 // loading/error the same way, instead of each one reinventing it.
@@ -9,6 +10,10 @@ export function useSupabaseQuery(fetcher, deps = []) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [reloadToken, setReloadToken] = useState(0);
+  const reportPageLoading = useContext(PageLoadingContext);
+  const queryId = useId();
+  useEffect(() => { reportPageLoading?.(queryId, loading); }, [reportPageLoading, queryId, loading]);
+  useEffect(() => () => reportPageLoading?.(queryId, false), [reportPageLoading, queryId]);
 
   useEffect(() => {
     let cancelled = false;

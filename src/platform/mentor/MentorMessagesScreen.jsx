@@ -1,3 +1,4 @@
+import { LoadingSkeleton } from "./../../components/common/PageLoadingBoundary.jsx";
 import React, { useState, useEffect, useRef, useContext } from "react";
 import { TopBar, Avatar, Tag, ToastContext } from "../components/PlatformUI.jsx";
 import { Send, Search, BookOpen, CheckCheck, X, ChevronLeft } from "lucide-react";
@@ -158,7 +159,7 @@ export function MentorMessagesScreen({ userId, mentorId, orgSelector, selectedLe
             {/* Learner List */}
             <div style={{ flex: 1, overflowY: "auto" }} className="anim-stagger">
               {(threadsQuery.loading || menteesQuery.loading || instructorsQuery.loading) && (
-                <div className="ta-empty" style={{ fontSize: 12.5, padding: 24 }}>Loading conversations...</div>
+                <div className="ta-empty" style={{ fontSize: 12.5, padding: 24 }}><LoadingSkeleton label="Loading conversations..." rows={3} /></div>
               )}
               {!threadsQuery.loading && !menteesQuery.loading && contacts.length === 0 && (
                 <div className="ta-empty" style={{ fontSize: 12.5, padding: 24 }}>
@@ -249,7 +250,7 @@ export function MentorMessagesScreen({ userId, mentorId, orgSelector, selectedLe
                 </div>
 
                 {conversationQuery.loading && (
-                  <div className="ta-empty" style={{ fontSize: 12.5 }}>Loading messages...</div>
+                  <div className="ta-empty" style={{ fontSize: 12.5 }}><LoadingSkeleton label="Loading messages..." rows={3} /></div>
                 )}
 
                 {!conversationQuery.loading && activeMessages.length === 0 && (

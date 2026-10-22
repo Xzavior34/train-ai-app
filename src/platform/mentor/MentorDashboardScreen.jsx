@@ -1,3 +1,4 @@
+import { LoadingSkeleton } from "./../../components/common/PageLoadingBoundary.jsx";
 import { useAssignmentRefresh } from "../../lib/useAssignmentRefresh.js";
 import React, { useState, useContext } from "react";
 import { TopBar, StatCard, Tag, ToastContext } from "../components/PlatformUI.jsx";
@@ -240,7 +241,7 @@ export function MentorDashboardScreen({ mentorId, currentUserId, profileQuery, o
               </div>
 
               <div className="ta-col ta-gap16 ta-mt16 anim-stagger">
-                {activeCohortsQuery.loading && <div className="ta-empty">Loading your cohorts...</div>}
+                {activeCohortsQuery.loading && <div className="ta-empty"><LoadingSkeleton label="Loading your cohorts..." rows={3} /></div>}
                 {activeCohortsQuery.error && <div className="ta-empty" role="alert">{activeCohortsQuery.error} <button className="ta-btn ta-btn-outline ta-btn-sm" onClick={activeCohortsQuery.refetch}>Retry</button></div>}
                 {!activeCohortsQuery.loading && !activeCohortsQuery.error && activeCohorts.length === 0 && (
                   <div className="ta-empty">You're not assigned to any active cohorts yet.</div>
@@ -322,7 +323,7 @@ export function MentorDashboardScreen({ mentorId, currentUserId, profileQuery, o
               </div>
 
               <div className="ta-col ta-gap12 ta-mt16 anim-stagger">
-                {riskQuery.loading && <div className="ta-empty">Loading learner activity...</div>}
+                {riskQuery.loading && <div className="ta-empty"><LoadingSkeleton label="Loading learner activity..." rows={3} /></div>}
                 {riskQuery.error && <div className="ta-empty" role="alert">{riskQuery.error} <button className="ta-btn ta-btn-outline ta-btn-sm" onClick={riskQuery.refetch}>Retry</button></div>}
                 {!riskQuery.loading && !riskQuery.error && studentRisks.length === 0 && (
                   <div className="ta-empty" style={{ padding: "16px 8px" }}>

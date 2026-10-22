@@ -1,3 +1,4 @@
+import { LoadingSkeleton } from "./../../components/common/PageLoadingBoundary.jsx";
 import React, { useState, useContext } from "react";
 import { ToastContext } from "./PlatformUI.jsx";
 import { StickyNote, Trash2 } from "lucide-react";
@@ -41,7 +42,7 @@ export function AnalysisNotesCard({ authorId, organizationId }) {
         {saving ? "Saving..." : "Add Note"}
       </button>
       <div className="ta-col ta-gap8 ta-mt16">
-        {notesQuery.loading && <div className="ta-empty">Loading notes...</div>}
+        {notesQuery.loading && <div className="ta-empty"><LoadingSkeleton label="Loading notes..." rows={3} /></div>}
         {!notesQuery.loading && (notesQuery.data || []).length === 0 && <div className="ta-empty">No notes yet.</div>}
         {(notesQuery.data || []).map((n) => (
           <div key={n.id} className="ta-row ta-between" style={{ padding: 12, background: "var(--surface-3)", borderRadius: 8, alignItems: "flex-start", gap: 10 }}>

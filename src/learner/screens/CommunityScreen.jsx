@@ -1,3 +1,4 @@
+import { LoadingSkeleton } from "./../../components/common/PageLoadingBoundary.jsx";
 import React, { useState, useMemo } from "react";
 import {
   Users, GraduationCap, Trophy, ChevronRight, Plus, Search, Heart, MessageCircle,
@@ -1652,7 +1653,7 @@ export function CommunityScreen({
               </div>
             )}
 
-            {studyGroupsQuery.loading && <div role="status" style={{ padding: 16 }}>Loading study groups...</div>}
+            {studyGroupsQuery.loading && <div role="status" style={{ padding: 16 }}><LoadingSkeleton label="Loading study groups..." rows={3} /></div>}
             {!studyGroupsQuery.loading && !studyGroupsQuery.error && filteredGroups.length === 0 && <div style={{ padding: 16, color: "var(--text-3)" }}>No study groups are available yet. Check back or ask your instructor about your groups.</div>}
             {/* Groups Grid */}
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 12 }}>

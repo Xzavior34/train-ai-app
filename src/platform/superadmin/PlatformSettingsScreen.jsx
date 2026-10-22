@@ -1,3 +1,4 @@
+import { LoadingSkeleton } from "./../../components/common/PageLoadingBoundary.jsx";
 import React, { useState, useContext, useEffect } from "react";
 import { TopBar, ToastContext, Switch } from "../components/PlatformUI.jsx";
 import { Plus } from "lucide-react";
@@ -144,7 +145,7 @@ export function PlatformSettingsScreen({ activeProject, projectSessionStatus, on
           </div>
         </div>
 
-        {settingsQuery.loading && <div className="ta-empty">Loading platform settings...</div>}
+        {settingsQuery.loading && <div className="ta-empty"><LoadingSkeleton label="Loading platform settings..." rows={3} /></div>}
         {settingsQuery.error && <div className="ta-empty">Couldn't load platform settings: {settingsQuery.error}</div>}
 
         {!settingsQuery.loading && (

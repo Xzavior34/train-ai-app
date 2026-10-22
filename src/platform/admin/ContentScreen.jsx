@@ -1,3 +1,4 @@
+import { LoadingSkeleton } from "./../../components/common/PageLoadingBoundary.jsx";
 import { CourseImage } from "../../components/common/CourseImage.jsx";
 import React, { useState, useEffect, useContext } from "react";
 import { TopBar, Tag, ToastContext, Switch } from "../components/PlatformUI.jsx";
@@ -680,7 +681,7 @@ export function ContentScreen({ orgId, orgSelector, setScreen, selectedCourseId,
                   </div>
                 </div>
                 <div className="ta-col ta-gap10">
-                  {materialsQuery.loading && <div className="ta-empty">Loading materials...</div>}
+                  {materialsQuery.loading && <div className="ta-empty"><LoadingSkeleton label="Loading materials..." rows={3} /></div>}
                   {!materialsQuery.loading && (materialsQuery.data || []).length === 0 && <div className="ta-empty">No materials added yet.</div>}
                   {(materialsQuery.data || []).map((m) => (
                     <div key={m.id} className="ta-row ta-between" style={{ padding: 12, background: "var(--surface-3)", borderRadius: 8 }}>
@@ -741,7 +742,7 @@ export function ContentScreen({ orgId, orgSelector, setScreen, selectedCourseId,
                 <table className="ta-table">
                   <thead><tr><th>Learner</th><th>Progress</th><th>Enrolled</th><th>Completed</th></tr></thead>
                   <tbody>
-                    {enrolledLearnersQuery.loading && <tr><td colSpan={4} className="ta-empty">Loading enrolled learners...</td></tr>}
+                    {enrolledLearnersQuery.loading && <tr><td colSpan={4} className="ta-empty"><LoadingSkeleton label="Loading enrolled learners..." rows={3} /></td></tr>}
                     {!enrolledLearnersQuery.loading && (enrolledLearnersQuery.data || []).length === 0 && (
                       <tr><td colSpan={4} className="ta-empty">No learners enrolled in this course yet.</td></tr>
                     )}
@@ -774,7 +775,7 @@ export function ContentScreen({ orgId, orgSelector, setScreen, selectedCourseId,
                 <table className="ta-table">
                   <thead><tr><th>Learner</th><th>Message</th><th>Requested</th><th>Status</th><th></th></tr></thead>
                   <tbody>
-                    {applicationsQuery.loading && <tr><td colSpan={5} className="ta-empty">Loading applications...</td></tr>}
+                    {applicationsQuery.loading && <tr><td colSpan={5} className="ta-empty"><LoadingSkeleton label="Loading applications..." rows={3} /></td></tr>}
                     {!applicationsQuery.loading && (applicationsQuery.data || []).length === 0 && (
                       <tr><td colSpan={5} className="ta-empty">No applications for this course yet.</td></tr>
                     )}
@@ -916,7 +917,7 @@ export function ContentScreen({ orgId, orgSelector, setScreen, selectedCourseId,
                   <table className="ta-table">
                     <thead><tr><th>Learner</th><th>Submitted</th><th>AI Score</th><th>Current Score</th><th>Override</th></tr></thead>
                     <tbody>
-                      {assessmentAttemptsQuery.loading && <tr><td colSpan={5} className="ta-empty">Loading attempts...</td></tr>}
+                      {assessmentAttemptsQuery.loading && <tr><td colSpan={5} className="ta-empty"><LoadingSkeleton label="Loading attempts..." rows={3} /></td></tr>}
                       {!assessmentAttemptsQuery.loading && (assessmentAttemptsQuery.data || []).length === 0 && (
                         <tr><td colSpan={5} className="ta-empty">No assessment attempts submitted yet.</td></tr>
                       )}
@@ -1109,7 +1110,7 @@ export function ContentScreen({ orgId, orgSelector, setScreen, selectedCourseId,
                     <table className="ta-table">
                       <thead><tr><th>Learner</th><th>Score</th><th>Status</th><th>Requested</th><th>Action</th></tr></thead>
                       <tbody>
-                        {certRequestsQuery.loading && <tr><td colSpan={5} className="ta-empty">Loading requests...</td></tr>}
+                        {certRequestsQuery.loading && <tr><td colSpan={5} className="ta-empty"><LoadingSkeleton label="Loading requests..." rows={3} /></td></tr>}
                         {!certRequestsQuery.loading && (certRequestsQuery.data || []).length === 0 && (
                           <tr><td colSpan={5} className="ta-empty">No certificate requests yet.</td></tr>
                         )}
@@ -1198,7 +1199,7 @@ export function ContentScreen({ orgId, orgSelector, setScreen, selectedCourseId,
               </div>
             )}
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 20 }}>
-              {coursesQuery.loading && <div className="ta-empty">Loading courses...</div>}
+              {coursesQuery.loading && <div className="ta-empty"><LoadingSkeleton label="Loading courses..." rows={3} /></div>}
               {!coursesQuery.loading && courses.length === 0 && <div className="ta-empty">No courses created yet.</div>}
               {courses.map((c, idx) => {
                 const fallbackImages = [

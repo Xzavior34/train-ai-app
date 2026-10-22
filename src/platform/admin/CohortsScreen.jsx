@@ -1,3 +1,4 @@
+import { LoadingSkeleton } from "./../../components/common/PageLoadingBoundary.jsx";
 import React, { useState, useContext } from "react";
 import { TopBar, Tag, ProgressBar, ToastContext } from "../components/PlatformUI.jsx";
 import {
@@ -131,7 +132,7 @@ export function CohortsScreen({ orgId, onOpenCohort, orgSelector, setScreen, cur
           {/* Main Left Column */}
           <div style={{ display: "flex", flexDirection: "column", gap: 16, minWidth: 0 }}>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 260px), 1fr))", gap: 16 }}>
-              {cohortsQuery.loading && <div className="ta-empty">Loading cohorts...</div>}
+              {cohortsQuery.loading && <div className="ta-empty"><LoadingSkeleton label="Loading cohorts..." rows={3} /></div>}
               {!cohortsQuery.loading && cohorts.length === 0 && (
                 <div className="ta-empty">No cohorts created yet. Click "Create Cohort" above to launch your first training batch.</div>
               )}
@@ -408,7 +409,7 @@ export function CohortsScreen({ orgId, onOpenCohort, orgSelector, setScreen, cur
               </div>
 
               <div className="ta-col ta-gap12 ta-mt14">
-                {sessionsQuery.loading && <div className="ta-empty">Loading milestone sessions...</div>}
+                {sessionsQuery.loading && <div className="ta-empty"><LoadingSkeleton label="Loading milestone sessions..." rows={3} /></div>}
                 {!sessionsQuery.loading && upcomingSessions.length === 0 && (
                   <div className="ta-empty" style={{ padding: "16px 8px" }}>
                     No upcoming live cohort milestones scheduled yet.

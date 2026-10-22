@@ -1,3 +1,4 @@
+import { LoadingSkeleton } from "./../../components/common/PageLoadingBoundary.jsx";
 import React, { useState, useContext, useMemo } from "react";
 import { TopBar, Tag, ToastContext, Switch, Avatar, exportRowsAsCsv } from "../components/PlatformUI.jsx";
 import {
@@ -252,7 +253,7 @@ function PlatformBillingPanel() {
         <table className="ta-table">
           <thead><tr><th>Organization</th><th>Tier</th><th>Provider</th><th>Reference</th><th>When</th></tr></thead>
           <tbody>
-            {paymentsQuery.loading && <tr><td colSpan={5} className="ta-empty">Loading payments...</td></tr>}
+            {paymentsQuery.loading && <tr><td colSpan={5} className="ta-empty"><LoadingSkeleton label="Loading payments..." rows={3} /></td></tr>}
             {!paymentsQuery.loading && payments.length === 0 && <tr><td colSpan={5} className="ta-empty">No organization payments recorded yet.</td></tr>}
             {payments.map((p) => (
               <tr key={p.id}>
@@ -586,7 +587,7 @@ export function PlatformUserReferralTracker({
           <tbody>
             {usersQuery.loading && (
               <tr>
-                <td colSpan={6} className="ta-empty">Loading platform users and referral tracking...</td>
+                <td colSpan={6} className="ta-empty"><LoadingSkeleton label="Loading platform users and referral tracking..." rows={3} /></td>
               </tr>
             )}
             {!usersQuery.loading && filteredUsers.length === 0 && (
@@ -926,7 +927,7 @@ export function OrganizationsScreen({ orgSelector, onSwitchToOrgWorkspace, onLau
               VIEW MODE: CARD GRID
               ========================================================================= */
           <div>
-            {orgsQuery.loading && <div className="ta-empty">Loading organizations...</div>}
+            {orgsQuery.loading && <div className="ta-empty"><LoadingSkeleton label="Loading organizations..." rows={3} /></div>}
             {!orgsQuery.loading && filteredOrgs.length === 0 && <div className="ta-empty">No organizations match the current date or invite link filters.</div>}
 
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 280px), 1fr))", gap: 18 }} className="anim-stagger">
@@ -1082,7 +1083,7 @@ export function OrganizationsScreen({ orgSelector, onSwitchToOrgWorkspace, onLau
                   </tr>
                 </thead>
                 <tbody>
-                  {orgsQuery.loading && <tr><td colSpan={7} className="ta-empty">Loading organizations...</td></tr>}
+                  {orgsQuery.loading && <tr><td colSpan={7} className="ta-empty"><LoadingSkeleton label="Loading organizations..." rows={3} /></td></tr>}
                   {!orgsQuery.loading && filteredOrgs.length === 0 && <tr><td colSpan={7} className="ta-empty">No organizations match the current filters.</td></tr>}
                   {filteredOrgs.map((o) => {
                     const slug = o.referral_slug || o.slug || o.id;

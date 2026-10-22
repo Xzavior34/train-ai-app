@@ -1,3 +1,4 @@
+import { LoadingSkeleton } from "./../../components/common/PageLoadingBoundary.jsx";
 import React, { useState } from "react";
 import { TopBar, StatCard, Avatar, Tag, ProgressBar, ToastContext, exportRowsAsCsv } from "../components/PlatformUI.jsx";
 import { AnalysisNotesCard } from "../components/AnalysisNotesCard.jsx";
@@ -129,7 +130,7 @@ export function ManagerDashboardScreen({ userId, profileQuery, orgId, orgSelecto
                     <tr><th>Name &amp; Email</th><th>Enrolled</th><th>Completed</th><th>Progress</th><th>Overdue</th><th>Last active</th></tr>
                   </thead>
                   <tbody>
-                    {reportsQuery.loading && <tr><td colSpan={6} className="ta-empty">Loading your team...</td></tr>}
+                    {reportsQuery.loading && <tr><td colSpan={6} className="ta-empty"><LoadingSkeleton label="Loading your team..." rows={3} /></td></tr>}
                     {!reportsQuery.loading && reports.length === 0 && (
                       <tr><td colSpan={6} className="ta-empty">No direct reports assigned yet. Ask an admin to link team members to you via People → user profile.</td></tr>
                     )}
@@ -166,7 +167,7 @@ export function ManagerDashboardScreen({ userId, profileQuery, orgId, orgSelecto
                 <table className="ta-table">
                   <thead><tr><th>Learner</th><th>Course</th><th>Progress</th><th>Due</th><th>Status</th></tr></thead>
                   <tbody>
-                    {teamComplianceQuery.loading && <tr><td colSpan={5} className="ta-empty">Loading...</td></tr>}
+                    {teamComplianceQuery.loading && <tr><td colSpan={5} className="ta-empty"><LoadingSkeleton label="Loading..." rows={3} /></td></tr>}
                     {!teamComplianceQuery.loading && (teamComplianceQuery.data || []).length === 0 && <tr><td colSpan={5} className="ta-empty">No compliance training assigned to your team yet.</td></tr>}
                     {(teamComplianceQuery.data || []).map((r) => (
                       <tr key={r.id}>
@@ -186,7 +187,7 @@ export function ManagerDashboardScreen({ userId, profileQuery, orgId, orgSelecto
               <div className="ta-title">Team Cohorts</div>
               <div style={{ fontSize: 12, color: "var(--text-2)", marginTop: 4 }}>Cohorts your direct reports belong to.</div>
               <div className="ta-col ta-gap10 ta-mt12 anim-stagger">
-                {teamCohortsQuery.loading && <div className="ta-empty">Loading...</div>}
+                {teamCohortsQuery.loading && <div className="ta-empty"><LoadingSkeleton label="Loading..." rows={3} /></div>}
                 {!teamCohortsQuery.loading && (teamCohortsQuery.data || []).length === 0 && <div className="ta-empty">None of your team members are enrolled in a cohort yet.</div>}
                 {(teamCohortsQuery.data || []).map((c) => (
                   <div key={c.id} style={{ padding: 12, background: "var(--surface-3)", borderRadius: 8 }}>
@@ -213,7 +214,7 @@ export function ManagerDashboardScreen({ userId, profileQuery, orgId, orgSelecto
                 Completion by course category across your direct reports.
               </div>
               <div className="ta-col ta-gap8 ta-mt12">
-                {skillSnapshotQuery.loading && <div className="ta-empty">Loading...</div>}
+                {skillSnapshotQuery.loading && <div className="ta-empty"><LoadingSkeleton label="Loading..." rows={3} /></div>}
                 {!skillSnapshotQuery.loading && (skillSnapshotQuery.data || []).length === 0 && <div className="ta-empty">No course activity to summarize yet.</div>}
                 {(skillSnapshotQuery.data || []).map((s) => (
                   <div key={s.category}>
@@ -232,7 +233,7 @@ export function ManagerDashboardScreen({ userId, profileQuery, orgId, orgSelecto
               <div className="ta-body" style={{ marginTop: 4, marginBottom: 4 }}>
                 Click a member to inspect demonstrated competencies and gaps.
               </div>
-              {skillGapsDetailQuery.loading && <div className="ta-empty">Loading skill gaps...</div>}
+              {skillGapsDetailQuery.loading && <div className="ta-empty"><LoadingSkeleton label="Loading skill gaps..." rows={3} /></div>}
               {!skillGapsDetailQuery.loading && (skillGapsDetailQuery.data || []).length === 0 && <div className="ta-empty">No direct reports yet.</div>}
               <div className="ta-col ta-gap8 ta-mt12 anim-stagger">
                 {(skillGapsDetailQuery.data || []).map((l) => (
@@ -268,7 +269,7 @@ export function ManagerDashboardScreen({ userId, profileQuery, orgId, orgSelecto
                   <button className="ta-btn ta-btn-primary ta-btn-sm" disabled={savingNote || !noteText.trim()} onClick={handleAddDeptNote}>Add</button>
                 </div>
                 <div className="ta-col ta-gap8 ta-mt12">
-                  {notesQuery.loading && <div className="ta-empty">Loading notes...</div>}
+                  {notesQuery.loading && <div className="ta-empty"><LoadingSkeleton label="Loading notes..." rows={3} /></div>}
                   {!notesQuery.loading && (notesQuery.data || []).length === 0 && <div style={{ fontSize: 12, color: "var(--text-3)" }}>No notes yet.</div>}
                   {(notesQuery.data || []).map((n) => (
                     <div key={n.id} style={{ background: "var(--surface-2)", borderRadius: 8, padding: "8px 10px" }}>

@@ -1,3 +1,4 @@
+import { LoadingSkeleton } from "./../../components/common/PageLoadingBoundary.jsx";
 import React, { useEffect, useState } from "react";
 import { TopBar, Avatar, timeAgo, initialsOf } from "../components/LearnerUI.jsx";
 import { Heart, MessageSquare, Plus, Search, Send } from "lucide-react";
@@ -114,7 +115,7 @@ export function CommunityFeedScreen({ session, showToast = () => {}, back, push,
   return <div className="tai-feed-page tai-fade-in">
     {selectedId ? <>
       <TopBar title="Discussion" onBack={closePost} />
-      {query.loading && !selectedPost ? <div className="tai-card tai-empty">Loading discussion...</div> :
+      {query.loading && !selectedPost ? <div className="tai-card tai-empty"><LoadingSkeleton label="Loading discussion..." rows={3} /></div> :
         selectedPost ? <>
           <article className="tai-card tai-feed-detail">
             {header(selectedPost)}
@@ -166,7 +167,7 @@ export function CommunityFeedScreen({ session, showToast = () => {}, back, push,
           aria-pressed={selectedType === value} onClick={() => setSelectedType(value)}>{label}</button>)}
       </div>
       {query.error && <div className="tai-card" role="alert">Could not load posts. <button className="tai-btn tai-btn-outline" onClick={query.refetch}>Retry</button></div>}
-      {query.loading && <div className="tai-card tai-empty">Loading posts...</div>}
+      {query.loading && <div className="tai-card tai-empty"><LoadingSkeleton label="Loading posts..." rows={3} /></div>}
       {!query.loading && filteredPosts.length === 0 && <div className="tai-card tai-empty">No posts found.</div>}
       {filteredPosts.map(post => <article key={post.id} className="tai-card tai-feed-preview">
         {header(post)}

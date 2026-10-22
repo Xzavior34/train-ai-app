@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { PageLoadingBoundary } from "../components/common/PageLoadingBoundary.jsx";
 import { CheckCircle2 } from "lucide-react";
 import { usePlatformData } from "./hooks/usePlatformData.js";
 import { useSupabaseQuery } from "../lib/useSupabaseQuery.js";
@@ -155,6 +156,7 @@ export default function PlatformOwnerApp({
                 />
 
               <div className="ta-main">
+                <PageLoadingBoundary key={`${screen}:${selectedOrgId || "all"}`} screen={screen} loading={profileQuery.loading} onOpenMenu={() => setMobileOpen(true)}>
                 {screen === "overview" && <OverviewScreen orgSelector={orgSelector} onNavigate={(scr) => setScreen(scr)} />}
                 {screen === "demos" && <DemoRequestsScreen orgSelector={orgSelector} />}
                 {screen === "orgs" && (
@@ -186,6 +188,7 @@ export default function PlatformOwnerApp({
                 {screen === "emails" && <EmailsScreen orgSelector={orgSelector} />}
                 {screen === "support" && <SupportQueueScreen currentUserId={session?.user?.id} />}
                 {screen === "access" && <AccessControlScreen orgSelector={orgSelector} />}
+                </PageLoadingBoundary>
               </div>
             </div>
 

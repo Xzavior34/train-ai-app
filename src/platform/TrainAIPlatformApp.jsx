@@ -1,4 +1,6 @@
+import { LoadingSkeleton } from "./../components/common/PageLoadingBoundary.jsx";
 import { InstructorCohortsScreen } from "./mentor/InstructorCohortsScreen.jsx";
+import { PageLoadingBoundary } from "../components/common/PageLoadingBoundary.jsx";
 import { useAssignmentRefresh } from "../lib/useAssignmentRefresh.js";
 import React, { useState, useEffect } from "react";
 import { usePlatformData } from "./hooks/usePlatformData.js";
@@ -201,7 +203,7 @@ export default function TrainAIPlatformApp({ isActive = true, onSwitchToLearner,
       return false;
     }
   });
-  if (!workspace) return <div className="ta-empty">Loading workspace permissions...</div>;
+  if (!workspace) return <div className="ta-empty"><LoadingSkeleton label="Loading workspace permissions..." rows={3} /></div>;
   if (orgPaymentCallbackActive) {
     return <OrgPaymentCallbackScreen onDone={() => setOrgPaymentCallbackActive(false)} />;
   }
@@ -229,6 +231,10 @@ export default function TrainAIPlatformApp({ isActive = true, onSwitchToLearner,
                 />
 
             <div className="ta-main">
+              <PageLoadingBoundary key={`${workspace}:${screen}:${effectiveOrgId || "none"}`} screen={screen}
+                onOpenMenu={() => setMobileOpen(true)}
+                loading={profileQuery.loading || (workspace === "mentor" && mentorProfileQuery.loading)
+                  || (workspace === "mentor" && screen === "community" && (mentorStudyGroupsQuery.loading || mentorCohortsForCommunityQuery.loading || mentorLeaderboardQuery.loading))}>
               {workspace === "admin" && (
                 <>
                   {screen === "dashboard" && <AdminDashboardScreen orgId={effectiveOrgId} profileQuery={profileQuery} setScreen={setScreen} orgSelector={orgSelector} isPlatformOwner={isSuperAdminUser} />}
@@ -318,6 +324,7 @@ export default function TrainAIPlatformApp({ isActive = true, onSwitchToLearner,
                   {screen === "workforce" && <WorkforceIntelligenceScreen orgId={effectiveOrgId} orgSelector={orgSelector} currentUserId={session?.user?.id} />}
                 </>
               )}
+              </PageLoadingBoundary>
             </div>
           </div>
 

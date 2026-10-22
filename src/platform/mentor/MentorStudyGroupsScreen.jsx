@@ -1,3 +1,4 @@
+import { LoadingSkeleton } from "./../../components/common/PageLoadingBoundary.jsx";
 import React, { useState, useContext } from "react";
 import { TopBar, Tag, ToastContext } from "../components/PlatformUI.jsx";
 import { 
@@ -160,7 +161,7 @@ export function MentorStudyGroupsScreen({ mentorId, orgId, orgSelector }) {
 
             {/* Group Cards List */}
             <div className="ta-col ta-gap12 anim-stagger">
-              {groupsQuery.loading && <div className="ta-empty">Loading study groups...</div>}
+              {groupsQuery.loading && <div className="ta-empty"><LoadingSkeleton label="Loading study groups..." rows={3} /></div>}
               {groups.map((g) => {
                 const isSelected = activeGroup?.id === g.id;
                 return (
@@ -376,7 +377,7 @@ export function MentorStudyGroupsScreen({ mentorId, orgId, orgSelector }) {
                 </div>
 
                 <div className="ta-col ta-gap8" style={{ maxHeight: 260, overflowY: "auto" }}>
-                  {groupMessagesQuery.loading && <div className="ta-empty" style={{ fontSize: 12 }}>Loading announcements...</div>}
+                  {groupMessagesQuery.loading && <div className="ta-empty" style={{ fontSize: 12 }}><LoadingSkeleton label="Loading announcements..." rows={3} /></div>}
                   {!groupMessagesQuery.loading && (groupMessagesQuery.data || []).length === 0 && (
                     <div style={{ fontSize: 12, color: "var(--text-3)" }}>No announcements posted yet.</div>
                   )}

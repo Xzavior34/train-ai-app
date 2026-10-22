@@ -1,3 +1,4 @@
+import { LoadingSkeleton } from "./../../components/common/PageLoadingBoundary.jsx";
 import React, { useContext, useEffect, useState } from "react";
 import { TopBar, ToastContext } from "../components/PlatformUI.jsx";
 import {
@@ -170,7 +171,7 @@ function DetailsStep({ currentUserProfileId, onComplete }) {
 
       {mode === "resume" && (
         <div className="ta-mt16">
-          {orgsQuery.loading && <div className="ta-empty">Loading organizations...</div>}
+          {orgsQuery.loading && <div className="ta-empty"><LoadingSkeleton label="Loading organizations..." rows={3} /></div>}
           {!orgsQuery.loading && resumableOrgs.length === 0 && (
             <div className="ta-empty">Every existing organization already has members. There's nothing to resume. Create a new one instead.</div>
           )}

@@ -1,3 +1,4 @@
+import { LoadingSkeleton } from "./../../components/common/PageLoadingBoundary.jsx";
 import React, { useState, useContext } from "react";
 import { TopBar, Tag, ToastContext } from "../components/PlatformUI.jsx";
 import { 
@@ -221,7 +222,7 @@ export function DiscussionsScreen({ mentorId, orgSelector }) {
 
         {/* Question Cards List */}
         <div className="ta-col ta-gap14 anim-stagger">
-          {discussionsQuery.loading && <div className="ta-empty">Loading Q&amp;A discussions...</div>}
+          {discussionsQuery.loading && <div className="ta-empty"><LoadingSkeleton label="Loading Q&amp;A discussions..." rows={3} /></div>}
           {!discussionsQuery.loading && filteredDiscussions.length === 0 && (
             <div className="ta-card" style={{ textAlign: "center", padding: 36 }}>
               <HelpCircle size={32} color="var(--primary)" style={{ opacity: 0.5, marginBottom: 8 }} />

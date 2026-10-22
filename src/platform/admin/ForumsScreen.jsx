@@ -1,3 +1,4 @@
+import { LoadingSkeleton } from "./../../components/common/PageLoadingBoundary.jsx";
 import React, { useState, useContext } from "react";
 import { TopBar, Tag, ToastContext } from "../components/PlatformUI.jsx";
 import { ArrowLeft, Plus, Trash2, Pencil, MessageSquare } from "lucide-react";
@@ -123,7 +124,7 @@ export function ForumsScreen({ orgSelector, setScreen }) {
             )}
 
             <div className="ta-grid ta-grid-3 ta-mt16">
-              {categoriesQuery.loading && <div className="ta-empty">Loading forum categories...</div>}
+              {categoriesQuery.loading && <div className="ta-empty"><LoadingSkeleton label="Loading forum categories..." rows={3} /></div>}
               {!categoriesQuery.loading && categories.length === 0 && <div className="ta-empty">No forum categories yet. Create one to get started.</div>}
               {categories.map((cat) => (
                 <div key={cat.id} className="ta-card">
@@ -151,7 +152,7 @@ export function ForumsScreen({ orgSelector, setScreen }) {
             <table className="ta-table ta-mt16">
               <thead><tr><th>Author</th><th>Content</th><th>Replies</th><th>Posted</th><th></th></tr></thead>
               <tbody>
-                {threadsQuery.loading && <tr><td colSpan={5} className="ta-empty">Loading threads...</td></tr>}
+                {threadsQuery.loading && <tr><td colSpan={5} className="ta-empty"><LoadingSkeleton label="Loading threads..." rows={3} /></td></tr>}
                 {!threadsQuery.loading && threads.length === 0 && <tr><td colSpan={5} className="ta-empty">No threads in this category yet.</td></tr>}
                 {threads.map((t) => (
                   <tr key={t.id}>

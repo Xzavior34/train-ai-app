@@ -1,3 +1,4 @@
+import { LoadingSkeleton } from "./../../components/common/PageLoadingBoundary.jsx";
 import React, { useState, useMemo } from "react";
 import { TopBar, Avatar, Tag, initialsOf, timeAgo } from "../components/LearnerUI.jsx";
 import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
@@ -255,9 +256,9 @@ export function StudyGroupScreen({
     return (
       <div className="tai-fade-in" style={{ display: "flex", flexDirection: "column", gap: 18 }}>
         <TopBar title="Study Group" sub="Loading group details..." onBack={handleBack} />
-        <div className="tai-card" style={{ padding: 40, textAlign: "center", color: "var(--text-3)", fontSize: 13 }}>
-          Loading study group...
-        </div>
+        <div className="tai-card" style={{ padding: 40, textAlign: "center", color: "var(--text-3)", fontSize: 13 }}><LoadingSkeleton label="Loading study group..." rows={3} /></div>
+
+
       </div>
     );
   }
@@ -536,9 +537,9 @@ export function StudyGroupScreen({
 
             {/* Posts List */}
             {groupPostsQuery.loading ? (
-              <div className="tai-card" style={{ padding: 32, textAlign: "center", color: "var(--text-3)", fontSize: 13 }}>
-                Loading group discussions...
-              </div>
+              <div className="tai-card" style={{ padding: 32, textAlign: "center", color: "var(--text-3)", fontSize: 13 }}><LoadingSkeleton label="Loading group discussions..." rows={3} /></div>
+
+
             ) : posts.length === 0 ? (
               <div className="tai-card tai-empty" style={{ padding: 36, textAlign: "center", borderRadius: 14 }}>
                 <MessageSquare size={28} color="var(--text-3)" style={{ margin: "0 auto 10px" }} />

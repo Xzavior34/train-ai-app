@@ -1,3 +1,4 @@
+import { LoadingSkeleton } from "./../../components/common/PageLoadingBoundary.jsx";
 import React, { useState, useContext } from "react";
 import { TopBar, Avatar, Tag, ProgressBar, ToastContext } from "../components/PlatformUI.jsx";
 import { BookOpen, Calendar, CheckCircle2, MessageSquare, X, Search, Filter, StickyNote, Award } from "lucide-react";
@@ -48,7 +49,7 @@ function LearnerNotesSection({ learnerId, orgId, authorId }) {
         </button>
       </div>
       <div className="ta-col ta-gap8 ta-mt10">
-        {notesQuery.loading && <div style={{ fontSize: 12, color: "var(--text-3)" }}>Loading notes...</div>}
+        {notesQuery.loading && <div style={{ fontSize: 12, color: "var(--text-3)" }}><LoadingSkeleton label="Loading notes..." rows={3} /></div>}
         {!notesQuery.loading && (notesQuery.data || []).length === 0 && <div style={{ fontSize: 12, color: "var(--text-3)" }}>No notes yet.</div>}
         {(notesQuery.data || []).map((n) => (
           <div key={n.id} style={{ background: "var(--surface-2)", borderRadius: 8, padding: "8px 10px" }}>
@@ -200,7 +201,7 @@ export function MenteesScreen({ mentorId, orgSelector, setScreen, setSelectedLea
               </tr>
             </thead>
             <tbody>
-              {menteesQuery.loading && <tr><td colSpan={7} className="ta-empty">Loading platform learners...</td></tr>}
+              {menteesQuery.loading && <tr><td colSpan={7} className="ta-empty"><LoadingSkeleton label="Loading platform learners..." rows={3} /></td></tr>}
               {!menteesQuery.loading && allMentees.length === 0 && (
                 <tr>
                   <td colSpan={7} className="ta-empty">

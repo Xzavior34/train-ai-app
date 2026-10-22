@@ -4,6 +4,7 @@ import http from 'node:http';
 import { build } from 'esbuild';
 fs.mkdirSync('scripts/audit/.generated',{recursive:true});
 await build({entryPoints:['scripts/audit/website-preview.jsx'],bundle:true,format:'esm',outdir:'scripts/audit/.generated/website',loader:{'.png':'file','.jpg':'file','.svg':'file'},logLevel:'error',define:{'import.meta.env':'{}'},plugins:[{name:'isolated-services',setup(b){
+ b.onLoad({filter:/[\\/]useSupabaseQuery\.js$/},async args=>({contents:(await fs.promises.readFile(args.path,'utf8')).replace('Promise.resolve().then(fetcher)','Promise.resolve().then(async () => { if (globalThis.__auditQueryDelay) await new Promise(resolve => setTimeout(resolve, globalThis.__auditQueryDelay)); return fetcher(); })'),loader:'js'}));
  b.onResolve({filter:/schemaHelper\.js$/}, args => args.importer.endsWith('CommunityFeedScreen.jsx') ? {path:path.resolve('scripts/audit/feed-fixture-service.mjs')} : undefined);
  b.onResolve({filter:/(?:^|[\\/])supabaseClient\.js$/},()=>({path:path.resolve('scripts/audit/fixture-client.mjs')}));
  b.onResolve({filter:/^react-onesignal$/},()=>({path:'onesignal',namespace:'fixture'}));

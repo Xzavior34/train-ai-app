@@ -1,3 +1,4 @@
+import { LoadingSkeleton } from "./../../components/common/PageLoadingBoundary.jsx";
 import React, { useState, useContext, useEffect } from "react";
 import { TopBar, ToastContext, Tag, Switch } from "../components/PlatformUI.jsx";
 import { Plus, Trash2, BadgeCheck, Link as LinkIcon, Bell, Calendar, FolderOpen, User } from "lucide-react";
@@ -434,7 +435,7 @@ export function MentorSettingsScreen({ mentorId, mentorProfileQuery, currentUser
           <div className="ta-title">Credentials & Certifications</div>
           <div style={{ fontSize: 12, color: "var(--text-2)", marginTop: 4 }}>Optional - helps learners know your background, not required to teach.</div>
           <div className="ta-col ta-gap8 ta-mt12 anim-stagger">
-            {credentialsQuery.loading && <div className="ta-empty">Loading credentials...</div>}
+            {credentialsQuery.loading && <div className="ta-empty"><LoadingSkeleton label="Loading credentials..." rows={3} /></div>}
             {!credentialsQuery.loading && (credentialsQuery.data || []).length === 0 && <div className="ta-empty">No credentials added yet.</div>}
             {(credentialsQuery.data || []).map(c => (
               <div key={c.id} className="ta-row ta-between" style={{ padding: 12, background: "var(--surface-3)", borderRadius: 8, flexWrap: "wrap", gap: 8 }}>
@@ -466,7 +467,7 @@ export function MentorSettingsScreen({ mentorId, mentorProfileQuery, currentUser
         <div className="ta-card ta-mt20" style={{ maxWidth: 700 }}>
           <div className="ta-title">Portfolio</div>
           <div className="ta-col ta-gap8 ta-mt12 anim-stagger">
-            {portfolioQuery.loading && <div className="ta-empty">Loading portfolio...</div>}
+            {portfolioQuery.loading && <div className="ta-empty"><LoadingSkeleton label="Loading portfolio..." rows={3} /></div>}
             {!portfolioQuery.loading && (portfolioQuery.data || []).length === 0 && <div className="ta-empty">No portfolio items added yet.</div>}
             {(portfolioQuery.data || []).map(p => (
               <div key={p.id} className="ta-row ta-between" style={{ padding: 12, background: "var(--surface-3)", borderRadius: 8, flexWrap: "wrap", gap: 8 }}>
@@ -519,7 +520,7 @@ export function MentorSettingsScreen({ mentorId, mentorProfileQuery, currentUser
               <div className="ta-title">Automated Reminders</div>
               <div style={{ fontSize: 12, color: "var(--text-2)" }}>Configure automated session reminders for your learners.</div>
               <div className="ta-col ta-gap8 ta-mt12 anim-stagger">
-                {remindersQuery.loading && <div className="ta-empty">Loading reminders...</div>}
+                {remindersQuery.loading && <div className="ta-empty"><LoadingSkeleton label="Loading reminders..." rows={3} /></div>}
                 {!remindersQuery.loading && (remindersQuery.data || []).length === 0 && <div className="ta-empty">No reminders configured.</div>}
                 {(remindersQuery.data || []).map((r) => (
                   <div key={r.id} className="ta-row ta-between" style={{ padding: 12, background: "var(--surface-3)", borderRadius: 8, flexWrap: "wrap", gap: 8 }}>

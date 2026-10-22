@@ -1,3 +1,4 @@
+import { LoadingSkeleton } from "./../../components/common/PageLoadingBoundary.jsx";
 import React from "react";
 import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
 import { fetchMemberLearningTrack } from "../../lib/api/platform.js";
@@ -10,9 +11,9 @@ export function MemberLearningTrack({ orgId, userId, cohortId = null, member = n
 
   if (query.loading) {
     return (
-      <div className="ta-empty ta-mt16" role="status">
-        Loading learning track & milestones...
-      </div>
+      <div className="ta-empty ta-mt16" role="status"><LoadingSkeleton label="Loading learning track & milestones..." rows={3} /></div>
+
+
     );
   }
 

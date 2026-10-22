@@ -1,3 +1,4 @@
+import { LoadingSkeleton } from "./../../components/common/PageLoadingBoundary.jsx";
 import React, { useState, useEffect } from "react";
 import { TopBar, Avatar, Switch, initialsOf } from "../components/LearnerUI.jsx";
 import { Moon, ShieldCheck, Download, LogOut, ChevronRight, Trophy, Accessibility, Camera, AlertTriangle, Trash2, Clock, Smartphone, Bell, Flame, User, CheckCircle2, Lock, BookOpen, Brain, Target, CreditCard, Mail, Sliders, Shield, MessageSquare, Send, Check, Gift, Copy, Users, Star, Award, Eye, EyeOff, KeyRound } from "lucide-react";
@@ -981,7 +982,7 @@ export function ProfileScreen({
                 </div>
               </>
             ) : (
-              <div style={{ fontSize: 13, color: "var(--text-3)" }}>Loading your referral link...</div>
+              <div style={{ fontSize: 13, color: "var(--text-3)" }}><LoadingSkeleton label="Loading your referral link..." rows={3} /></div>
             )}
           </div>
         </div>

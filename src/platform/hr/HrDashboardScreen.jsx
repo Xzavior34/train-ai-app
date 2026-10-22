@@ -1,3 +1,4 @@
+import { LoadingSkeleton } from "./../../components/common/PageLoadingBoundary.jsx";
 import React from "react";
 import { TopBar, StatCard, Tag, Avatar } from "../components/PlatformUI.jsx";
 import { Users, ShieldCheck, GraduationCap, AlertTriangle, Target } from "lucide-react";
@@ -70,7 +71,7 @@ export function HrDashboardScreen({ orgId, profileQuery }) {
           <div className="ta-card" style={{ borderRadius: 10 }}>
             <div className="ta-title">Compliance status breakdown</div>
             <div className="ta-col ta-gap12 ta-mt16">
-              {complianceQuery.loading && <div className="ta-empty">Loading compliance data...</div>}
+              {complianceQuery.loading && <div className="ta-empty"><LoadingSkeleton label="Loading compliance data..." rows={3} /></div>}
               {!complianceQuery.loading && orgAssignments.length === 0 && (
                 <div className="ta-empty">No compliance assignments found for this organization.</div>
               )}

@@ -1,3 +1,4 @@
+import { LoadingSkeleton } from "./../../components/common/PageLoadingBoundary.jsx";
 import React, { useState, useEffect, useRef } from "react";
 import { TopBar, StatTile, Avatar, optionLabel, optionValue, initialsOf, Tag, ProgressBar } from "../components/LearnerUI.jsx";
 import {
@@ -823,7 +824,7 @@ export function AIQuizScreen({
           ========================================================================= */}
       {aiTab === "history" && (
         <div className="tai-col tai-gap12">
-          {coachMessagesLoading && <div className="tai-empty">Loading history...</div>}
+          {coachMessagesLoading && <div className="tai-empty"><LoadingSkeleton label="Loading history..." rows={3} /></div>}
           {!coachMessagesLoading && coachMessages.length === 0 && (
             <div className="tai-empty">No conversation history yet. Start a session in the Coach tab!</div>
           )}

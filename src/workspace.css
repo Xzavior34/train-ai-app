@@ -103,3 +103,36 @@
   :is(.ta, .tai) { --workspace-card-gap:12px; }
   .ta .ta-card > .ta-empty, .tai .tai-card > .tai-empty { padding-block:16px; }
 }
+/* Full-page loading preserves the sidebar and the mounted page's form state. */
+.tai-screen-loading-boundary, .ta-screen-content { min-width:0; width:100%; }
+.tai-screen-loading-boundary > .ta-screen-content[hidden] { display:none !important; }
+.tai-page-skeleton { display:flex; flex-direction:column; gap:16px; width:100%; min-width:0; box-sizing:border-box; }
+.tai-page-skeleton-padded { max-width:1560px; margin:0 auto; padding:20px clamp(16px,2.2vw,32px) 24px; }
+.tai-skeleton-page-heading { display:flex; flex-direction:column; gap:10px; padding:4px 0 8px; }
+.tai-skeleton-menu { display:none; }
+.tai-skeleton-hero, .tai-skeleton-surface { padding:22px; border:1px solid var(--border,#e2e8f0); border-radius:12px; background:var(--surface,#fff); display:flex; flex-direction:column; gap:14px; }
+.tai-skeleton-three, .tai-skeleton-stats, .tai-skeleton-panels, .tai-skeleton-message-layout { display:grid; gap:16px; min-width:0; }
+.tai-skeleton-three { grid-template-columns:repeat(3,minmax(0,1fr)); }
+.tai-skeleton-stats { grid-template-columns:repeat(4,minmax(0,1fr)); }
+.tai-skeleton-panels { grid-template-columns:repeat(2,minmax(0,1fr)); }
+.tai-skeleton-message-layout { grid-template-columns:minmax(0,1fr) minmax(0,2fr); }
+.tai-skeleton-toolbar, .tai-skeleton-list-row { display:flex; align-items:center; gap:16px; min-width:0; }
+.tai-skeleton-toolbar { justify-content:space-between; }
+.tai-skeleton-rows { display:flex; flex-direction:column; gap:0; width:100%; }
+.tai-skeleton-list-row { padding:14px 0; border-bottom:1px solid var(--border,#e2e8f0); }
+.tai-skeleton-list-row:last-child { border-bottom:0; }
+.tai-skeleton-list-row > div:nth-child(2) { flex:1; min-width:0; }
+.tai-feature-skeleton { width:100%; min-width:0; text-align:left; }
+.tai-loading-sr { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip-path:inset(50%); white-space:nowrap; border:0; }
+/* Reused learner screens need the same content gutter inside staff workspaces. */
+.ta .ta-screen-content > :is(.tai-fade-in, .tai-feed-page) { box-sizing:border-box; width:100%; max-width:1560px; padding:20px clamp(16px,2.2vw,32px) 24px; margin-inline:auto; }
+@media (max-width:899px) {
+  .tai-page-skeleton { gap:12px; }
+  .tai-skeleton-menu { display:flex; align-items:center; justify-content:center; align-self:flex-start; width:40px; height:40px; border:1px solid var(--border,#e2e8f0); background:var(--surface,#fff); color:var(--text,#0f172a); border-radius:8px; cursor:pointer; }
+  .tai-page-skeleton-padded, .ta .ta-screen-content > :is(.tai-fade-in, .tai-feed-page) { padding:16px 12px 24px; }
+  .tai-skeleton-three, .tai-skeleton-stats { grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
+  .tai-skeleton-panels, .tai-skeleton-message-layout { grid-template-columns:minmax(0,1fr); gap:12px; }
+  .tai-skeleton-hero, .tai-skeleton-surface { padding:16px; }
+}
+@media (max-width:480px) { .tai-skeleton-three { grid-template-columns:minmax(0,1fr); } }
+@media (prefers-reduced-motion:reduce) { .tai-skeleton { animation:none !important; } }

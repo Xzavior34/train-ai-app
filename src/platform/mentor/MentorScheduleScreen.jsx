@@ -1,3 +1,4 @@
+import { LoadingSkeleton } from "./../../components/common/PageLoadingBoundary.jsx";
 import React, { useState, useContext } from "react";
 import { TopBar, Tag, ToastContext } from "../components/PlatformUI.jsx";
 import { Calendar, Trash2, Plus, Video, CheckCircle2, XCircle, Clock, MessageSquare, ExternalLink } from "lucide-react";
@@ -295,7 +296,7 @@ export function MentorScheduleScreen({ mentorId, orgSelector }) {
 
             {/* Sessions Queue Cards */}
             <div className="ta-col ta-gap12 anim-stagger">
-              {sessionsQuery.loading && <div className="ta-empty">Loading sessions...</div>}
+              {sessionsQuery.loading && <div className="ta-empty"><LoadingSkeleton label="Loading sessions..." rows={3} /></div>}
               {!sessionsQuery.loading && filteredSessions.length === 0 && (
                 <div className="ta-card" style={{ textAlign: "center", padding: 36 }}>
                   <Calendar size={32} color="var(--primary)" style={{ opacity: 0.5, marginBottom: 8 }} />
@@ -543,7 +544,7 @@ export function MentorScheduleScreen({ mentorId, orgSelector }) {
               <div className="ta-sub" style={{ fontSize: 12, color: "var(--text-3)", marginTop: 2 }}>Recurring time windows active on your public booking calendar</div>
 
               <div className="ta-col ta-gap8 ta-mt16 anim-stagger">
-                {availabilityQuery.loading && <div className="ta-empty">Loading timetable...</div>}
+                {availabilityQuery.loading && <div className="ta-empty"><LoadingSkeleton label="Loading timetable..." rows={3} /></div>}
                 {!availabilityQuery.loading && availability.length === 0 && (
                   <div className="ta-empty">No availability slots configured yet. Add your first window on the left.</div>
                 )}

@@ -1,3 +1,4 @@
+import { LoadingSkeleton } from "./../../components/common/PageLoadingBoundary.jsx";
 import React from "react";
 import { TopBar, Tag } from "../components/PlatformUI.jsx";
 import { Briefcase } from "lucide-react";
@@ -31,7 +32,7 @@ export function GJPScreen({ orgId, orgSelector, setScreen }) {
           <table className="ta-table ta-mt16">
             <thead><tr><th>Applicant</th><th>School</th><th>Department / Level</th><th>Applied</th><th>Status</th></tr></thead>
             <tbody>
-              {gjpQuery.loading && <tr><td colSpan={5} className="ta-empty">Loading GJP applicants...</td></tr>}
+              {gjpQuery.loading && <tr><td colSpan={5} className="ta-empty"><LoadingSkeleton label="Loading GJP applicants..." rows={3} /></td></tr>}
               {gjpQuery.error && <tr><td colSpan={5} className="ta-empty">Couldn't load GJP applicants: {gjpQuery.error}</td></tr>}
               {!gjpQuery.loading && !gjpQuery.error && applicants.length === 0 && (
                 <tr><td colSpan={5} className="ta-empty">No GJP placement candidates yet.</td></tr>

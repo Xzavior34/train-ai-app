@@ -1,3 +1,4 @@
+import { LoadingSkeleton } from "./../../components/common/PageLoadingBoundary.jsx";
 import React, { useContext, useState } from "react";
 import { TopBar, Tag, Switch, ToastContext } from "../components/PlatformUI.jsx";
 import { Plug, Plus, Activity, Lock } from "lucide-react";
@@ -152,7 +153,7 @@ export function IntegrationsScreen({ orgId, userId, orgSelector, setScreen, isPl
           </div>
         )}
 
-        {integrationsQuery.loading && <div className="ta-empty">Loading integrations...</div>}
+        {integrationsQuery.loading && <div className="ta-empty"><LoadingSkeleton label="Loading integrations..." rows={3} /></div>}
         {integrationsQuery.error && <div className="ta-empty">Couldn't load integrations: {integrationsQuery.error}</div>}
 
         {integrations.length > 0 && (
@@ -192,7 +193,7 @@ export function IntegrationsScreen({ orgId, userId, orgSelector, setScreen, isPl
           <table className="ta-table ta-mt12">
             <thead><tr><th>Integration</th><th>Event</th><th>Status</th><th>When</th></tr></thead>
             <tbody>
-              {logQuery.loading && <tr><td colSpan={4} className="ta-empty">Loading dispatch log...</td></tr>}
+              {logQuery.loading && <tr><td colSpan={4} className="ta-empty"><LoadingSkeleton label="Loading dispatch log..." rows={3} /></td></tr>}
               {!logQuery.loading && log.length === 0 && <tr><td colSpan={4} className="ta-empty">No webhook deliveries recorded yet.</td></tr>}
               {log.map((l) => (
                 <tr key={l.id}>

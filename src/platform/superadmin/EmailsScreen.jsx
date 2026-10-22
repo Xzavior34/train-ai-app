@@ -1,3 +1,4 @@
+import { LoadingSkeleton } from "./../../components/common/PageLoadingBoundary.jsx";
 import React, { useState, useContext } from "react";
 import { TopBar, ToastContext } from "../components/PlatformUI.jsx";
 import { Mail, Send, Users, RefreshCw } from "lucide-react";
@@ -228,7 +229,7 @@ export function EmailsScreen() {
             </button>
           </div>
 
-          {campaignsQuery.loading && <div className="ta-mt12" style={{ fontSize: 12.5, color: "var(--text-2)" }}>Loading...</div>}
+          {campaignsQuery.loading && <div className="ta-mt12" style={{ fontSize: 12.5, color: "var(--text-2)" }}><LoadingSkeleton label="Loading..." rows={3} /></div>}
           {!campaignsQuery.loading && campaigns.length === 0 && (
             <div className="ta-mt12" style={{ fontSize: 12.5, color: "var(--text-2)" }}>No broadcasts sent yet.</div>
           )}

@@ -1,3 +1,4 @@
+import { LoadingSkeleton } from "./../../components/common/PageLoadingBoundary.jsx";
 import React, { useContext, useEffect, useState } from "react";
 import { TopBar, ToastContext, Tag } from "../components/PlatformUI.jsx";
 import { Building2, Palette, Check, Sun, Moon, Eye } from "lucide-react";
@@ -108,7 +109,7 @@ export function BrandingScreen({ orgSelector } = {}) {
           
           <div className="ta-mt16">
             <label className="ta-label" style={{ marginBottom: 6, display: "block" }}>Select Tenant Organization</label>
-            {orgsQuery.loading && <div className="ta-empty">Loading organizations...</div>}
+            {orgsQuery.loading && <div className="ta-empty"><LoadingSkeleton label="Loading organizations..." rows={3} /></div>}
             {!orgsQuery.loading && orgs.length === 0 && <div className="ta-empty">No organizations created yet.</div>}
             {orgs.length > 0 && (
               <div className="ta-row ta-gap10">

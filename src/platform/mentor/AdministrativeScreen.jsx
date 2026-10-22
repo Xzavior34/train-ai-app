@@ -1,3 +1,4 @@
+import { LoadingSkeleton } from "./../../components/common/PageLoadingBoundary.jsx";
 import React, { useState, useContext } from "react";
 import { TopBar, Tag, ToastContext } from "../components/PlatformUI.jsx";
 import { 
@@ -395,7 +396,7 @@ export function AdministrativeScreen({ mentorId, mentorProfileQuery, currentUser
             <div className="ta-sub" style={{ fontSize: 12, color: "var(--text-3)", marginTop: 2 }}>Review session rescheduling disputes and cancellation appeals</div>
 
             <div className="ta-col ta-gap12 ta-mt16 anim-stagger">
-              {refundsQuery.loading && <div className="ta-empty">Loading dispute requests...</div>}
+              {refundsQuery.loading && <div className="ta-empty"><LoadingSkeleton label="Loading dispute requests..." rows={3} /></div>}
               {!refundsQuery.loading && (refundsQuery.data || []).length === 0 && (
                 <div style={{ textAlign: "center", padding: 32 }}>
                   <ShieldCheck size={32} color="#10B981" style={{ marginBottom: 8 }} />

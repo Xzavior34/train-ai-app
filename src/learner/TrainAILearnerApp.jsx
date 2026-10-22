@@ -7,6 +7,7 @@ import { SearchBar } from "./components/SearchBar.jsx";
 import { fetchOrgAISettings, fetchOrgLeaderboardSettings, fetchOrgGamificationSettings } from "../lib/api/organizations.js";
 import { isRealDatabaseId } from "../lib/mockDataManager.js";
 import { HomeScreen } from "./screens/HomeScreen.jsx";
+import { PageLoadingBoundary } from "../components/common/PageLoadingBoundary.jsx";
 import { CoursesScreen } from "./screens/CoursesScreen.jsx";
 import { CourseDetailScreen } from "./screens/CourseDetailScreen.jsx";
 import { LessonScreen } from "./screens/LessonScreen.jsx";
@@ -744,6 +745,21 @@ export default function TrainAILearnerApp({ isActive = true, onSwitchToPlatform,
     }
   }
 
+  const screenQueries = {
+    home: [learnerData.coursesQuery, enrollmentsQuery, cohortMembershipQuery],
+    courses: [learnerData.coursesQuery, enrollmentsQuery, learningPathsQuery],
+    courseDetail: [learnerData.coursesQuery, courseLessonsQuery, courseReviewsQuery],
+    lesson: [courseLessonsQuery, lessonProgressQuery],
+    community: [postsQuery, studyGroupsQuery, mentorsQuery],
+    studyGroup: [studyGroupsQuery, myGroupIdsQuery],
+    cohort: [cohortMembershipQuery, cohortCoursesQuery, cohortMembersQuery],
+    mentors: [mentorsQuery], messages: [messageThreadsQuery],
+    notifications: [notificationsQuery], settings: [userProfileQuery],
+    leaderboard: [leaderboardQuery], achievements: [achievementsQuery, myCertificatesQuery],
+    ai: [quizzesQuery, quizAttemptsQuery],
+  };
+  const initialScreenLoading = (screenQueries[screen] || []).some(query => query?.loading);
+
   return (
     <NotificationBellContext.Provider value={{ unread: unreadNotifs, onOpen: () => push("notifications") }}>
     <div className={`tai ${dark ? "dark" : ""}`} style={brandPrimaryColor ? { "--primary": brandPrimaryColor } : undefined}>
@@ -806,6 +822,7 @@ export default function TrainAILearnerApp({ isActive = true, onSwitchToPlatform,
 
           <div className="tai-app">
             <div className="tai-body">
+              <PageLoadingBoundary key={`${screen}:${orgId || "personal"}:${params?.id || ""}`} screen={screen} loading={initialScreenLoading} padded={false}>
               {screen === "home" && (
                 <HomeScreen
                   user={user} courses={courses} coursesLoading={coursesLoading}
@@ -1094,6 +1111,7 @@ export default function TrainAILearnerApp({ isActive = true, onSwitchToPlatform,
               {screen === "schedule" && (
                 <ScheduleView push={push} back={back} />
               )}
+              </PageLoadingBoundary>
             </div>
 
             <BottomNav active={activeTabKey} go={goTab} />

@@ -1,3 +1,4 @@
+import { LoadingSkeleton } from "./../../components/common/PageLoadingBoundary.jsx";
 import React, { useState } from "react";
 import { TopBar, Tag } from "../components/PlatformUI.jsx";
 import { Map, Users, ChevronDown, ChevronUp, BookOpen } from "lucide-react";
@@ -18,7 +19,7 @@ export function TracksScreen() {
     <div className="ta-fade">
       <TopBar title="Learning Tracks" sub="System-wide learning tracks & career paths" />
       <div className="ta-content">
-        {tracksQuery.loading && <div className="ta-empty">Loading learning tracks...</div>}
+        {tracksQuery.loading && <div className="ta-empty"><LoadingSkeleton label="Loading learning tracks..." rows={3} /></div>}
         {tracksQuery.error && <div className="ta-empty">Couldn't load learning tracks: {tracksQuery.error}</div>}
         {!tracksQuery.loading && !tracksQuery.error && tracks.length === 0 && (
           <div className="ta-empty">No learning tracks yet. Tracks are derived from course categories, so publish a course with a category to see one here.</div>

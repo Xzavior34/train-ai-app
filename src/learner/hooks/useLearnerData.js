@@ -529,6 +529,7 @@ export function useLearnerData(session, screen, params) {
     referralStatsQuery,
     leaderboardQuery,
     coursesQuery,
+    coursesLoading: coursesQuery.loading,
     enrollmentsQuery,
     lessonCountsQuery,
     bookmarksQuery,
