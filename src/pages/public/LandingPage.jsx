@@ -163,7 +163,7 @@ export default function LandingPage({ onNavigate }) {
 
   const showcasePhotos = [
     { src: "/images/train-ai-diverse-learners.jpg", title: "Organisation-led learning", caption: "Bring courses, cohorts, learner support and reporting into one managed workspace." },
-    { src: "/images/train-ai-professional.jpg", title: "Academy and instructor delivery", caption: "Host courses for independent learners or manage structured cohorts through organisation access." },
+    { src: "/images/train-ai-instructor-workshop.jpg", title: "Academy and instructor delivery", caption: "Host courses for independent learners or manage structured cohorts through organisation access." },
     { src: "/images/train-ai-women-tech.jpg", title: "Workforce and foundation programmes", caption: "Track participation, progress, skill development and programme outcomes in one place." },
     { src: "/images/train-ai-white-team.jpg", title: "Cohort learning and mentorship", caption: "Coordinate scheduled learning, instructor support, mentorship and learner progress." },
   ];
