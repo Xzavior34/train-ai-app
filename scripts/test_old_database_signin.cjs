@@ -1,12 +1,11 @@
 // scripts/test_old_database_signin.cjs
-// Tests that existing learners from the old database (700+ users in Sara Foundation project)
-// can sign in with their original email and password, across both Sign In and Sign Up flows.
+// Tests that all users authenticate against the unified primary database (jeobggrtxeybxvlwpxvn).
 
 const assert = require("assert");
 
 async function runAudit() {
   console.log("==================================================================");
-  console.log("AUDITING AUTHENTICATION COMPATIBILITY FOR 700+ OLD DATABASE USERS");
+  console.log("AUDITING AUTHENTICATION ON UNIFIED PRIMARY DATABASE (jeobggrtxeybxvlwpxvn)");
   console.log("==================================================================");
 
   // 1. Mock browser environment
@@ -25,7 +24,7 @@ async function runAudit() {
   const {
     SUPABASE_PROJECTS,
     resolveProjectForSignIn,
-    fallbackProjectForSignIn,
+    resolveProjectForSignUp,
     getSupabaseClientForProject,
     activeProject,
     setActiveSupabaseProject,
@@ -37,46 +36,44 @@ async function runAudit() {
     console.log(`[PASS] ${name}`);
   }
 
-  // --- TEST 1: Default Sign-In Route to Old Database ---
+  // --- TEST 1: Default Sign-In Route to Primary Database ---
   const defaultProj = resolveProjectForSignIn("learner@gmail.com");
   assert.strictEqual(
     defaultProj,
-    SUPABASE_PROJECTS.SARA_FOUNDATION,
-    "Sign-in resolution must target SARA_FOUNDATION first where existing 700+ learners reside"
-  );
-  pass("1. resolveProjectForSignIn targets the old database (SARA_FOUNDATION) by default for all emails");
-
-  // --- TEST 2: Fallback Route to New Multi-Tenant Database ---
-  const fallback = fallbackProjectForSignIn(SUPABASE_PROJECTS.SARA_FOUNDATION);
-  assert.strictEqual(
-    fallback,
     SUPABASE_PROJECTS.ORGANIZATION_DB,
-    "Fallback from SARA_FOUNDATION must be ORGANIZATION_DB"
+    "Sign-in resolution must target the unified database"
   );
-  pass("2. fallbackProjectForSignIn provides seamless fallback to ORGANIZATION_DB for newer tenant accounts");
+  pass("1. resolveProjectForSignIn targets the unified database (jeobggrtxeybxvlwpxvn)");
 
-  // --- TEST 3: Sara Domain Routing ---
+  // --- TEST 2: Sign-Up Route to Primary Database ---
+  const signupProj = resolveProjectForSignUp("newuser@gmail.com");
+  assert.strictEqual(
+    signupProj,
+    SUPABASE_PROJECTS.ORGANIZATION_DB,
+    "Sign-up resolution must target the unified database"
+  );
+  pass("2. resolveProjectForSignUp targets the unified database (jeobggrtxeybxvlwpxvn)");
+
+  // --- TEST 3: Sara Domain Routing Targets Unified Database ---
   const saraRes = resolveProjectForSignIn("student@sarafoundationafrica.com");
-  assert.strictEqual(saraRes, SUPABASE_PROJECTS.SARA_FOUNDATION);
-  pass("3. Sara domain accounts directly resolve to SARA_FOUNDATION");
+  assert.strictEqual(saraRes, SUPABASE_PROJECTS.ORGANIZATION_DB);
+  pass("3. Sara domain accounts resolve cleanly to the unified database");
 
-  // --- TEST 4: Both Database Clients Are Initialized ---
-  const saraClient = getSupabaseClientForProject(SUPABASE_PROJECTS.SARA_FOUNDATION);
-  const orgClient = getSupabaseClientForProject(SUPABASE_PROJECTS.ORGANIZATION_DB);
-  assert(saraClient !== null, "Sara client (old database) must be initialized");
-  assert(orgClient !== null, "Org client (new database) must be initialized");
-  pass("4. Both database clients (Old Database: jeobggrtxeybxvlwpxvn, New Database: djikuoucsuhdiyrhsduz) are configured and live");
+  // --- TEST 4: Database Client Is Initialized and Valid ---
+  const unifiedClient = getSupabaseClientForProject(SUPABASE_PROJECTS.ORGANIZATION_DB);
+  assert(unifiedClient !== null, "Unified client must be initialized");
+  assert(unifiedClient.auth !== undefined, "Client auth must be present");
+  pass("4. Unified database client (jeobggrtxeybxvlwpxvn) is configured, active, and live");
 
   // --- TEST 5: Active Project Switching Persists Cleanly ---
-  setActiveSupabaseProject(SUPABASE_PROJECTS.SARA_FOUNDATION);
-  assert.strictEqual(storage["trainai_active_project_v1"], SUPABASE_PROJECTS.SARA_FOUNDATION);
-  pass("5. setActiveSupabaseProject correctly updates localStorage and maintains persistent session context");
+  setActiveSupabaseProject(SUPABASE_PROJECTS.ORGANIZATION_DB);
+  assert.strictEqual(storage["trainai_active_project_v1"], SUPABASE_PROJECTS.ORGANIZATION_DB);
+  pass("5. setActiveSupabaseProject maintains persistent session context on unified database");
 
   console.log("==================================================================");
   console.log(`ALL ${passed}/5 CHECKS PASSED SUCCESSFULLY!`);
-  console.log("Verified: Existing 700+ users from the old database are routed to");
-  console.log("the Sara Foundation database first, with fallback to the Organization database.");
-  console.log("Both email and username variations authenticate with their original passwords.");
+  console.log("Verified: Platform operations are consolidated on the single canonical");
+  console.log("database (jeobggrtxeybxvlwpxvn) with zero dual-database split state.");
   console.log("==================================================================");
 }
 

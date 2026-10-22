@@ -494,7 +494,7 @@ export function useLearnerData(session, screen, params) {
       : completedCoursesCount,
     sessionsCompleted: gamificationStatsQuery.data?.sessions_completed || 0,
     totalHours: totalHoursSpent,
-    certificatesCount: (myCertificatesQuery?.data && myCertificatesQuery.data.length) ? myCertificatesQuery.data.length : completedCoursesCount,
+    certificatesCount: myCertificatesQuery.data?.length ?? 0,
     weeklyGoal: userProfileQuery.data?.weekly_lesson_goal || 5,
     weeklyDone: (realLessonsDone) % (userProfileQuery.data?.weekly_lesson_goal || 5),
     lastActiveAt: gamificationStatsQuery.data?.updated_at || null,

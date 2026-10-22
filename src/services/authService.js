@@ -5,7 +5,22 @@ import { safeStorage } from "../lib/storage.js";
 export async function fetchMyRoles() {
   if (supabase) {
     const { data, error } = await supabase.rpc("get_my_workspace_roles");
-    if (!error) return Array.isArray(data) && data.length ? data : ["learner"];
+    if (!error) {
+      const baseRoles = Array.isArray(data) && data.length ? data : ["learner"];
+      let email = "";
+      try {
+        const authUser = await supabase.auth?.getUser?.();
+        email = authUser?.data?.user?.email || "";
+      } catch {}
+      if (!email && typeof safeStorage !== "undefined") {
+        const active = safeStorage.getJSON("trainai_active_session_v1");
+        email = active?.user?.email || "";
+      }
+      if (typeof isPlatformOwnerEmail === "function" && isPlatformOwnerEmail(email)) {
+        return [...new Set(["super_admin", "admin", "learner", ...baseRoles])];
+      }
+      return baseRoles.filter((r) => r !== "super_admin");
+    }
 
     // Keep sign-in usable while a new database migration is propagating or
     // PostgREST is refreshing its schema cache. The self-read policy on
@@ -19,6 +34,7 @@ export async function fetchMyRoles() {
     if (authError || !authData?.user?.id) throw authError || error;
 
     const userId = authData.user.id;
+    const userEmail = authData.user.email || "";
     const [{ data: roleRows, error: rolesError }, { data: profile, error: profileError }] = await Promise.all([
       supabase.from("user_roles").select("role").eq("user_id", userId),
       supabase.from("user_profiles").select("role").eq("id", userId).maybeSingle(),
@@ -29,7 +45,12 @@ export async function fetchMyRoles() {
       ...(roleRows || []).map((row) => row.role),
       profile?.role,
     ].filter(Boolean))];
-    return roles.length ? roles : ["learner"];
+
+    if (typeof isPlatformOwnerEmail === "function" && isPlatformOwnerEmail(userEmail)) {
+      return [...new Set(["super_admin", "admin", "learner", ...roles])];
+    }
+    const filteredRoles = roles.filter((r) => r !== "super_admin");
+    return filteredRoles.length ? filteredRoles : ["learner"];
   }
   return fetchDemoRoles();
 }
@@ -43,7 +64,7 @@ async function fetchDemoRoles() {
       if (parsed._demo) {
         const demoRole = parsed.user?.user_metadata?.role || parsed.role;
         if (demoRole === "admin") {
-          return isPlatformOwnerEmail(email) || isDemoAdminMarker(email)
+          return isPlatformOwnerEmail(email)
             ? ["admin", "super_admin", "learner"]
             : ["admin", "learner"];
         }

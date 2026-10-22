@@ -1,3 +1,4 @@
+import { CourseImage } from "../../components/common/CourseImage.jsx";
 import React, { useState, useEffect, useRef } from "react";
 import { TopBar, CourseCard, ProgressBar, Tag, Avatar, initialsOf } from "../components/LearnerUI.jsx";
 import {
@@ -382,7 +383,7 @@ const RECENT_RECORDINGS = [
 
 export function CoursesScreen({
   user = {},
-  courses = [], coursesLoading, courseSearch = "", setCourseSearch,
+  courses = [], coursesLoading, coursesError, onRetryCourses, courseSearch = "", setCourseSearch,
   courseLevelFilter = "all", setCourseLevelFilter, courseSourceTab = "all", setCourseSourceTab,
   showMyCoursesOnly = false, setShowMyCoursesOnly, push, handleEnroll, handleRequestJoin,
   onToggleBookmark, learningPathsQuery
@@ -521,7 +522,7 @@ export function CoursesScreen({
         {
           id: "track-mastery-complete",
           isTrackCompleted: true,
-          badge: "TRACK COMPLETED • 100% CERTIFIED",
+          badge: "COURSES COMPLETED",
           badgeGradient: "#059669",
           cohortTag: trackDisplayName,
           pathwayName: trackDisplayName,
@@ -529,7 +530,7 @@ export function CoursesScreen({
           description: `Outstanding achievement! You have completed every required course in your ${trackDisplayName}. Review lessons, practice with the AI Coach, or request your official Certificate.`,
           rating: 5.0,
           reviews: "Track Mastered",
-          enrolled: "Certified",
+          enrolled: "Completed",
           status: "Completed",
           progress: 100,
           lessonsRemaining: "All lessons complete",
@@ -607,6 +608,18 @@ export function CoursesScreen({
   });
 
   const filteredCatalog = filteredCatalogUnsorted;
+
+  if (coursesError || (!coursesLoading && courses.length === 0)) return (
+    <div className="tai-fade-in">
+      <TopBar title="Courses" sub="Your organization's published learning content" />
+      <div className="tai-card" role={coursesError ? "alert" : "status"} style={{ padding: 28, marginTop: 16, textAlign: "center" }}>
+        <BookOpen size={28} style={{ marginBottom: 12 }} />
+        <h2>{coursesError ? "Courses could not be loaded" : "No courses available yet"}</h2>
+        <p>{coursesError ? "Please retry to load your courses." : "Your organization has not published any courses for you yet. Check back or contact your administrator."}</p>
+        {coursesError && <button className="tai-btn tai-btn-primary" onClick={onRetryCourses}>Retry</button>}
+      </div>
+    </div>
+  );
 
   return (
     <div className="tai-fade-in" style={{ display: "flex", flexDirection: "column", gap: 24 }}>
@@ -698,7 +711,7 @@ export function CoursesScreen({
             {/* Right Column: Visual Cover */}
             <div className="tai-desktop-only" style={{ minWidth: 0, display: "flex", flexDirection: "column", gap: 12, boxSizing: "border-box" }}>
               <div style={{ position: "relative", borderRadius: 10, overflow: "hidden", boxShadow: "0 12px 30px rgba(0,0,0,0.5)", border: "1px solid rgba(255,255,255,0.18)" }}>
-                <img
+                <CourseImage
                   key={currentSpotlight.id + "-img"}
                   src={currentSpotlight.coverImage}
                   alt={currentSpotlight.title}
@@ -708,7 +721,9 @@ export function CoursesScreen({
                 
                 <div style={{ position: "absolute", bottom: 12, left: 14, right: 14, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                   <div className="tai-row tai-gap10">
-                    <img
+                    <Avatar
+                      size={34}
+                      initials={initialsOf(currentSpotlight.instructor || "Instructor")}
                       src={currentSpotlight.instructorAvatar}
                       alt={currentSpotlight.instructor}
                       style={{ width: 34, height: 34, borderRadius: "50%", border: "2px solid #fff", objectFit: "cover" }}
@@ -927,13 +942,10 @@ export function CoursesScreen({
               >
                 {/* Thumbnail Image with Dark Gradient Overlay & Error Handler */}
                 <div style={{ position: "relative", height: 165, width: "100%", overflow: "hidden", background: "#0F172A" }}>
-                  <img
+                  <CourseImage
                     src={safeCover}
                     alt=""
-                    onError={(e) => {
-                      e.currentTarget.onerror = null;
-                      e.currentTarget.src = CURATED_STOCK_PHOTOS[idx % CURATED_STOCK_PHOTOS.length];
-                    }}
+
                     style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
                   />
                   <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(15,23,42,0.72) 0%, transparent 60%)" }} />
@@ -1096,7 +1108,7 @@ export function CoursesScreen({
               }}
             >
               <div style={{ position: "relative", height: 140, width: "100%", overflow: "hidden" }}>
-                <img src={rec.thumbnail} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                <CourseImage src={rec.thumbnail} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                 <div style={{ position: "absolute", inset: 0, background: "rgba(15,23,42,0.35)", display: "flex", alignItems: "center", justifyContent: "center" }}>
                   <div style={{ width: 38, height: 38, borderRadius: "50%", background: "#fff", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 4px 12px rgba(0,0,0,0.3)" }}>
                     <Play size={15} color="var(--primary)" fill="var(--primary)" style={{ marginLeft: 2 }} />

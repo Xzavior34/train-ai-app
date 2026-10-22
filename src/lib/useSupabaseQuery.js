@@ -15,7 +15,7 @@ export function useSupabaseQuery(fetcher, deps = []) {
     setLoading(true);
     setData(null);
     setError(null);
-    fetcher()
+    Promise.resolve().then(fetcher)
       .then((result) => { if (!cancelled) setData(result); })
       .catch((err) => { if (!cancelled) setError(err.message || String(err)); })
       .finally(() => { if (!cancelled) setLoading(false); });

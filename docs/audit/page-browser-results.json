@@ -1,0 +1,1723 @@
+[
+  {
+    "role": "public",
+    "name": "initial",
+    "headings": [
+      "Manage learning. Support people. Measure what changes.",
+      "Learning delivery and development intelligence belong in the same system.",
+      "A clear place to learn, practise and stay connected.",
+      "Visibility across the full development process.",
+      "Experience the platform from both perspectives.",
+      "Learner Dashboard & Active Tracks",
+      "Welcome back, Olamide 👋",
+      "Know what is happening across learning, not just who logged in.",
+      "Built for organisations that deliver learning and develop people.",
+      "Academies and training providers"
+    ],
+    "text": "ment for organisations.\n\nDeliver learning, support people and understand development outcomes from one connected platform.\nPLATFORM\nHave a look\nFor learners\nFor organisations\nPricing tiers\nBook a demo\nCOMPANY\nAbout Train AI\nWho it is for\nAcademy Marketplace\nVerify Certificate\nFrequently asked questions\nCustomer sign in\nCONTACT\ninfo@trainailtd.com\nInstagram\n@trainailtd\nSchedule a product conversation\n© 2026 Train AI Ltd. All rights reserved.\nPrivacy\nTerms\nCookies\nWe value your privacy\n\nWe use cookies for essential functionality and, with your consent, for analytics and marketing. You can change your choices anytime from Profile > Privacy & Data.\n\nManage cookies\nReject non-essential\nAccept all",
+    "overflow": false,
+    "brokenImages": [],
+    "crash": false,
+    "errors": []
+  },
+  {
+    "role": "public",
+    "name": "/?view=auth&mode=signin",
+    "headings": [
+      "Welcome back"
+    ],
+    "text": "Isolated local audit\npublic fixture\nlearner fixture\nmentor fixture\nadmin fixture\nmanager fixture\nowner fixture\n← Back to website\nWelcome back\n\nSign in with your email and password.\n\nEMAIL OR USERNAME\nPASSWORD\nForgot password?\nSign in\nDon't have an account? Sign up",
+    "overflow": false,
+    "brokenImages": [],
+    "crash": false,
+    "errors": []
+  },
+  {
+    "role": "public",
+    "name": "/?view=auth&mode=signin mobile",
+    "headings": [
+      "Welcome back"
+    ],
+    "text": "Isolated local audit\npublic fixture\nlearner fixture\nmentor fixture\nadmin fixture\nmanager fixture\nowner fixture\n← Back to website\nWelcome back\n\nSign in with your email and password.\n\nEMAIL OR USERNAME\nPASSWORD\nForgot password?\nSign in\nDon't have an account? Sign up",
+    "overflow": false,
+    "brokenImages": [],
+    "crash": false,
+    "errors": []
+  },
+  {
+    "role": "public",
+    "name": "/?view=auth&mode=signup",
+    "headings": [
+      "Create your account"
+    ],
+    "text": "Isolated local audit\npublic fixture\nlearner fixture\nmentor fixture\nadmin fixture\nmanager fixture\nowner fixture\n← Back to website\nCreate your account\n\nJoin Train AI to start learning with 3 free AI questions.\n\nCHOOSE ACCOUNT TYPE\nIndividual learner\nRECOMMENDED\nAccess courses, AI quizzes, and community independently with 3 free AI questions.\nOrganization\nWorkforce readiness, team cohorts, and org-wide reporting. You become the organization admin.\nORGANIZATION / ACADEMY (Optional)\nBrowse organizations (8)\nAdmin access is granted by your organisation or the platform team.\nFULL NAME\nEMAIL ADDRESS\nPASSWORD\nCreate Account\nAlready have an account? Sign in",
+    "overflow": false,
+    "brokenImages": [],
+    "crash": false,
+    "errors": []
+  },
+  {
+    "role": "public",
+    "name": "/?view=auth&mode=signup mobile",
+    "headings": [
+      "Create your account"
+    ],
+    "text": "Isolated local audit\npublic fixture\nlearner fixture\nmentor fixture\nadmin fixture\nmanager fixture\nowner fixture\n← Back to website\nCreate your account\n\nJoin Train AI to start learning with 3 free AI questions.\n\nCHOOSE ACCOUNT TYPE\nIndividual learner\nRECOMMENDED\nAccess courses, AI quizzes, and community independently with 3 free AI questions.\nOrganization\nWorkforce readiness, team cohorts, and org-wide reporting. You become the organization admin.\nORGANIZATION / ACADEMY (Optional)\nBrowse organizations (8)\nAdmin access is granted by your organisation or the platform team.\nFULL NAME\nEMAIL ADDRESS\nPASSWORD\nCreate Account\nAlready have an account? Sign in",
+    "overflow": false,
+    "brokenImages": [],
+    "crash": false,
+    "errors": []
+  },
+  {
+    "role": "public",
+    "name": "/marketplace",
+    "headings": [
+      "Learn Industry-Grade AI, Engineering & Product from Top Tech Academies"
+    ],
+    "text": "Isolated local audit\npublic fixture\nlearner fixture\nmentor fixture\nadmin fixture\nmanager fixture\nowner fixture\nTRAINAIACADEMY MARKETPLACE\nInstitutional Demo\nLearner Sign In\nINDEPENDENT ACADEMIES & CERTIFIED INSTRUCTORS\nLearn Industry-Grade AI, Engineering & Product from Top Tech Academies\n\nExplore self-paced courses and live cohort bootcamps delivered by verified training institutions. Coexists alongside private enterprise training on the Train AI infrastructure.\n\n Browse Courses\n Instructor Seat Plans\nAll Categories\nArtificial Intelligence\nData Science\nSoftware Engineering\nProduct Management\nAll Levels\nBeginner\nIntermediate\nAdvanced\nLoading courses...",
+    "overflow": false,
+    "brokenImages": [],
+    "crash": false,
+    "errors": []
+  },
+  {
+    "role": "public",
+    "name": "/marketplace mobile",
+    "headings": [
+      "Learn Industry-Grade AI, Engineering & Product from Top Tech Academies",
+      "Building Production AI Agents with LLMs & Vector Databases",
+      "Executive Business Analytics with SQL & PowerBI",
+      "Full-Stack AI Product Development (React, FastAPI, Supabase)"
+    ],
+    "text": "Learners\n4.9\n$49.00\n15% platform commission after verified payment\nView course details\nBeginner\nAPEX DATA & ANALYTICS INSTITUTE\nExecutive Business Analytics with SQL & PowerBI\n\nTransform complex operational datasets into executive dashboards, financial forecasts, and automated reports.\n\n5 Modules\n124 Learners\n4.8\n$35.00\n15% platform commission after verified payment\nView course details\nAdvanced\nAFRITECH APPLIED AI ACADEMY\nFull-Stack AI Product Development (React, FastAPI, Supabase)\n\nDesign and ship venture-backed AI micro-SaaS applications from scratch with seamless payments and authentication.\n\n8 Modules\n42 Learners\n5\n$65.00\n15% platform commission after verified payment\nView course details",
+    "overflow": false,
+    "brokenImages": [],
+    "crash": false,
+    "errors": []
+  },
+  {
+    "role": "public",
+    "name": "/verify",
+    "headings": [],
+    "text": "Isolated local audit\npublic fixture\nlearner fixture\nmentor fixture\nadmin fixture\nmanager fixture\nowner fixture\nBack to Train AI\nTRAINAI\nCredential & Certificate Verification Portal\nVerify the authenticity of digital certificates issued by Train AI partner organizations, academies, and the Career Acceleration Programme (CAP).\nVerify",
+    "overflow": false,
+    "brokenImages": [],
+    "crash": false,
+    "errors": []
+  },
+  {
+    "role": "public",
+    "name": "/verify mobile",
+    "headings": [],
+    "text": "Isolated local audit\npublic fixture\nlearner fixture\nmentor fixture\nadmin fixture\nmanager fixture\nowner fixture\nBack to Train AI\nTRAINAI\nCredential & Certificate Verification Portal\nVerify the authenticity of digital certificates issued by Train AI partner organizations, academies, and the Career Acceleration Programme (CAP).\nVerify",
+    "overflow": false,
+    "brokenImages": [],
+    "crash": false,
+    "errors": []
+  },
+  {
+    "role": "public",
+    "name": "/?view=book-demo",
+    "headings": [
+      "Set an Appointment with Train AI"
+    ],
+    "text": "ess insights.\nThe most appropriate platform tier and implementation approach.\n3. Your Organization Details\nWe will send the Google Meet invitation and agenda directly to your work email.\nSELECTED SLOT\nThursday, October 22, 2026\n10:00 AM (Africa/Lagos)\nFull Name *\nInstitutional / Work Email *\nPhone Number / WhatsApp *\nOrganization Name *\nOrganization Type\nAcademy / Educational Institution\nNGO / Non-Profit / Foundation\nBusiness / Enterprise\nGovernment / Public Sector\nOther\nLearner / Team Size\n1 - 50 learners\n50 - 250 learners\n250 - 1,000 learners\n1,000+ learners\nTopics or Goals to Focus On (Optional)\nConfirm Appointment for Thu at 10:00 AM\nFree 30-minute discovery call. No commitment required.",
+    "overflow": false,
+    "brokenImages": [],
+    "crash": false,
+    "errors": []
+  },
+  {
+    "role": "public",
+    "name": "/?view=book-demo mobile",
+    "headings": [
+      "Set an Appointment with Train AI"
+    ],
+    "text": "ess insights.\nThe most appropriate platform tier and implementation approach.\n3. Your Organization Details\nWe will send the Google Meet invitation and agenda directly to your work email.\nSELECTED SLOT\nThursday, October 22, 2026\n10:00 AM (Africa/Lagos)\nFull Name *\nInstitutional / Work Email *\nPhone Number / WhatsApp *\nOrganization Name *\nOrganization Type\nAcademy / Educational Institution\nNGO / Non-Profit / Foundation\nBusiness / Enterprise\nGovernment / Public Sector\nOther\nLearner / Team Size\n1 - 50 learners\n50 - 250 learners\n250 - 1,000 learners\n1,000+ learners\nTopics or Goals to Focus On (Optional)\nConfirm Appointment for Thu at 10:00 AM\nFree 30-minute discovery call. No commitment required.",
+    "overflow": false,
+    "brokenImages": [],
+    "crash": false,
+    "errors": []
+  },
+  {
+    "role": "learner",
+    "name": "initial",
+    "headings": [
+      "Welcome back, Demo"
+    ],
+    "text": "cates\nSaved Bookmarks\nQuick access to your saved resources\nView All →\nNo saved bookmarks yet. Bookmark a course to quickly access it here.\nExplore Bookmarked Library\nQuick Access\nLearner shortcuts\nAssigned Courses\nAI Quiz Generator\nStudy Group\nInstructors\nAI Recommended for you\nOpen AI Coach\nNext Step\nhigh\nAdvance in AI Fundamentals\nCurrently at 65% progress. Finish the next module to accelerate your Data & AI milestones.\nAdaptive recommendation for active track\nWe value your privacy\n\nWe use cookies for essential functionality and, with your consent, for analytics and marketing. You can change your choices anytime from Profile > Privacy & Data.\n\nManage cookies\nReject non-essential\nAccept all",
+    "overflow": false,
+    "brokenImages": [],
+    "crash": false,
+    "errors": []
+  },
+  {
+    "role": "learner",
+    "name": "Overview",
+    "headings": [
+      "Welcome back, Demo"
+    ],
+    "text": "completed • AI\nResume (65%)\nAI Coach\nYOUR COHORT\nNot part of a cohort yet\nProgress & Milestones\n1 of 3 Courses Completed\nDetails →\nCOURSES COMPLETED\n1\nCERTIFICATES EARNED\n0\nLESSONS DONE\n12 Lessons\nTOTAL HOURS\n9.2 Hrs\nAnalytics\nCertificates\nSaved Bookmarks\nQuick access to your saved resources\nView All →\nNo saved bookmarks yet. Bookmark a course to quickly access it here.\nExplore Bookmarked Library\nQuick Access\nLearner shortcuts\nAssigned Courses\nAI Quiz Generator\nStudy Group\nInstructors\nAI Recommended for you\nOpen AI Coach\nNext Step\nhigh\nAdvance in AI Fundamentals\nCurrently at 65% progress. Finish the next module to accelerate your Data & AI milestones.\nAdaptive recommendation for active track",
+    "overflow": false,
+    "brokenImages": [],
+    "crash": false,
+    "errors": []
+  },
+  {
+    "role": "learner",
+    "name": "Overview mobile",
+    "headings": [
+      "Welcome back, Demo"
+    ],
+    "text": "oach\nYOUR COHORT\nNot part of a cohort yet\nProgress & Milestones\n1 of 3 Courses Completed\nDetails →\nCOURSES COMPLETED\n1\nCERTIFICATES EARNED\n0\nLESSONS DONE\n12 Lessons\nTOTAL HOURS\n9.2 Hrs\nAnalytics\nCertificates\nSaved Bookmarks\nQuick access to your saved resources\nView All →\nNo saved bookmarks yet. Bookmark a course to quickly access it here.\nExplore Bookmarked Library\nQuick Access\nLearner shortcuts\nAssigned Courses\nAI Quiz Generator\nStudy Group\nInstructors\nAI Recommended for you\nOpen AI Coach\nNext Step\nhigh\nAdvance in AI Fundamentals\nCurrently at 65% progress. Finish the next module to accelerate your Data & AI milestones.\nAdaptive recommendation for active track\nHome\nCourses\nAI Coach\nCommunity",
+    "overflow": false,
+    "brokenImages": [],
+    "crash": false,
+    "errors": []
+  },
+  {
+    "role": "learner",
+    "name": "All Courses",
+    "headings": [
+      "AI Fundamentals",
+      "AI Fundamentals",
+      "Workplace Compliance 101",
+      "Leadership Essentials",
+      "Live Workshop & Studio Replays"
+    ],
+    "text": "ents.\n\nCI\nCourse Instructor\n5.0\n(0)\n•\n0 learners\n6 Total Hours\n•\n0 Modules\n•\nAudited\nCompleted ✓\nReview Material\nLive Workshop & Studio Replays\n\nWatch recorded breakdowns and live session workshops\n\n45 mins\nUI/UX Principles & Spatial Component Hierarchies\nCourse Instructor • Staff Product Designer\n18 Nov 2024\n1.4k views\n1 hr 10m\nAccelerating Design Systems With AI & Figma Variables\nCourse Instructor • Lead AI Design Engineer\n14 Nov 2024\n2.8k views\n52 mins\nBuilding Production Multi-Agent Systems in Python\nCourse Instructor • Principal AI Scientist\n10 Nov 2024\n3.2k views\n38 mins\nInteractive Micro-Interactions & Prototyping Workshop\nCourse Instructor • Lead Motion Designer\n4 Nov 2024\n1.9k views",
+    "overflow": false,
+    "brokenImages": [],
+    "crash": false,
+    "errors": []
+  },
+  {
+    "role": "learner",
+    "name": "All Courses mobile",
+    "headings": [
+      "AI Fundamentals",
+      "AI Fundamentals",
+      "Workplace Compliance 101",
+      "Leadership Essentials",
+      "Live Workshop & Studio Replays"
+    ],
+    "text": "(0)\n•\n0 learners\n6 Total Hours\n•\n0 Modules\n•\nAudited\nCompleted ✓\nReview Material\nLive Workshop & Studio Replays\n\nWatch recorded breakdowns and live session workshops\n\n45 mins\nUI/UX Principles & Spatial Component Hierarchies\nCourse Instructor • Staff Product Designer\n18 Nov 2024\n1.4k views\n1 hr 10m\nAccelerating Design Systems With AI & Figma Variables\nCourse Instructor • Lead AI Design Engineer\n14 Nov 2024\n2.8k views\n52 mins\nBuilding Production Multi-Agent Systems in Python\nCourse Instructor • Principal AI Scientist\n10 Nov 2024\n3.2k views\n38 mins\nInteractive Micro-Interactions & Prototyping Workshop\nCourse Instructor • Lead Motion Designer\n4 Nov 2024\n1.9k views\nHome\nCourses\nAI Coach\nCommunity",
+    "overflow": false,
+    "brokenImages": [],
+    "crash": false,
+    "errors": []
+  },
+  {
+    "role": "learner",
+    "name": "AI Coach",
+    "headings": [
+      "AI Learning Coach & Quiz Arena",
+      "How can I assist your learning today?"
+    ],
+    "text": "\nLeaderboard\nAccount\nProgress & Achievements\nNotifications\nSettings\nSign Out\nAI Learning Coach & Quiz Arena\n\nAsk questions, debug code, and take interactive practice quizzes generated in real-time.\n\n0 credits\nBuy Credits\nAI Coach & Tutor\nAI Quiz\nPerformance Insights\nChat History (0)\nWrite a question\nSUGGESTED QUESTIONS\nExplain this concept to me\nGive me study tips\nHelp me understand better\nCreate a study plan\nSummarize my last lesson\nHow can I assist your learning today?\n\nAsk me to break down any complex concept, review your assignments, generate flashcards, or prepare a study schedule.\n\nYou have no AI credits remaining. Buy credits or request more from your organization.\nBuy AI Credits\nSend",
+    "overflow": false,
+    "brokenImages": [],
+    "crash": false,
+    "errors": []
+  },
+  {
+    "role": "learner",
+    "name": "AI Coach mobile",
+    "headings": [
+      "AI Learning Coach & Quiz Arena",
+      "How can I assist your learning today?"
+    ],
+    "text": "fixture\nmanager fixture\nowner fixture\n8\n0\nDL\nAI Learning Coach & Quiz Arena\n\nAsk questions, debug code, and take interactive practice quizzes generated in real-time.\n\n0 credits\nBuy Credits\nAI Coach & Tutor\nAI Quiz\nPerformance Insights\nChat History (0)\nWrite a question\nSUGGESTED QUESTIONS\nExplain this concept to me\nGive me study tips\nHelp me understand better\nCreate a study plan\nSummarize my last lesson\nHow can I assist your learning today?\n\nAsk me to break down any complex concept, review your assignments, generate flashcards, or prepare a study schedule.\n\nYou have no AI credits remaining. Buy credits or request more from your organization.\nBuy AI Credits\nSend\nHome\nCourses\nAI Coach\nCommunity",
+    "overflow": false,
+    "brokenImages": [],
+    "crash": false,
+    "errors": []
+  },
+  {
+    "role": "learner",
+    "name": "AI Quiz",
+    "headings": [
+      "AI Learning Coach & Quiz Arena",
+      "AI Adaptive Assessment Generator"
+    ],
+    "text": "munity\nCommunity\nFeed\nCohort\nInstructors\nStudy Group\nMessages\nLeaderboard\nAccount\nProgress & Achievements\nNotifications\nSettings\nSign Out\nAI Learning Coach & Quiz Arena\n\nAsk questions, debug code, and take interactive practice quizzes generated in real-time.\n\n0 credits\nBuy Credits\nAI Coach & Tutor\nAI Quiz\nPerformance Insights\nAI Adaptive Assessment Generator\n\nGenerate custom quizzes tuned to your target skillset\n\nTopic or Skill\nDifficulty Level\nBeginner / Novice\nIntermediate\nAdvanced / Master\nQuestion Count\n3 Questions (Quick)\n5 Questions (Standard)\n8 Questions (Deep)\n10 Questions (Mastery)\nGenerate & Start AI Quiz\nAssessment Daily Goal\n0 of 3 Done\n-\nRecent Quiz Points\n8 Days\nPractice Streak",
+    "overflow": false,
+    "brokenImages": [],
+    "crash": false,
+    "errors": []
+  },
+  {
+    "role": "learner",
+    "name": "AI Quiz mobile",
+    "headings": [
+      "AI Learning Coach & Quiz Arena",
+      "AI Adaptive Assessment Generator"
+    ],
+    "text": "al audit\npublic fixture\nlearner fixture\nmentor fixture\nadmin fixture\nmanager fixture\nowner fixture\n8\n0\nDL\nAI Learning Coach & Quiz Arena\n\nAsk questions, debug code, and take interactive practice quizzes generated in real-time.\n\n0 credits\nBuy Credits\nAI Coach & Tutor\nAI Quiz\nPerformance Insights\nAI Adaptive Assessment Generator\n\nGenerate custom quizzes tuned to your target skillset\n\nTopic or Skill\nDifficulty Level\nBeginner / Novice\nIntermediate\nAdvanced / Master\nQuestion Count\n3 Questions (Quick)\n5 Questions (Standard)\n8 Questions (Deep)\n10 Questions (Mastery)\nGenerate & Start AI Quiz\nAssessment Daily Goal\n0 of 3 Done\n-\nRecent Quiz Points\n8 Days\nPractice Streak\nHome\nCourses\nAI Coach\nCommunity",
+    "overflow": false,
+    "brokenImages": [],
+    "crash": false,
+    "errors": []
+  },
+  {
+    "role": "learner",
+    "name": "Community",
+    "headings": [
+      "Community Hub"
+    ],
+    "text": "opics, join study groups, and share insights.\n\nNew Discussion\nRecent Discussions\n0 Posts\nView All Posts (0)\nNew Post\nNo discussions yet\nClick \"New Post\" above to start a conversation!\nStudy Groups\nView All\nCreate Group\nNo study groups are available yet. Check back or ask your instructor about your groups.\nCohort Learning Space\nView Cohorts\nCohort-Based Learning\nJoin intensive instructor-led sprint cohorts, collaborate on team deliverables, and attend live sprint sessions.\nExplore Cohort Hub →\nInstructors & Mentors\n0 Available\nView All\nYour Community Status\nNewcomer\n0\nPosts\n0\nReplies\n0\nScore\nTop Contributors\nRank #-\nFull\nDirect Messages\nOpen\nNo active chat threads yet. Click to view messages.",
+    "overflow": false,
+    "brokenImages": [],
+    "crash": false,
+    "errors": []
+  },
+  {
+    "role": "learner",
+    "name": "Community mobile",
+    "headings": [
+      "Community Hub"
+    ],
+    "text": "are insights.\n\nNew Discussion\nRecent Discussions\n0 Posts\nView All Posts (0)\nNew Post\nNo discussions yet\nClick \"New Post\" above to start a conversation!\nStudy Groups\nView All\nCreate Group\nNo study groups are available yet. Check back or ask your instructor about your groups.\nCohort Learning Space\nView Cohorts\nCohort-Based Learning\nJoin intensive instructor-led sprint cohorts, collaborate on team deliverables, and attend live sprint sessions.\nExplore Cohort Hub →\nInstructors & Mentors\n0 Available\nView All\nYour Community Status\nNewcomer\n0\nPosts\n0\nReplies\n0\nScore\nTop Contributors\nRank #-\nFull\nDirect Messages\nOpen\nNo active chat threads yet. Click to view messages.\nHome\nCourses\nAI Coach\nCommunity",
+    "overflow": false,
+    "brokenImages": [],
+    "crash": false,
+    "errors": []
+  },
+  {
+    "role": "learner",
+    "name": "Feed",
+    "headings": [
+      "Community Feed",
+      "Connect, Learn & Share with Peers",
+      "No posts found"
+    ],
+    "text": "\nOverview\nCourses\nAll Courses\nAI Coach\nAI Coach\nAI Quiz\nCommunity\nCommunity\nFeed\nCohort\nInstructors\nStudy Group\nMessages\nLeaderboard\nAccount\nProgress & Achievements\nNotifications\nSettings\nSign Out\nCommunity Feed\n\nReal-time discussions, questions, and insights\n\nLIVE COMMUNITY FEED\nConnect, Learn & Share with Peers\n\nAsk questions, showcase your projects, discuss AI developments, and engage with verified instructors and peers.\n\nCreate Post\nInstructors\n0\nTotal Posts\nVerified\nInstructors Active\nReal-time\nSynced\nNew Post\nAll\nGeneral\nAI & ML\nWeb Development\nProjects\nQuestions\nAnnouncements\nStudy Lounge\nNo posts found\n\nBe the first one to start a conversation in the community!\n\nCreate the First Post",
+    "overflow": false,
+    "brokenImages": [],
+    "crash": false,
+    "errors": []
+  },
+  {
+    "role": "learner",
+    "name": "Feed mobile",
+    "headings": [
+      "Community Feed",
+      "Connect, Learn & Share with Peers",
+      "No posts found"
+    ],
+    "text": "Isolated local audit\npublic fixture\nlearner fixture\nmentor fixture\nadmin fixture\nmanager fixture\nowner fixture\n8\n0\nDL\nCommunity Feed\n\nReal-time discussions, questions, and insights\n\nLIVE COMMUNITY FEED\nConnect, Learn & Share with Peers\n\nAsk questions, showcase your projects, discuss AI developments, and engage with verified instructors and peers.\n\nCreate Post\nInstructors\n0\nTotal Posts\nVerified\nInstructors Active\nReal-time\nSynced\nNew Post\nAll\nGeneral\nAI & ML\nWeb Development\nProjects\nQuestions\nAnnouncements\nStudy Lounge\nNo posts found\n\nBe the first one to start a conversation in the community!\n\nCreate the First Post\nHome\nCourses\nAI Coach\nCommunity",
+    "overflow": false,
+    "brokenImages": [],
+    "crash": false,
+    "errors": []
+  },
+  {
+    "role": "learner",
+    "name": "Cohort",
+    "headings": [
+      "Cohort"
+    ],
+    "text": "Isolated local audit\npublic fixture\nlearner fixture\nmentor fixture\nadmin fixture\nmanager fixture\nowner fixture\n8 days\n620 XP\n0 credits\nDL\nHome\nOverview\nCourses\nAll Courses\nAI Coach\nAI Coach\nAI Quiz\nCommunity\nCommunity\nFeed\nCohort\nInstructors\nStudy Group\nMessages\nLeaderboard\nAccount\nProgress & Achievements\nNotifications\nSettings\nSign Out\nCohort\nYou're not part of a cohort yet. Once an admin adds you to one, its resources, sessions, and chat will show up here.",
+    "overflow": false,
+    "brokenImages": [],
+    "crash": false,
+    "errors": []
+  },
+  {
+    "role": "learner",
+    "name": "Cohort mobile",
+    "headings": [
+      "Cohort"
+    ],
+    "text": "Isolated local audit\npublic fixture\nlearner fixture\nmentor fixture\nadmin fixture\nmanager fixture\nowner fixture\n8\n0\nDL\nCohort\nYou're not part of a cohort yet. Once an admin adds you to one, its resources, sessions, and chat will show up here.\nHome\nCourses\nAI Coach\nCommunity",
+    "overflow": false,
+    "brokenImages": [],
+    "crash": false,
+    "errors": []
+  },
+  {
+    "role": "learner",
+    "name": "Instructors",
+    "headings": [
+      "Instructors & Mentors",
+      "Industry Instructors & Mentors"
+    ],
+    "text": "Isolated local audit\npublic fixture\nlearner fixture\nmentor fixture\nadmin fixture\nmanager fixture\nowner fixture\n8 days\n620 XP\n0 credits\nDL\nHome\nOverview\nCourses\nAll Courses\nAI Coach\nAI Coach\nAI Quiz\nCommunity\nCommunity\nFeed\nCohort\nInstructors\nStudy Group\nMessages\nLeaderboard\nAccount\nProgress & Achievements\nNotifications\nSettings\nSign Out\nInstructors & Mentors\n\n0 instructors available\n\nIndustry Instructors & Mentors\n\nConnect 1-on-1 with verified industry leaders for architectural reviews, personalized guidance, and office hours.\n\n0 Active\nVerified Instructors\nNo active instructors found\nCheck back soon as new instructors and industry mentors join the platform.",
+    "overflow": false,
+    "brokenImages": [],
+    "crash": false,
+    "errors": []
+  },
+  {
+    "role": "learner",
+    "name": "Instructors mobile",
+    "headings": [
+      "Instructors & Mentors",
+      "Industry Instructors & Mentors"
+    ],
+    "text": "Isolated local audit\npublic fixture\nlearner fixture\nmentor fixture\nadmin fixture\nmanager fixture\nowner fixture\n8\n0\nDL\nInstructors & Mentors\n\n0 instructors available\n\nIndustry Instructors & Mentors\n\nConnect 1-on-1 with verified industry leaders for architectural reviews, personalized guidance, and office hours.\n\n0 Active\nVerified Instructors\nNo active instructors found\nCheck back soon as new instructors and industry mentors join the platform.\nHome\nCourses\nAI Coach\nCommunity",
+    "overflow": false,
+    "brokenImages": [],
+    "crash": false,
+    "errors": []
+  },
+  {
+    "role": "learner",
+    "name": "Study Group",
+    "headings": [
+      "Study Groups",
+      "Collaborative Study Groups"
+    ],
+    "text": "Isolated local audit\npublic fixture\nlearner fixture\nmentor fixture\nadmin fixture\nmanager fixture\nowner fixture\n8 days\n620 XP\n0 credits\nDL\nHome\nOverview\nCourses\nAll Courses\nAI Coach\nAI Coach\nAI Quiz\nCommunity\nCommunity\nFeed\nCohort\nInstructors\nStudy Group\nMessages\nLeaderboard\nAccount\nProgress & Achievements\nNotifications\nSettings\nSign Out\nStudy Groups\n\nFind, join, and collaborate with peers in your organization\n\nCollaborative Study Groups\n\nJoin peer discussion spaces, share study notes, ask course questions, and learn together.\n\n0 Active Groups\n0 Joined\nCreate Study Group\nYour Groups\n0\nYou haven't joined a study group yet. Explore the groups below or create your own!\nDiscover Groups\n0",
+    "overflow": false,
+    "brokenImages": [],
+    "crash": false,
+    "errors": []
+  },
+  {
+    "role": "learner",
+    "name": "Study Group mobile",
+    "headings": [
+      "Study Groups",
+      "Collaborative Study Groups"
+    ],
+    "text": "Isolated local audit\npublic fixture\nlearner fixture\nmentor fixture\nadmin fixture\nmanager fixture\nowner fixture\n8\n0\nDL\nStudy Groups\n\nFind, join, and collaborate with peers in your organization\n\nCollaborative Study Groups\n\nJoin peer discussion spaces, share study notes, ask course questions, and learn together.\n\n0 Active Groups\n0 Joined\nCreate Study Group\nYour Groups\n0\nYou haven't joined a study group yet. Explore the groups below or create your own!\nDiscover Groups\n0\nHome\nCourses\nAI Coach\nCommunity",
+    "overflow": false,
+    "brokenImages": [],
+    "crash": false,
+    "errors": []
+  },
+  {
+    "role": "learner",
+    "name": "Messages",
+    "headings": [
+      "Direct Messages"
+    ],
+    "text": "Isolated local audit\npublic fixture\nlearner fixture\nmentor fixture\nadmin fixture\nmanager fixture\nowner fixture\n8 days\n620 XP\n0 credits\nDL\nHome\nOverview\nCourses\nAll Courses\nAI Coach\nAI Coach\nAI Quiz\nCommunity\nCommunity\nFeed\nCohort\nInstructors\nStudy Group\nMessages\nLeaderboard\nAccount\nProgress & Achievements\nNotifications\nSettings\nSign Out\nBack\nDirect Messages\n\nAsk project questions, receive code review guidance, and communicate directly with your academy instructors.\n\nActive Chats\n0 Mentors\nUnread\n0 New\nNo conversations yet. Message an instructor from Community or Instructors to start one.\nSelect an Instructor Conversation\nChoose a thread from the left to view messages and ask questions.",
+    "overflow": false,
+    "brokenImages": [],
+    "crash": false,
+    "errors": []
+  },
+  {
+    "role": "learner",
+    "name": "Messages mobile",
+    "headings": [
+      "Direct Messages"
+    ],
+    "text": "Isolated local audit\npublic fixture\nlearner fixture\nmentor fixture\nadmin fixture\nmanager fixture\nowner fixture\n8\n0\nDL\nBack\nDirect Messages\n\nAsk project questions, receive code review guidance, and communicate directly with your academy instructors.\n\nActive Chats\n0 Mentors\nUnread\n0 New\nNo conversations yet. Message an instructor from Community or Instructors to start one.\nHome\nCourses\nAI Coach\nCommunity",
+    "overflow": false,
+    "brokenImages": [],
+    "crash": false,
+    "errors": []
+  },
+  {
+    "role": "learner",
+    "name": "Leaderboard",
+    "headings": [
+      "Leaderboard",
+      "Leaderboard & Top Achievers"
+    ],
+    "text": "Isolated local audit\npublic fixture\nlearner fixture\nmentor fixture\nadmin fixture\nmanager fixture\nowner fixture\n8 days\n620 XP\n0 credits\nDL\nHome\nOverview\nCourses\nAll Courses\nAI Coach\nAI Coach\nAI Quiz\nCommunity\nCommunity\nFeed\nCohort\nInstructors\nStudy Group\nMessages\nLeaderboard\nAccount\nProgress & Achievements\nNotifications\nSettings\nSign Out\nLeaderboard\n\nRanking based on lesson progress, quizzes, and streak consistency\n\nLeaderboard & Top Achievers\n\n0 learners competing • All time ranking\n\nAll Time\nThis Week\nThis Month\nRefresh\n#1\nYour Standing\n0 pts • Level 1\nLeading the board!\n\"The more that you read, the more things you will know. The more that you learn, the more places you'll go.\"\n- Dr. Seuss",
+    "overflow": false,
+    "brokenImages": [],
+    "crash": false,
+    "errors": []
+  },
+  {
+    "role": "learner",
+    "name": "Leaderboard mobile",
+    "headings": [
+      "Leaderboard",
+      "Leaderboard & Top Achievers"
+    ],
+    "text": "Isolated local audit\npublic fixture\nlearner fixture\nmentor fixture\nadmin fixture\nmanager fixture\nowner fixture\n8\n0\nDL\nLeaderboard\n\nRanking based on lesson progress, quizzes, and streak consistency\n\nLeaderboard & Top Achievers\n\n0 learners competing • All time ranking\n\nAll Time\nThis Week\nThis Month\nRefresh\n#1\nYour Standing\n0 pts • Level 1\nLeading the board!\n\"The more that you read, the more things you will know. The more that you learn, the more places you'll go.\"\n- Dr. Seuss\nHome\nCourses\nAI Coach\nCommunity",
+    "overflow": false,
+    "brokenImages": [],
+    "crash": false,
+    "errors": []
+  },
+  {
+    "role": "learner",
+    "name": "Progress & Achievements",
+    "headings": [
+      "Level 3 • LEARNER",
+      "Study Time & Velocity",
+      "Skill Competency Matrix"
+    ],
+    "text": "rtificates Earned\n8 Days\nDaily Streak\n9.2 hrs\nTotal Study Time\n-\nCurrent Rank\nProgress Analytics\nCertificates (1)\nBadges (0)\nActivity (0)\nStudy Time & Velocity\n9.2 hrs total logged across enrolled tracks\nActive\nLessons Finished\n12\nContinuous Streak\n8 Days\nCurriculum Mastery\n65%\nSkill Competency Matrix\nAssessed from course progress & assessments\nAI\n65% (Intermediate)\nCompliance\n30% (In Progress)\nLeadership\n100% (Expert)\nMilestone Reward Mystery Box Available!\nUnlocked by reaching your 8-day continuous learning streak\nOpen Mystery Box\nKey Alerts\nAI credits running low\nCompleted Courses\nLeadership Essentials\nAI Insights\nAI Insights are unavailable: Supabase isn't configured in this environment.",
+    "overflow": false,
+    "brokenImages": [],
+    "crash": false,
+    "errors": []
+  },
+  {
+    "role": "learner",
+    "name": "Progress & Achievements mobile",
+    "headings": [
+      "Level 3 • LEARNER",
+      "Study Time & Velocity",
+      "Skill Competency Matrix"
+    ],
+    "text": "treak\n9.2 hrs\nTotal Study Time\n-\nCurrent Rank\nProgress Analytics\nCertificates (1)\nBadges (0)\nActivity (0)\nStudy Time & Velocity\n9.2 hrs total logged across enrolled tracks\nActive\nLessons Finished\n12\nContinuous Streak\n8 Days\nCurriculum Mastery\n65%\nSkill Competency Matrix\nAssessed from course progress & assessments\nAI\n65% (Intermediate)\nCompliance\n30% (In Progress)\nLeadership\n100% (Expert)\nMilestone Reward Mystery Box Available!\nUnlocked by reaching your 8-day continuous learning streak\nOpen Mystery Box\nKey Alerts\nAI credits running low\nCompleted Courses\nLeadership Essentials\nAI Insights\nAI Insights are unavailable: Supabase isn't configured in this environment.\nHome\nCourses\nAI Coach\nCommunity",
+    "overflow": false,
+    "brokenImages": [],
+    "crash": false,
+    "errors": []
+  },
+  {
+    "role": "learner",
+    "name": "Notifications",
+    "headings": [
+      "Notifications & Activity Center"
+    ],
+    "text": "Isolated local audit\npublic fixture\nlearner fixture\nmentor fixture\nadmin fixture\nmanager fixture\nowner fixture\n8 days\n620 XP\n0 credits\nDL\nHome\nOverview\nCourses\nAll Courses\nAI Coach\nAI Coach\nAI Quiz\nCommunity\nCommunity\nFeed\nCohort\nInstructors\nStudy Group\nMessages\nLeaderboard\nAccount\nProgress & Achievements\nNotifications\nSettings\nSign Out\nBack\nNotifications & Activity Center\n\nStay on top of live instructor sessions, cohort assignments, milestone achievements, and platform announcements.\n\nUnread\n0 Alerts\nAll Updates (0)\nUnread (0)\nAssignments\nLive Sessions\nAchievements & XP\nNo Notifications Found\nYou're all caught up! There are no new notifications in this category.",
+    "overflow": false,
+    "brokenImages": [],
+    "crash": false,
+    "errors": []
+  },
+  {
+    "role": "learner",
+    "name": "Notifications mobile",
+    "headings": [
+      "Notifications & Activity Center"
+    ],
+    "text": "Isolated local audit\npublic fixture\nlearner fixture\nmentor fixture\nadmin fixture\nmanager fixture\nowner fixture\n8\n0\nDL\nBack\nNotifications & Activity Center\n\nStay on top of live instructor sessions, cohort assignments, milestone achievements, and platform announcements.\n\nUnread\n0 Alerts\nAll Updates (0)\nUnread (0)\nAssignments\nLive Sessions\nAchievements & XP\nNo Notifications Found\nYou're all caught up! There are no new notifications in this category.\nHome\nCourses\nAI Coach\nCommunity",
+    "overflow": false,
+    "brokenImages": [],
+    "crash": false,
+    "errors": []
+  },
+  {
+    "role": "learner",
+    "name": "Settings",
+    "headings": [
+      "Profile & Settings",
+      "Demo Learner",
+      "Learner Information & Identity",
+      "Earned Certificates & Credentials"
+    ],
+    "text": "ctive Day Streak\n620\nCredential XP\n0 Issued\nCertificates\nProfile & Overview\nPreferences & Habits\nNotifications\nSecurity & Access\nPrivacy & Data\nInvite & Earn\nSupport & Feedback\nLearner Information & Identity\nFULL NAME\nDemo Learner\nEMAIL ADDRESS\nlearner@example.invalid\nCURRENT ORGANIZATION\nGlobal Digital Training Institute (+ Super Admin)\nENROLLED BATCH\nLearning Cohort\nEarned Certificates & Credentials\n0 Certificates Earned\nNo issued certificates yet\nComplete all modules in an enrolled course or learning track to receive verified certificates.\nView Achievements, XP & Rank\nLevel 3 • 620 XP earned\nSwitch Workspace Dashboard\nSwitch to Admin, Instructor, or Manager workspaces\nSign Out of Train AI",
+    "overflow": false,
+    "brokenImages": [],
+    "crash": false,
+    "errors": []
+  },
+  {
+    "role": "learner",
+    "name": "Settings mobile",
+    "headings": [
+      "Profile & Settings",
+      "Demo Learner",
+      "Learner Information & Identity",
+      "Earned Certificates & Credentials"
+    ],
+    "text": "XP\n0 Issued\nCertificates\nProfile & Overview\nPreferences & Habits\nNotifications\nSecurity & Access\nPrivacy & Data\nInvite & Earn\nSupport & Feedback\nLearner Information & Identity\nFULL NAME\nDemo Learner\nEMAIL ADDRESS\nlearner@example.invalid\nCURRENT ORGANIZATION\nGlobal Digital Training Institute (+ Super Admin)\nENROLLED BATCH\nLearning Cohort\nEarned Certificates & Credentials\n0 Certificates Earned\nNo issued certificates yet\nComplete all modules in an enrolled course or learning track to receive verified certificates.\nView Achievements, XP & Rank\nLevel 3 • 620 XP earned\nSwitch Workspace Dashboard\nSwitch to Admin, Instructor, or Manager workspaces\nSign Out of Train AI\nHome\nCourses\nAI Coach\nCommunity",
+    "overflow": false,
+    "brokenImages": [],
+    "crash": false,
+    "errors": []
+  },
+  {
+    "role": "learner",
+    "name": "mobile current page",
+    "headings": [
+      "Profile & Settings",
+      "Demo Learner",
+      "Learner Information & Identity",
+      "Earned Certificates & Credentials"
+    ],
+    "text": "XP\n0 Issued\nCertificates\nProfile & Overview\nPreferences & Habits\nNotifications\nSecurity & Access\nPrivacy & Data\nInvite & Earn\nSupport & Feedback\nLearner Information & Identity\nFULL NAME\nDemo Learner\nEMAIL ADDRESS\nlearner@example.invalid\nCURRENT ORGANIZATION\nGlobal Digital Training Institute (+ Super Admin)\nENROLLED BATCH\nLearning Cohort\nEarned Certificates & Credentials\n0 Certificates Earned\nNo issued certificates yet\nComplete all modules in an enrolled course or learning track to receive verified certificates.\nView Achievements, XP & Rank\nLevel 3 • 620 XP earned\nSwitch Workspace Dashboard\nSwitch to Admin, Instructor, or Manager workspaces\nSign Out of Train AI\nHome\nCourses\nAI Coach\nCommunity",
+    "overflow": false,
+    "brokenImages": [],
+    "crash": false,
+    "errors": []
+  },
+  {
+    "role": "mentor",
+    "name": "initial",
+    "headings": [
+      "Instructor Live Studio & Pacing"
+    ],
+    "text": "ort resources\nLearner Activity Alerts\nInactivity signals for learners in your assigned cohorts\nNo inactivity alerts for your assigned cohorts.\nMy Schedule\nInteractive live sessions & critiques\nFull calendar\nNo sessions scheduled today.\nMy Notes\nYour own running notes for analysis - visible to you and your org admin, not posted anywhere public.\nAdd Note\nFatima and Liam are both falling behind on AI Fundamentals - worth a check-in this week.\n10/20/2026, 3:56:57 PM\nWe value your privacy\n\nWe use cookies for essential functionality and, with your consent, for analytics and marketing. You can change your choices anytime from Profile > Privacy & Data.\n\nManage cookies\nReject non-essential\nAccept all",
+    "overflow": false,
+    "brokenImages": [],
+    "crash": false,
+    "errors": []
+  },
+  {
+    "role": "mentor",
+    "name": "Instructor Overview",
+    "headings": [
+      "Instructor Live Studio & Pacing"
+    ],
+    "text": "ew all\nQ1 Onboarding Cohort\nNo start date - 4/1/2026\nFinishing soon\nCohort Diagnostic & Recommendations\nNo inactivity alerts for your assigned cohorts. Open your schedule to arrange a check-in.\nSchedule clarification workshop\nOpen cohort resources\nLearner Activity Alerts\nInactivity signals for learners in your assigned cohorts\nNo inactivity alerts for your assigned cohorts.\nMy Schedule\nInteractive live sessions & critiques\nFull calendar\nNo sessions scheduled today.\nMy Notes\nYour own running notes for analysis - visible to you and your org admin, not posted anywhere public.\nAdd Note\nFatima and Liam are both falling behind on AI Fundamentals - worth a check-in this week.\n10/20/2026, 3:56:57 PM",
+    "overflow": false,
+    "brokenImages": [],
+    "crash": false,
+    "errors": []
+  },
+  {
+    "role": "mentor",
+    "name": "Instructor Overview mobile",
+    "headings": [
+      "Instructor Live Studio & Pacing"
+    ],
+    "text": "ew all\nQ1 Onboarding Cohort\nNo start date - 4/1/2026\nFinishing soon\nCohort Diagnostic & Recommendations\nNo inactivity alerts for your assigned cohorts. Open your schedule to arrange a check-in.\nSchedule clarification workshop\nOpen cohort resources\nLearner Activity Alerts\nInactivity signals for learners in your assigned cohorts\nNo inactivity alerts for your assigned cohorts.\nMy Schedule\nInteractive live sessions & critiques\nFull calendar\nNo sessions scheduled today.\nMy Notes\nYour own running notes for analysis - visible to you and your org admin, not posted anywhere public.\nAdd Note\nFatima and Liam are both falling behind on AI Fundamentals - worth a check-in this week.\n10/20/2026, 3:56:57 PM",
+    "overflow": false,
+    "brokenImages": [],
+    "crash": false,
+    "errors": []
+  },
+  {
+    "role": "mentor",
+    "name": "Availability & Sessions",
+    "headings": [
+      "Availability & Live Sessions"
+    ],
+    "text": "Direct Messages\nLearner Q&A\nMy Performance\nEarnings & Payouts\nInstructor Settings\nDark Theme\nSwitch Dashboard\nSign Out\nAvailability & Sessions\nManage 1:1 sessions, student requests & recurring weekly availability\nM\nMember\nMember\nSign Out\nAvailability & Live Sessions\n\nHost 1:1 clarification video calls, manage recurring office hours, and confirm student booking requests.\n\nSchedule 1-on-1 Session\nTOTAL BOOKED\n0\n0 completed successfully\nTEACHING HOURS\n0 hrs\nAvg session: 30-45 mins\nWEEKLY SLOTS\n0 active\nConfigured across 0 days\nSessions & Bookings\nWeekly Availability\nALL\nUPCOMING\nCOMPLETED\nCANCELLED\n0 sessions listed\nNo sessions matching filter\nBooked and requested 1:1 sessions will appear here.",
+    "overflow": false,
+    "brokenImages": [],
+    "crash": false,
+    "errors": []
+  },
+  {
+    "role": "mentor",
+    "name": "Availability & Sessions mobile",
+    "headings": [
+      "Availability & Live Sessions"
+    ],
+    "text": "Learners\nDirect Messages\nLearner Q&A\nMy Performance\nEarnings & Payouts\nInstructor Settings\nDark Theme\nSwitch Dashboard\nSign Out\nAvailability & Sessions\nManage 1:1 sessions, student requests & recurring weekly availability\nM\nMember\nMember\nAvailability & Live Sessions\n\nHost 1:1 clarification video calls, manage recurring office hours, and confirm student booking requests.\n\nSchedule 1-on-1 Session\nTOTAL BOOKED\n0\n0 completed successfully\nTEACHING HOURS\n0 hrs\nAvg session: 30-45 mins\nWEEKLY SLOTS\n0 active\nConfigured across 0 days\nSessions & Bookings\nWeekly Availability\nALL\nUPCOMING\nCOMPLETED\nCANCELLED\n0 sessions listed\nNo sessions matching filter\nBooked and requested 1:1 sessions will appear here.",
+    "overflow": false,
+    "brokenImages": [],
+    "crash": false,
+    "errors": []
+  },
+  {
+    "role": "mentor",
+    "name": "My Cohorts",
+    "headings": [],
+    "text": "Isolated local audit\npublic fixture\nlearner fixture\nmentor fixture\nadmin fixture\nmanager fixture\nowner fixture\nPRO\nSearch platform...\n⌘K\nWORKSPACES\nInstructor View\nNAVIGATION\nInstructor Overview\nAvailability & Sessions\nMy Cohorts\nMy Courses\nMy Study Groups\nLearner Community View\nLearner Leaderboard\nAssessments & Grading\nMy Learners\nDirect Messages\nLearner Q&A\nMy Performance\nEarnings & Payouts\nInstructor Settings\nDark Theme\nSwitch Dashboard\nSign Out\nMy teaching cohorts\nAssigned cohorts, learner progress, resources and sessions\nDI\nDemo\nInstructor\nSign Out\nQ1 Onboarding Cohort · Open teaching space",
+    "overflow": false,
+    "brokenImages": [],
+    "crash": false,
+    "errors": []
+  },
+  {
+    "role": "mentor",
+    "name": "My Cohorts mobile",
+    "headings": [],
+    "text": "Isolated local audit\npublic fixture\nlearner fixture\nmentor fixture\nadmin fixture\nmanager fixture\nowner fixture\nPRO\nSearch platform...\n⌘K\nWORKSPACES\nInstructor View\nNAVIGATION\nInstructor Overview\nAvailability & Sessions\nMy Cohorts\nMy Courses\nMy Study Groups\nLearner Community View\nLearner Leaderboard\nAssessments & Grading\nMy Learners\nDirect Messages\nLearner Q&A\nMy Performance\nEarnings & Payouts\nInstructor Settings\nDark Theme\nSwitch Dashboard\nSign Out\nMy teaching cohorts\nAssigned cohorts, learner progress, resources and sessions\nDI\nDemo\nInstructor\nQ1 Onboarding Cohort · Open teaching space",
+    "overflow": false,
+    "brokenImages": [],
+    "crash": false,
+    "errors": []
+  },
+  {
+    "role": "mentor",
+    "name": "My Courses",
+    "headings": [
+      "Course Catalog & Curriculum"
+    ],
+    "text": "\nSign Out\nContent & Course Management\nBuild, manage, and publish organization courses\nM\nMember\nMember\nSign Out\nCourse Catalog & Curriculum\n\nAuthor interactive courses, manage lesson syllabi, configure assessment criteria, and publish learning modules.\n\nCreate Course\nPublished\nAI\nAI Fundamentals\nComprehensive syllabus with hands-on exercises and quizzes.\n8 Enrolled • 2 Lessons\nManage Course\nPublished\nCOMPLIANCE\nWorkplace Compliance 101\nComprehensive syllabus with hands-on exercises and quizzes.\n4 Enrolled • 1 Lessons\nManage Course\nPublished\nLEADERSHIP\nLeadership Essentials\nComprehensive syllabus with hands-on exercises and quizzes.\nPending Approval\nApprove\n3 Enrolled • 1 Lessons\nManage Course",
+    "overflow": false,
+    "brokenImages": [],
+    "crash": false,
+    "errors": []
+  },
+  {
+    "role": "mentor",
+    "name": "My Courses mobile",
+    "headings": [
+      "Course Catalog & Curriculum"
+    ],
+    "text": "Dashboard\nSign Out\nContent & Course Management\nBuild, manage, and publish organization courses\nM\nMember\nMember\nCourse Catalog & Curriculum\n\nAuthor interactive courses, manage lesson syllabi, configure assessment criteria, and publish learning modules.\n\nCreate Course\nPublished\nAI\nAI Fundamentals\nComprehensive syllabus with hands-on exercises and quizzes.\n8 Enrolled • 2 Lessons\nManage Course\nPublished\nCOMPLIANCE\nWorkplace Compliance 101\nComprehensive syllabus with hands-on exercises and quizzes.\n4 Enrolled • 1 Lessons\nManage Course\nPublished\nLEADERSHIP\nLeadership Essentials\nComprehensive syllabus with hands-on exercises and quizzes.\nPending Approval\nApprove\n3 Enrolled • 1 Lessons\nManage Course",
+    "overflow": false,
+    "brokenImages": [],
+    "crash": false,
+    "errors": []
+  },
+  {
+    "role": "mentor",
+    "name": "My Study Groups",
+    "headings": [
+      "Study Groups & Peer Learning Hub"
+    ],
+    "text": " platform...\n⌘K\nWORKSPACES\nInstructor View\nNAVIGATION\nInstructor Overview\nAvailability & Sessions\nMy Cohorts\nMy Courses\nMy Study Groups\nLearner Community View\nLearner Leaderboard\nAssessments & Grading\nMy Learners\nDirect Messages\nLearner Q&A\nMy Performance\nEarnings & Payouts\nInstructor Settings\nDark Theme\nSwitch Dashboard\nSign Out\nMy Study Groups\nFacilitate student study circles, peer code reviews, and weekly live labs\nM\nMember\nMember\nSign Out\nStudy Groups & Peer Learning Hub\n\nOrganize cohort breakout sessions, share curated course resources, and foster peer-to-peer accountability.\n\nLaunch Circle Room\nCreate New Study Circle\nForm a focused group for a specific course module or capstone\nCreate",
+    "overflow": false,
+    "brokenImages": [],
+    "crash": false,
+    "errors": []
+  },
+  {
+    "role": "mentor",
+    "name": "My Study Groups mobile",
+    "headings": [
+      "Study Groups & Peer Learning Hub"
+    ],
+    "text": "RO\nSearch platform...\n⌘K\nWORKSPACES\nInstructor View\nNAVIGATION\nInstructor Overview\nAvailability & Sessions\nMy Cohorts\nMy Courses\nMy Study Groups\nLearner Community View\nLearner Leaderboard\nAssessments & Grading\nMy Learners\nDirect Messages\nLearner Q&A\nMy Performance\nEarnings & Payouts\nInstructor Settings\nDark Theme\nSwitch Dashboard\nSign Out\nMy Study Groups\nFacilitate student study circles, peer code reviews, and weekly live labs\nM\nMember\nMember\nStudy Groups & Peer Learning Hub\n\nOrganize cohort breakout sessions, share curated course resources, and foster peer-to-peer accountability.\n\nLaunch Circle Room\nCreate New Study Circle\nForm a focused group for a specific course module or capstone\nCreate",
+    "overflow": false,
+    "brokenImages": [],
+    "crash": false,
+    "errors": []
+  },
+  {
+    "role": "mentor",
+    "name": "Learner Community View",
+    "headings": [
+      "Community Hub"
+    ],
+    "text": "mmunity Hub\n\nConnect with peers, discuss AI topics, join study groups, and share insights.\n\nNew Discussion\nRecent Discussions\n0 Posts\nView All Posts (0)\nNew Post\nNo discussions yet\nClick \"New Post\" above to start a conversation!\nStudy Groups\nView All\nCreate Group\nNo study groups are available yet. Check back or ask your instructor about your groups.\nCohort Learning Space\nActive Member\nEnter Space\nQ1 Onboarding Cohort\nLIVE SESSIONS\n0 Scheduled\nSTATUS\nActive Sprint\nEnter Cohort Learning Space →\nInstructors & Mentors\n0 Available\nView All\nYour Community Status\nNewcomer\n0\nPosts\n0\nReplies\n0\nScore\nTop Contributors\nRank #-\nFull\nDirect Messages\nOpen\nNo active chat threads yet. Click to view messages.",
+    "overflow": false,
+    "brokenImages": [],
+    "crash": false,
+    "errors": []
+  },
+  {
+    "role": "mentor",
+    "name": "Learner Community View mobile",
+    "headings": [
+      "Community Hub"
+    ],
+    "text": "mmunity Hub\n\nConnect with peers, discuss AI topics, join study groups, and share insights.\n\nNew Discussion\nRecent Discussions\n0 Posts\nView All Posts (0)\nNew Post\nNo discussions yet\nClick \"New Post\" above to start a conversation!\nStudy Groups\nView All\nCreate Group\nNo study groups are available yet. Check back or ask your instructor about your groups.\nCohort Learning Space\nActive Member\nEnter Space\nQ1 Onboarding Cohort\nLIVE SESSIONS\n0 Scheduled\nSTATUS\nActive Sprint\nEnter Cohort Learning Space →\nInstructors & Mentors\n0 Available\nView All\nYour Community Status\nNewcomer\n0\nPosts\n0\nReplies\n0\nScore\nTop Contributors\nRank #-\nFull\nDirect Messages\nOpen\nNo active chat threads yet. Click to view messages.",
+    "overflow": false,
+    "brokenImages": [],
+    "crash": false,
+    "errors": []
+  },
+  {
+    "role": "mentor",
+    "name": "Learner Leaderboard",
+    "headings": [
+      "Leaderboard",
+      "Leaderboard & Top Achievers"
+    ],
+    "text": " fixture\nmanager fixture\nowner fixture\nPRO\nSearch platform...\n⌘K\nWORKSPACES\nInstructor View\nNAVIGATION\nInstructor Overview\nAvailability & Sessions\nMy Cohorts\nMy Courses\nMy Study Groups\nLearner Community View\nLearner Leaderboard\nAssessments & Grading\nMy Learners\nDirect Messages\nLearner Q&A\nMy Performance\nEarnings & Payouts\nInstructor Settings\nDark Theme\nSwitch Dashboard\nSign Out\nLeaderboard\n\nRanking based on lesson progress, quizzes, and streak consistency\n\nLeaderboard & Top Achievers\n\n0 learners competing • All time ranking\n\nAll Time\nThis Week\nThis Month\nRefresh\n#1\nYour Standing\n0 pts • Level 1\nLeading the board!\n\"Education is not preparation for life; education is life itself.\"\n- John Dewey",
+    "overflow": false,
+    "brokenImages": [],
+    "crash": false,
+    "errors": []
+  },
+  {
+    "role": "mentor",
+    "name": "Learner Leaderboard mobile",
+    "headings": [
+      "Leaderboard",
+      "Leaderboard & Top Achievers"
+    ],
+    "text": " fixture\nmanager fixture\nowner fixture\nPRO\nSearch platform...\n⌘K\nWORKSPACES\nInstructor View\nNAVIGATION\nInstructor Overview\nAvailability & Sessions\nMy Cohorts\nMy Courses\nMy Study Groups\nLearner Community View\nLearner Leaderboard\nAssessments & Grading\nMy Learners\nDirect Messages\nLearner Q&A\nMy Performance\nEarnings & Payouts\nInstructor Settings\nDark Theme\nSwitch Dashboard\nSign Out\nLeaderboard\n\nRanking based on lesson progress, quizzes, and streak consistency\n\nLeaderboard & Top Achievers\n\n0 learners competing • All time ranking\n\nAll Time\nThis Week\nThis Month\nRefresh\n#1\nYour Standing\n0 pts • Level 1\nLeading the board!\n\"Education is not preparation for life; education is life itself.\"\n- John Dewey",
+    "overflow": false,
+    "brokenImages": [],
+    "crash": false,
+    "errors": []
+  },
+  {
+    "role": "mentor",
+    "name": "Assessments & Grading",
+    "headings": [],
+    "text": "or fixture\nadmin fixture\nmanager fixture\nowner fixture\nPRO\nSearch platform...\n⌘K\nWORKSPACES\nInstructor View\nNAVIGATION\nInstructor Overview\nAvailability & Sessions\nMy Cohorts\nMy Courses\nMy Study Groups\nLearner Community View\nLearner Leaderboard\nAssessments & Grading\nMy Learners\nDirect Messages\nLearner Q&A\nMy Performance\nEarnings & Payouts\nInstructor Settings\nDark Theme\nSwitch Dashboard\nSign Out\nAssessments & Grading\nEvery course's assessment attempts, at a glance - open a course to review and override scores.\nM\nMember\nMember\nSign Out\nAI Fundamentals\nClick to view submitted attempts\nWorkplace Compliance 101\nClick to view submitted attempts\nLeadership Essentials\nClick to view submitted attempts",
+    "overflow": false,
+    "brokenImages": [],
+    "crash": false,
+    "errors": []
+  },
+  {
+    "role": "mentor",
+    "name": "Assessments & Grading mobile",
+    "headings": [],
+    "text": "ture\nmentor fixture\nadmin fixture\nmanager fixture\nowner fixture\nPRO\nSearch platform...\n⌘K\nWORKSPACES\nInstructor View\nNAVIGATION\nInstructor Overview\nAvailability & Sessions\nMy Cohorts\nMy Courses\nMy Study Groups\nLearner Community View\nLearner Leaderboard\nAssessments & Grading\nMy Learners\nDirect Messages\nLearner Q&A\nMy Performance\nEarnings & Payouts\nInstructor Settings\nDark Theme\nSwitch Dashboard\nSign Out\nAssessments & Grading\nEvery course's assessment attempts, at a glance - open a course to review and override scores.\nM\nMember\nMember\nAI Fundamentals\nClick to view submitted attempts\nWorkplace Compliance 101\nClick to view submitted attempts\nLeadership Essentials\nClick to view submitted attempts",
+    "overflow": false,
+    "brokenImages": [],
+    "crash": false,
+    "errors": []
+  },
+  {
+    "role": "mentor",
+    "name": "My Learners",
+    "headings": [
+      "My Learners & Direct Mentorship"
+    ],
+    "text": "gitaltraining.org\n\tAI Fundamentals, Workplace Compliance 101\t1 sessions\t\nOverall\n80%\n\t82%\tOn Track\t\nProfile\n\n\nMarcus Webb\nmarcus.webb@digitaltraining.org\n\tAI Fundamentals, Data Literacy for Teams\t1 sessions\t\nOverall\n78%\n\t82%\tOn Track\t\nProfile\n\n\nFatima Diallo\nfatima.diallo@sarafoundationafrica.com\n\tAI Fundamentals\t0 sessions\t\nOverall\n30%\n\t82%\tOn Track\t\nProfile\n\n\nLiam Torres\nliam.torres@trainailtd.com\n\tAI Fundamentals\t0 sessions\t\nOverall\n15%\n\t82%\tOn Track\t\nProfile\n\n\nNgozi Adeyemi\nngozi.adeyemi@trainailtd.com\n\tAI Fundamentals, Leadership Essentials\t2 sessions\t\nOverall\n100%\n\t82%\tOn Track\t\nProfile\n\n\nSofia Kim\nsofia.kim@trainailtd.com\n\tAI Fundamentals\t0 sessions\t\nOverall\n45%\n\t82%\tOn Track\t\nProfile",
+    "overflow": false,
+    "brokenImages": [
+      "https://images.unsplash.com/photo-1534528741775?w=150&auto=format&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1534528746775?w=150&auto=format&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1534528751775?w=150&auto=format&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1534528756775?w=150&auto=format&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1534528761775?w=150&auto=format&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1534528766775?w=150&auto=format&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1534528771775?w=150&auto=format&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1534528776775?w=150&auto=format&fit=crop&q=80"
+    ],
+    "crash": false,
+    "errors": []
+  },
+  {
+    "role": "mentor",
+    "name": "My Learners mobile",
+    "headings": [
+      "My Learners & Direct Mentorship"
+    ],
+    "text": "gitaltraining.org\n\tAI Fundamentals, Workplace Compliance 101\t1 sessions\t\nOverall\n80%\n\t82%\tOn Track\t\nProfile\n\n\nMarcus Webb\nmarcus.webb@digitaltraining.org\n\tAI Fundamentals, Data Literacy for Teams\t1 sessions\t\nOverall\n78%\n\t82%\tOn Track\t\nProfile\n\n\nFatima Diallo\nfatima.diallo@sarafoundationafrica.com\n\tAI Fundamentals\t0 sessions\t\nOverall\n30%\n\t82%\tOn Track\t\nProfile\n\n\nLiam Torres\nliam.torres@trainailtd.com\n\tAI Fundamentals\t0 sessions\t\nOverall\n15%\n\t82%\tOn Track\t\nProfile\n\n\nNgozi Adeyemi\nngozi.adeyemi@trainailtd.com\n\tAI Fundamentals, Leadership Essentials\t2 sessions\t\nOverall\n100%\n\t82%\tOn Track\t\nProfile\n\n\nSofia Kim\nsofia.kim@trainailtd.com\n\tAI Fundamentals\t0 sessions\t\nOverall\n45%\n\t82%\tOn Track\t\nProfile",
+    "overflow": false,
+    "brokenImages": [
+      "https://images.unsplash.com/photo-1534528741775?w=150&auto=format&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1534528746775?w=150&auto=format&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1534528751775?w=150&auto=format&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1534528756775?w=150&auto=format&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1534528761775?w=150&auto=format&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1534528766775?w=150&auto=format&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1534528771775?w=150&auto=format&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1534528776775?w=150&auto=format&fit=crop&q=80"
+    ],
+    "crash": false,
+    "errors": []
+  },
+  {
+    "role": "mentor",
+    "name": "Direct Messages",
+    "headings": [
+      "Direct Mentorship Messaging"
+    ],
+    "text": "n real-time, and collaborate with fellow academy instructors.\n\nTotal Contacts\n10 Available\nActive Chats\n0 Active\nAC\nAmara Chen\nNo messages yet. Say hello!\nDO\nDavid Osei\nNo messages yet. Say hello!\nPN\nPriya Nair\nNo messages yet. Say hello!\nMW\nMarcus Webb\nNo messages yet. Say hello!\nFD\nFatima Diallo\nNo messages yet. Say hello!\nLT\nLiam Torres\nNo messages yet. Say hello!\nNA\nNgozi Adeyemi\nNo messages yet. Say hello!\nSK\nSofia Kim\nNo messages yet. Say hello!\nJO\nJordan Reyes (Instructor)\nNo messages yet. Say hello!\nWA\nWale Adebayo (Instructor)\nNo messages yet. Say hello!\nAC\nAmara Chen\nView Progress\nInstructor Direct Message Channel\nNo messages in this conversation yet. Send the first one below.\nSend",
+    "overflow": false,
+    "brokenImages": [],
+    "crash": false,
+    "errors": []
+  },
+  {
+    "role": "mentor",
+    "name": "Direct Messages mobile",
+    "headings": [
+      "Direct Mentorship Messaging"
+    ],
+    "text": "tor Overview\nAvailability & Sessions\nMy Cohorts\nMy Courses\nMy Study Groups\nLearner Community View\nLearner Leaderboard\nAssessments & Grading\nMy Learners\nDirect Messages\nLearner Q&A\nMy Performance\nEarnings & Payouts\nInstructor Settings\nDark Theme\nSwitch Dashboard\nSign Out\nInstructor Direct Messages\nFind learners and communicate directly across all active courses\nM\nMember\nMember\nDirect Mentorship Messaging\n\nProvide 1:1 guidance, answer assignment queries in real-time, and collaborate with fellow academy instructors.\n\nTotal Contacts\n10 Available\nActive Chats\n0 Active\nAC\nAmara Chen\nView Progress\nInstructor Direct Message Channel\nNo messages in this conversation yet. Send the first one below.\nSend",
+    "overflow": false,
+    "brokenImages": [],
+    "crash": false,
+    "errors": []
+  },
+  {
+    "role": "mentor",
+    "name": "Learner Q&A",
+    "headings": [
+      "Instructor Q&A & Knowledge Base"
+    ],
+    "text": "s\nMy Cohorts\nMy Courses\nMy Study Groups\nLearner Community View\nLearner Leaderboard\nAssessments & Grading\nMy Learners\nDirect Messages\nLearner Q&A\nMy Performance\nEarnings & Payouts\nInstructor Settings\nDark Theme\nSwitch Dashboard\nSign Out\nLearner Q&A\nAnswer student questions, clarify course assignments, and guide project discussions\nM\nMember\nMember\nSign Out\nInstructor Q&A & Knowledge Base\n\nProvide expert code reviews, unblock students on complex concepts, and build a lasting community FAQ.\n\nUnresolved\n0 Open\nAvg Response Time\n1.4 Hours\nFocus Unresolved\nAll Questions (0)\nUnresolved (0)\nResolved (0)\nNo questions match your current filter\nAll student questions in this category have been addressed.",
+    "overflow": false,
+    "brokenImages": [],
+    "crash": false,
+    "errors": []
+  },
+  {
+    "role": "mentor",
+    "name": "Learner Q&A mobile",
+    "headings": [
+      "Instructor Q&A & Knowledge Base"
+    ],
+    "text": "& Sessions\nMy Cohorts\nMy Courses\nMy Study Groups\nLearner Community View\nLearner Leaderboard\nAssessments & Grading\nMy Learners\nDirect Messages\nLearner Q&A\nMy Performance\nEarnings & Payouts\nInstructor Settings\nDark Theme\nSwitch Dashboard\nSign Out\nLearner Q&A\nAnswer student questions, clarify course assignments, and guide project discussions\nM\nMember\nMember\nInstructor Q&A & Knowledge Base\n\nProvide expert code reviews, unblock students on complex concepts, and build a lasting community FAQ.\n\nUnresolved\n0 Open\nAvg Response Time\n1.4 Hours\nFocus Unresolved\nAll Questions (0)\nUnresolved (0)\nResolved (0)\nNo questions match your current filter\nAll student questions in this category have been addressed.",
+    "overflow": false,
+    "brokenImages": [],
+    "crash": false,
+    "errors": []
+  },
+  {
+    "role": "mentor",
+    "name": "My Performance",
+    "headings": [
+      "Teaching Analytics & Impact Studio"
+    ],
+    "text": "ACHING SESSIONS\n0\n0 completed 1:1s & workshops\nLEARNERS MENTORED\n0\nActive learner cohort\nGROSS EARNINGS\n$0.00\nPayout verified & active\nStudent Rating Breakdown\nVerified reviews from completed cohorts and courses\nN/A Star Avg\n5\n0%\n4\n0%\n3\n0%\n2\n0%\n1\n0%\nTeaching Assessment\nAwaiting Feedback\nTeaching Benchmarks & Health\nMetrics tracked against organization targets\nActive\nCourse Completion Trajectory\n0%\nActive Sessions Completed\n0 total sessions\nLearner Retention\nOptimal\nRecent Student Reviews & Testimonials\nDirect feedback left by learners after sessions and project evaluations\nView All Learners\nNo student reviews or feedback submitted yet. Feedback left from completed sessions will show up here.",
+    "overflow": false,
+    "brokenImages": [],
+    "crash": false,
+    "errors": []
+  },
+  {
+    "role": "mentor",
+    "name": "My Performance mobile",
+    "headings": [
+      "Teaching Analytics & Impact Studio"
+    ],
+    "text": "ACHING SESSIONS\n0\n0 completed 1:1s & workshops\nLEARNERS MENTORED\n0\nActive learner cohort\nGROSS EARNINGS\n$0.00\nPayout verified & active\nStudent Rating Breakdown\nVerified reviews from completed cohorts and courses\nN/A Star Avg\n5\n0%\n4\n0%\n3\n0%\n2\n0%\n1\n0%\nTeaching Assessment\nAwaiting Feedback\nTeaching Benchmarks & Health\nMetrics tracked against organization targets\nActive\nCourse Completion Trajectory\n0%\nActive Sessions Completed\n0 total sessions\nLearner Retention\nOptimal\nRecent Student Reviews & Testimonials\nDirect feedback left by learners after sessions and project evaluations\nView All Learners\nNo student reviews or feedback submitted yet. Feedback left from completed sessions will show up here.",
+    "overflow": false,
+    "brokenImages": [],
+    "crash": false,
+    "errors": []
+  },
+  {
+    "role": "mentor",
+    "name": "Earnings & Payouts",
+    "headings": [
+      "Instructor Earnings & Financial Studio"
+    ],
+    "text": " Payouts\nTrack teaching revenue, automated withdrawals, and dispute resolutions\nM\nMember\nMember\nSign Out\nInstructor Earnings & Financial Studio\n\nReview course milestone bounties, workshop earnings, 1:1 mentorship fees, and request instant withdrawals.\n\nExport CSV Statement\nAVAILABLE FOR WITHDRAWAL\n$0.00\nReady for instant transfer\nLIFETIME GROSS EARNINGS\n$0.00\nAcross 0 verified sessions & cohorts\nPENDING SETTLEMENT\n$0.00\nClears in 24-48h after session sign-off\nEarnings Breakdown\nWithdrawal & Payout Methods\nRefunds & Disputes\nDetailed Transaction History\nItemized credits from live sessions, capstone grading, and workshops\nRefresh\nACTIVITY / DESCRIPTION\tLEARNER / COHORT\tGROSS AMOUNT\tSTATUS\tDATE",
+    "overflow": false,
+    "brokenImages": [],
+    "crash": false,
+    "errors": []
+  },
+  {
+    "role": "mentor",
+    "name": "Earnings & Payouts mobile",
+    "headings": [
+      "Instructor Earnings & Financial Studio"
+    ],
+    "text": "arnings & Payouts\nTrack teaching revenue, automated withdrawals, and dispute resolutions\nM\nMember\nMember\nInstructor Earnings & Financial Studio\n\nReview course milestone bounties, workshop earnings, 1:1 mentorship fees, and request instant withdrawals.\n\nExport CSV Statement\nAVAILABLE FOR WITHDRAWAL\n$0.00\nReady for instant transfer\nLIFETIME GROSS EARNINGS\n$0.00\nAcross 0 verified sessions & cohorts\nPENDING SETTLEMENT\n$0.00\nClears in 24-48h after session sign-off\nEarnings Breakdown\nWithdrawal & Payout Methods\nRefunds & Disputes\nDetailed Transaction History\nItemized credits from live sessions, capstone grading, and workshops\nRefresh\nACTIVITY / DESCRIPTION\tLEARNER / COHORT\tGROSS AMOUNT\tSTATUS\tDATE",
+    "overflow": false,
+    "brokenImages": [],
+    "crash": false,
+    "errors": []
+  },
+  {
+    "role": "mentor",
+    "name": "Instructor Settings",
+    "headings": [
+      "Instructor Studio & Preferences"
+    ],
+    "text": "ess\n0%\nIncomplete: Biography, Tagline, Specializations, Years of Experience, Languages\nProfile & Portfolio\nBio, photo, credentials\nCommunications\nNotifications and alerts\nSessions & Video\nRoom URLs, policies\nResources & Agreements\nDocuments and guides\nInstructor Public Profile\nThis information is visible to enrolled learners and co-instructors.\nDE\nChange photo\nMax 10MB\nDISPLAY NAME\nSave name\nSPECIALIZATION / TEACHING AREAS\nBIO\nSave profile\nCredentials & Certifications\nOptional - helps learners know your background, not required to teach.\nNo credentials added yet.\ncertification\ndegree\nlicense\naward\nother\nAdd\nPortfolio\nNo portfolio items added yet.\nproject\ncase study\npublication\nlink\nvideo\nAdd",
+    "overflow": false,
+    "brokenImages": [],
+    "crash": false,
+    "errors": []
+  },
+  {
+    "role": "mentor",
+    "name": "Instructor Settings mobile",
+    "headings": [
+      "Instructor Studio & Preferences"
+    ],
+    "text": "ess\n0%\nIncomplete: Biography, Tagline, Specializations, Years of Experience, Languages\nProfile & Portfolio\nBio, photo, credentials\nCommunications\nNotifications and alerts\nSessions & Video\nRoom URLs, policies\nResources & Agreements\nDocuments and guides\nInstructor Public Profile\nThis information is visible to enrolled learners and co-instructors.\nDE\nChange photo\nMax 10MB\nDISPLAY NAME\nSave name\nSPECIALIZATION / TEACHING AREAS\nBIO\nSave profile\nCredentials & Certifications\nOptional - helps learners know your background, not required to teach.\nNo credentials added yet.\ncertification\ndegree\nlicense\naward\nother\nAdd\nPortfolio\nNo portfolio items added yet.\nproject\ncase study\npublication\nlink\nvideo\nAdd",
+    "overflow": false,
+    "brokenImages": [],
+    "crash": false,
+    "errors": []
+  },
+  {
+    "role": "mentor",
+    "name": "mobile current page",
+    "headings": [
+      "Instructor Studio & Preferences"
+    ],
+    "text": "ess\n0%\nIncomplete: Biography, Tagline, Specializations, Years of Experience, Languages\nProfile & Portfolio\nBio, photo, credentials\nCommunications\nNotifications and alerts\nSessions & Video\nRoom URLs, policies\nResources & Agreements\nDocuments and guides\nInstructor Public Profile\nThis information is visible to enrolled learners and co-instructors.\nDE\nChange photo\nMax 10MB\nDISPLAY NAME\nSave name\nSPECIALIZATION / TEACHING AREAS\nBIO\nSave profile\nCredentials & Certifications\nOptional - helps learners know your background, not required to teach.\nNo credentials added yet.\ncertification\ndegree\nlicense\naward\nother\nAdd\nPortfolio\nNo portfolio items added yet.\nproject\ncase study\npublication\nlink\nvideo\nAdd",
+    "overflow": false,
+    "brokenImages": [],
+    "crash": false,
+    "errors": []
+  },
+  {
+    "role": "admin",
+    "name": "initial",
+    "headings": [
+      "Welcome back, Demo Admin"
+    ],
+    "text": "y Log\nRecent admin actions within your own organization.\nissue certificate directly: Amara Chen\n10/21/2026, 2:57:10 PM\nassign compliance course: Fatima Diallo\n10/20/2026, 3:57:10 PM\nreview certificate: Priya Nair\n10/19/2026, 3:57:10 PM\nMy Notes\nYour own running notes for analysis - visible to you and your org admin, not posted anywhere public.\nAdd Note\nFatima and Liam are both falling behind on AI Fundamentals - worth a check-in this week.\n10/20/2026, 3:57:10 PM\nWe value your privacy\n\nWe use cookies for essential functionality and, with your consent, for analytics and marketing. You can change your choices anytime from Profile > Privacy & Data.\n\nManage cookies\nReject non-essential\nAccept all",
+    "overflow": false,
+    "brokenImages": [],
+    "crash": false,
+    "errors": []
+  },
+  {
+    "role": "admin",
+    "name": "Dashboard",
+    "headings": [
+      "Welcome back, Demo Admin"
+    ],
+    "text": "gs & drop-off alerts\nNo at-risk students right now.\nTop instructors\nHighest-rated active instructors in your org\nNo active instructors yet.\nUpcoming sessions\nLive & confirmed instructor sessions\nNo upcoming sessions scheduled.\nActivity Log\nRecent admin actions within your own organization.\nissue certificate directly: Amara Chen\n10/21/2026, 2:57:10 PM\nassign compliance course: Fatima Diallo\n10/20/2026, 3:57:10 PM\nreview certificate: Priya Nair\n10/19/2026, 3:57:10 PM\nMy Notes\nYour own running notes for analysis - visible to you and your org admin, not posted anywhere public.\nAdd Note\nFatima and Liam are both falling behind on AI Fundamentals - worth a check-in this week.\n10/20/2026, 3:57:10 PM",
+    "overflow": false,
+    "brokenImages": [],
+    "crash": false,
+    "errors": []
+  },
+  {
+    "role": "admin",
+    "name": "Dashboard mobile",
+    "headings": [
+      "Welcome back, Demo Admin"
+    ],
+    "text": "gs & drop-off alerts\nNo at-risk students right now.\nTop instructors\nHighest-rated active instructors in your org\nNo active instructors yet.\nUpcoming sessions\nLive & confirmed instructor sessions\nNo upcoming sessions scheduled.\nActivity Log\nRecent admin actions within your own organization.\nissue certificate directly: Amara Chen\n10/21/2026, 2:57:10 PM\nassign compliance course: Fatima Diallo\n10/20/2026, 3:57:10 PM\nreview certificate: Priya Nair\n10/19/2026, 3:57:10 PM\nMy Notes\nYour own running notes for analysis - visible to you and your org admin, not posted anywhere public.\nAdd Note\nFatima and Liam are both falling behind on AI Fundamentals - worth a check-in this week.\n10/20/2026, 3:57:10 PM",
+    "overflow": false,
+    "brokenImages": [],
+    "crash": false,
+    "errors": []
+  },
+  {
+    "role": "admin",
+    "name": "Demo Requests",
+    "headings": [
+      "Inbound Demos & Walkthrough Pipeline"
+    ],
+    "text": "NSIGHTS\nAnalytics Hub\nPLATFORM\nSettings Hub\nDark Theme\nSwitch Dashboard\nSign Out\nInstitutional Demo & Appointment Requests\nReview incoming booking requests, scheduled institutional walkthroughs, and attendee details.\nM\nMember\nMember\nSign Out\nInbound Demos & Walkthrough Pipeline\n\nReal-time booking submissions from educational institutions, non-profits, and corporate enterprises.\n\nExport Requests (CSV)\nTotal Inbound\n0\nAll logged demo requests\nScheduled Sessions\n0\nDate & time confirmed\nNew Inquiries\n0\nAwaiting first outreach\nClosed / Completed\n0\nOnboarded or finished\nAll Requests\n0\nScheduled\n0\nNew Inquiries\n0\nClosed\n0\nNo demo requests found\n\nNo demo requests logged under this status filter yet.",
+    "overflow": false,
+    "brokenImages": [],
+    "crash": false,
+    "errors": []
+  },
+  {
+    "role": "admin",
+    "name": "Demo Requests mobile",
+    "headings": [
+      "Inbound Demos & Walkthrough Pipeline"
+    ],
+    "text": "eration\nINSIGHTS\nAnalytics Hub\nPLATFORM\nSettings Hub\nDark Theme\nSwitch Dashboard\nSign Out\nInstitutional Demo & Appointment Requests\nReview incoming booking requests, scheduled institutional walkthroughs, and attendee details.\nM\nMember\nMember\nInbound Demos & Walkthrough Pipeline\n\nReal-time booking submissions from educational institutions, non-profits, and corporate enterprises.\n\nExport Requests (CSV)\nTotal Inbound\n0\nAll logged demo requests\nScheduled Sessions\n0\nDate & time confirmed\nNew Inquiries\n0\nAwaiting first outreach\nClosed / Completed\n0\nOnboarded or finished\nAll Requests\n0\nScheduled\n0\nNew Inquiries\n0\nClosed\n0\nNo demo requests found\n\nNo demo requests logged under this status filter yet.",
+    "overflow": false,
+    "brokenImages": [],
+    "crash": false,
+    "errors": []
+  },
+  {
+    "role": "admin",
+    "name": "Workforce Intelligence",
+    "headings": [
+      "Workforce Intelligence & Skill Radar"
+    ],
+    "text": "sessment results for this pathway\n0/2 Completed\nAI Fundamentals: Course Completed\nIn Progress (65%)\nWorkplace Compliance 101: Course Completed\nIn Progress (30%)\nSkill Growth Recommendation\nAmara Chen hasn't completed any assessments in this pathway yet - recommendations will appear once real scores come in.\nAssign Recommended Module →\nExport Development Plan (CSV)\nSkill gaps by department\nReal course-category completion, broken down by department - the lowest scores are the closest thing this data supports to \"where the gaps are.\"\nUnspecified\n68% avg (8 enrollments)\nCompletion by course category\nAI\n78% avg (5 enrollments)\nLeadership\n62% avg (3 enrollments)\nCompliance\n100% avg (4 enrollments)",
+    "overflow": false,
+    "brokenImages": [],
+    "crash": false,
+    "errors": []
+  },
+  {
+    "role": "admin",
+    "name": "Workforce Intelligence mobile",
+    "headings": [
+      "Workforce Intelligence & Skill Radar"
+    ],
+    "text": "sessment results for this pathway\n0/2 Completed\nAI Fundamentals: Course Completed\nIn Progress (65%)\nWorkplace Compliance 101: Course Completed\nIn Progress (30%)\nSkill Growth Recommendation\nAmara Chen hasn't completed any assessments in this pathway yet - recommendations will appear once real scores come in.\nAssign Recommended Module →\nExport Development Plan (CSV)\nSkill gaps by department\nReal course-category completion, broken down by department - the lowest scores are the closest thing this data supports to \"where the gaps are.\"\nUnspecified\n68% avg (8 enrollments)\nCompletion by course category\nAI\n78% avg (5 enrollments)\nLeadership\n62% avg (3 enrollments)\nCompliance\n100% avg (4 enrollments)",
+    "overflow": false,
+    "brokenImages": [],
+    "crash": false,
+    "errors": []
+  },
+  {
+    "role": "admin",
+    "name": "Courses",
+    "headings": [
+      "Course Catalog & Curriculum"
+    ],
+    "text": "\nSign Out\nContent & Course Management\nBuild, manage, and publish organization courses\nM\nMember\nMember\nSign Out\nCourse Catalog & Curriculum\n\nAuthor interactive courses, manage lesson syllabi, configure assessment criteria, and publish learning modules.\n\nCreate Course\nPublished\nAI\nAI Fundamentals\nComprehensive syllabus with hands-on exercises and quizzes.\n8 Enrolled • 2 Lessons\nManage Course\nPublished\nCOMPLIANCE\nWorkplace Compliance 101\nComprehensive syllabus with hands-on exercises and quizzes.\n4 Enrolled • 1 Lessons\nManage Course\nPublished\nLEADERSHIP\nLeadership Essentials\nComprehensive syllabus with hands-on exercises and quizzes.\nPending Approval\nApprove\n3 Enrolled • 1 Lessons\nManage Course",
+    "overflow": false,
+    "brokenImages": [],
+    "crash": false,
+    "errors": []
+  },
+  {
+    "role": "admin",
+    "name": "Courses mobile",
+    "headings": [
+      "Course Catalog & Curriculum"
+    ],
+    "text": "Dashboard\nSign Out\nContent & Course Management\nBuild, manage, and publish organization courses\nM\nMember\nMember\nCourse Catalog & Curriculum\n\nAuthor interactive courses, manage lesson syllabi, configure assessment criteria, and publish learning modules.\n\nCreate Course\nPublished\nAI\nAI Fundamentals\nComprehensive syllabus with hands-on exercises and quizzes.\n8 Enrolled • 2 Lessons\nManage Course\nPublished\nCOMPLIANCE\nWorkplace Compliance 101\nComprehensive syllabus with hands-on exercises and quizzes.\n4 Enrolled • 1 Lessons\nManage Course\nPublished\nLEADERSHIP\nLeadership Essentials\nComprehensive syllabus with hands-on exercises and quizzes.\nPending Approval\nApprove\n3 Enrolled • 1 Lessons\nManage Course",
+    "overflow": false,
+    "brokenImages": [],
+    "crash": false,
+    "errors": []
+  },
+  {
+    "role": "admin",
+    "name": "Learning Paths",
+    "headings": [
+      "Curriculum Tracks & Learning Paths"
+    ],
+    "text": "Member\nMember\nSign Out\nCurriculum Tracks & Learning Paths\n\nDesign progressive career roadmaps, sequenced multi-course modules, and milestone requirements.\n\nNew Learning Path\nPublished\nNew Hire Foundations\nThe core courses every new hire completes in their first month.\nBeginner • 2 Courses • Onboarding\n0 enrolled\nLive\nBuild journey\nEdit\nPublished\nAI Engineer Track\nMaster LLM orchestration, RAG architectures, and fine-tuning models.\nAdvanced • 2 Courses • Engineering\n0 enrolled\nLive\nBuild journey\nEdit\nPublished\nProduct Manager Leadership\nEssential framework for product strategy, data analytics, and team leadership.\nIntermediate • 1 Course • Product Management\n0 enrolled\nLive\nBuild journey\nEdit",
+    "overflow": false,
+    "brokenImages": [
+      "https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?w=600&auto=format&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1552664730-d307ca884978?w=600&auto=format&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1552664730-d307ca884978?w=600&auto=format&fit=crop&q=80"
+    ],
+    "crash": false,
+    "errors": []
+  },
+  {
+    "role": "admin",
+    "name": "Learning Paths mobile",
+    "headings": [
+      "Curriculum Tracks & Learning Paths"
+    ],
+    "text": "arners\nM\nMember\nMember\nCurriculum Tracks & Learning Paths\n\nDesign progressive career roadmaps, sequenced multi-course modules, and milestone requirements.\n\nNew Learning Path\nPublished\nNew Hire Foundations\nThe core courses every new hire completes in their first month.\nBeginner • 2 Courses • Onboarding\n0 enrolled\nLive\nBuild journey\nEdit\nPublished\nAI Engineer Track\nMaster LLM orchestration, RAG architectures, and fine-tuning models.\nAdvanced • 2 Courses • Engineering\n0 enrolled\nLive\nBuild journey\nEdit\nPublished\nProduct Manager Leadership\nEssential framework for product strategy, data analytics, and team leadership.\nIntermediate • 1 Course • Product Management\n0 enrolled\nLive\nBuild journey\nEdit",
+    "overflow": false,
+    "brokenImages": [
+      "https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?w=600&auto=format&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1552664730-d307ca884978?w=600&auto=format&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1552664730-d307ca884978?w=600&auto=format&fit=crop&q=80"
+    ],
+    "crash": false,
+    "errors": []
+  },
+  {
+    "role": "admin",
+    "name": "Cohorts",
+    "headings": [
+      "Cohort Administration & Milestone Pacing"
+    ],
+    "text": "enter\nSeats & Licensing\nPayouts\nIntegrations\nContent Moderation\nINSIGHTS\nAnalytics Hub\nPLATFORM\nSettings Hub\nDark Theme\nSwitch Dashboard\nSign Out\nCohorts\nActive cohorts, time-elapsed progress & batch schedules\nM\nMember\nMember\nSign Out\nCohort Administration & Milestone Pacing\n\nManage structured training programmes, 6-week CAP accelerators, time-elapsed learner pacing, and batch broadcasts.\n\nCreate Cohort\nNo cohorts created yet. Click \"Create Cohort\" above to launch your first training batch.\nCohort Milestones\nUpcoming batch milestones & deadlines\nNo upcoming live cohort milestones scheduled yet.\nCohort Announcements & Discussion\nPost announcements into cohort stream\nStream\nPost Announcement →",
+    "overflow": false,
+    "brokenImages": [],
+    "crash": false,
+    "errors": []
+  },
+  {
+    "role": "admin",
+    "name": "Cohorts mobile",
+    "headings": [
+      "Cohort Administration & Milestone Pacing"
+    ],
+    "text": "S\nEmail Center\nSeats & Licensing\nPayouts\nIntegrations\nContent Moderation\nINSIGHTS\nAnalytics Hub\nPLATFORM\nSettings Hub\nDark Theme\nSwitch Dashboard\nSign Out\nCohorts\nActive cohorts, time-elapsed progress & batch schedules\nM\nMember\nMember\nCohort Administration & Milestone Pacing\n\nManage structured training programmes, 6-week CAP accelerators, time-elapsed learner pacing, and batch broadcasts.\n\nCreate Cohort\nNo cohorts created yet. Click \"Create Cohort\" above to launch your first training batch.\nCohort Milestones\nUpcoming batch milestones & deadlines\nNo upcoming live cohort milestones scheduled yet.\nCohort Announcements & Discussion\nPost announcements into cohort stream\nStream\nPost Announcement →",
+    "overflow": false,
+    "brokenImages": [],
+    "crash": false,
+    "errors": []
+  },
+  {
+    "role": "admin",
+    "name": "Learner Progress",
+    "headings": [
+      "Progress & Compliance Hub"
+    ],
+    "text": "OARD • TOP PERFORMERS\nRanked by average course progress\n#1 Amara Chen\n100% avg (2/2 completed)\n#2 Ngozi Adeyemi\n100% avg (2/2 completed)\n#3 Priya Nair\n80% avg (1/2 completed)\n#4 Marcus Webb\n78% avg (1/2 completed)\n#5 David Osei\n63% avg (0/2 completed)\n#6 Sofia Kim\n45% avg (0/1 completed)\nLEARNERS BEHIND (2)\nLow progress or inactive for more than 6 days\nFatima Diallo\n30% avg • inactive 12d\nLiam Torres\n15% avg • inactive 13d\nPROGRESS BY COURSE\nClick a course to see who's enrolled and their individual progress.\nAI Fundamentals\n8 enrolled - 3 completed\nLeadership Essentials\n3 enrolled - 2 completed\nWorkplace Compliance 101\n1 enrolled - 1 completed\nData Literacy for Teams\n1 enrolled - 0 completed",
+    "overflow": false,
+    "brokenImages": [],
+    "crash": false,
+    "errors": []
+  },
+  {
+    "role": "admin",
+    "name": "Learner Progress mobile",
+    "headings": [
+      "Progress & Compliance Hub"
+    ],
+    "text": "OARD • TOP PERFORMERS\nRanked by average course progress\n#1 Amara Chen\n100% avg (2/2 completed)\n#2 Ngozi Adeyemi\n100% avg (2/2 completed)\n#3 Priya Nair\n80% avg (1/2 completed)\n#4 Marcus Webb\n78% avg (1/2 completed)\n#5 David Osei\n63% avg (0/2 completed)\n#6 Sofia Kim\n45% avg (0/1 completed)\nLEARNERS BEHIND (2)\nLow progress or inactive for more than 6 days\nFatima Diallo\n30% avg • inactive 12d\nLiam Torres\n15% avg • inactive 13d\nPROGRESS BY COURSE\nClick a course to see who's enrolled and their individual progress.\nAI Fundamentals\n8 enrolled - 3 completed\nLeadership Essentials\n3 enrolled - 2 completed\nWorkplace Compliance 101\n1 enrolled - 1 completed\nData Literacy for Teams\n1 enrolled - 0 completed",
+    "overflow": false,
+    "brokenImages": [],
+    "crash": false,
+    "errors": []
+  },
+  {
+    "role": "admin",
+    "name": "Study Groups",
+    "headings": [
+      "Peer Circles & Study Groups"
+    ],
+    "text": "PERATIONS\nEmail Center\nSeats & Licensing\nPayouts\nIntegrations\nContent Moderation\nINSIGHTS\nAnalytics Hub\nPLATFORM\nSettings Hub\nDark Theme\nSwitch Dashboard\nSign Out\nStudy Groups\nEvery study group in your organization\nM\nMember\nMember\nSign Out\nPeer Circles & Study Groups\n\nOversee student study circles, mentor pairings, and collaborative rooms.\n\n0 Active Pods\nSyllabi Linked\nActive Study Groups\n0\nIn your organization\nTotal Peer Learners\n0\nCollaborative pods\nCourses Supported\n0\nActive syllabi linked\nAvg Pod Size\n0 members\nOptimal peer capacity\nAll study groups (0)\nNAME\tLINKED COURSE\tMEMBERS\tVISIBILITY\nNo study groups in this organization yet - learners create these themselves as they self-organize.",
+    "overflow": false,
+    "brokenImages": [],
+    "crash": false,
+    "errors": []
+  },
+  {
+    "role": "admin",
+    "name": "Study Groups mobile",
+    "headings": [
+      "Peer Circles & Study Groups"
+    ],
+    "text": "Control\nOPERATIONS\nEmail Center\nSeats & Licensing\nPayouts\nIntegrations\nContent Moderation\nINSIGHTS\nAnalytics Hub\nPLATFORM\nSettings Hub\nDark Theme\nSwitch Dashboard\nSign Out\nStudy Groups\nEvery study group in your organization\nM\nMember\nMember\nPeer Circles & Study Groups\n\nOversee student study circles, mentor pairings, and collaborative rooms.\n\n0 Active Pods\nSyllabi Linked\nActive Study Groups\n0\nIn your organization\nTotal Peer Learners\n0\nCollaborative pods\nCourses Supported\n0\nActive syllabi linked\nAvg Pod Size\n0 members\nOptimal peer capacity\nAll study groups (0)\nNAME\tLINKED COURSE\tMEMBERS\tVISIBILITY\nNo study groups in this organization yet - learners create these themselves as they self-organize.",
+    "overflow": false,
+    "brokenImages": [],
+    "crash": false,
+    "errors": []
+  },
+  {
+    "role": "admin",
+    "name": "Leaderboard & Ranks",
+    "headings": [
+      "Leaderboard",
+      "Leaderboard & Top Achievers"
+    ],
+    "text": "Dashboard\nDemo Requests\nWorkforce Intelligence\nLEARNING\nCourses\nLearning Paths\nCohorts\nLearner Progress\nStudy Groups\nLeaderboard & Ranks\nAssessments & Quizzes\nPEOPLE\nUsers & Access\nRole & Access Control\nOPERATIONS\nEmail Center\nSeats & Licensing\nPayouts\nIntegrations\nContent Moderation\nINSIGHTS\nAnalytics Hub\nPLATFORM\nSettings Hub\nDark Theme\nSwitch Dashboard\nSign Out\nLeaderboard\n\nRanking based on lesson progress, quizzes, and streak consistency\n\nLeaderboard & Top Achievers\n\n0 learners competing • All time ranking\n\nAll Time\nThis Week\nThis Month\nRefresh\n#1\nYour Standing\n0 pts • Level 1\nLeading the board!\n\"Live as if you were to die tomorrow. Learn as if you were to live forever.\"\n- Mahatma Gandhi",
+    "overflow": false,
+    "brokenImages": [],
+    "crash": false,
+    "errors": []
+  },
+  {
+    "role": "admin",
+    "name": "Leaderboard & Ranks mobile",
+    "headings": [
+      "Leaderboard",
+      "Leaderboard & Top Achievers"
+    ],
+    "text": "Dashboard\nDemo Requests\nWorkforce Intelligence\nLEARNING\nCourses\nLearning Paths\nCohorts\nLearner Progress\nStudy Groups\nLeaderboard & Ranks\nAssessments & Quizzes\nPEOPLE\nUsers & Access\nRole & Access Control\nOPERATIONS\nEmail Center\nSeats & Licensing\nPayouts\nIntegrations\nContent Moderation\nINSIGHTS\nAnalytics Hub\nPLATFORM\nSettings Hub\nDark Theme\nSwitch Dashboard\nSign Out\nLeaderboard\n\nRanking based on lesson progress, quizzes, and streak consistency\n\nLeaderboard & Top Achievers\n\n0 learners competing • All time ranking\n\nAll Time\nThis Week\nThis Month\nRefresh\n#1\nYour Standing\n0 pts • Level 1\nLeading the board!\n\"Live as if you were to die tomorrow. Learn as if you were to live forever.\"\n- Mahatma Gandhi",
+    "overflow": false,
+    "brokenImages": [],
+    "crash": false,
+    "errors": []
+  },
+  {
+    "role": "admin",
+    "name": "Assessments & Quizzes",
+    "headings": [],
+    "text": "r View\nManager View\nWORKSPACE\nDashboard\nDemo Requests\nWorkforce Intelligence\nLEARNING\nCourses\nLearning Paths\nCohorts\nLearner Progress\nStudy Groups\nLeaderboard & Ranks\nAssessments & Quizzes\nPEOPLE\nUsers & Access\nRole & Access Control\nOPERATIONS\nEmail Center\nSeats & Licensing\nPayouts\nIntegrations\nContent Moderation\nINSIGHTS\nAnalytics Hub\nPLATFORM\nSettings Hub\nDark Theme\nSwitch Dashboard\nSign Out\nAssessments & Grading\nEvery course's assessment attempts, at a glance - open a course to review and override scores.\nM\nMember\nMember\nSign Out\nAI Fundamentals\nClick to view submitted attempts\nWorkplace Compliance 101\nClick to view submitted attempts\nLeadership Essentials\nClick to view submitted attempts",
+    "overflow": false,
+    "brokenImages": [],
+    "crash": false,
+    "errors": []
+  },
+  {
+    "role": "admin",
+    "name": "Assessments & Quizzes mobile",
+    "headings": [],
+    "text": "Instructor View\nManager View\nWORKSPACE\nDashboard\nDemo Requests\nWorkforce Intelligence\nLEARNING\nCourses\nLearning Paths\nCohorts\nLearner Progress\nStudy Groups\nLeaderboard & Ranks\nAssessments & Quizzes\nPEOPLE\nUsers & Access\nRole & Access Control\nOPERATIONS\nEmail Center\nSeats & Licensing\nPayouts\nIntegrations\nContent Moderation\nINSIGHTS\nAnalytics Hub\nPLATFORM\nSettings Hub\nDark Theme\nSwitch Dashboard\nSign Out\nAssessments & Grading\nEvery course's assessment attempts, at a glance - open a course to review and override scores.\nM\nMember\nMember\nAI Fundamentals\nClick to view submitted attempts\nWorkplace Compliance 101\nClick to view submitted attempts\nLeadership Essentials\nClick to view submitted attempts",
+    "overflow": false,
+    "brokenImages": [],
+    "crash": false,
+    "errors": []
+  },
+  {
+    "role": "admin",
+    "name": "Users & Access",
+    "headings": [
+      "Member & Role Management"
+    ],
+    "text": "ot in a cohort\t-\t\nOverall Progress\n100%\n\tOn Track\t\n\n\t\nSK\nSofia Kim\nsofia.kim@trainailtd.com\n\tLearner\t\nEmail Invite\n/?join=sara-foundation\n\tOct 18, 2026\tNot in a cohort\t-\t\nOverall Progress\n45%\n\tNeeds Attention\t\n\n\t\nJR\nJordan Reyes\njordan.reyes@trainailtd.com\n\tInstructor\t\nEmail Invite\n/?join=sara-foundation\n\tOct 11, 2026\tNot in a cohort\t-\t\nOverall Progress\n0%\n\tNo enrollments\t\n\n\t\nWA\nWale Adebayo\nwale.adebayo@trainailtd.com\n\tInstructor\t\nEmail Invite\n/?join=sara-foundation\n\tSep 27, 2026\tNot in a cohort\t-\t\nOverall Progress\n0%\n\tNo enrollments\t\n\n\t\nDM\nDemo Manager\nmanager@trainailtd.com\n\tManager\t\nDirect / Admin\n/?join=sara-foundation\n\tOct 1, 2026\tNot in a cohort\t-\t\nOverall Progress\n0%\n\tNo enrollments\t",
+    "overflow": false,
+    "brokenImages": [],
+    "crash": false,
+    "errors": []
+  },
+  {
+    "role": "admin",
+    "name": "Users & Access mobile",
+    "headings": [
+      "Member & Role Management"
+    ],
+    "text": "ot in a cohort\t-\t\nOverall Progress\n100%\n\tOn Track\t\n\n\t\nSK\nSofia Kim\nsofia.kim@trainailtd.com\n\tLearner\t\nEmail Invite\n/?join=sara-foundation\n\tOct 18, 2026\tNot in a cohort\t-\t\nOverall Progress\n45%\n\tNeeds Attention\t\n\n\t\nJR\nJordan Reyes\njordan.reyes@trainailtd.com\n\tInstructor\t\nEmail Invite\n/?join=sara-foundation\n\tOct 11, 2026\tNot in a cohort\t-\t\nOverall Progress\n0%\n\tNo enrollments\t\n\n\t\nWA\nWale Adebayo\nwale.adebayo@trainailtd.com\n\tInstructor\t\nEmail Invite\n/?join=sara-foundation\n\tSep 27, 2026\tNot in a cohort\t-\t\nOverall Progress\n0%\n\tNo enrollments\t\n\n\t\nDM\nDemo Manager\nmanager@trainailtd.com\n\tManager\t\nDirect / Admin\n/?join=sara-foundation\n\tOct 1, 2026\tNot in a cohort\t-\t\nOverall Progress\n0%\n\tNo enrollments\t",
+    "overflow": false,
+    "brokenImages": [],
+    "crash": false,
+    "errors": []
+  },
+  {
+    "role": "admin",
+    "name": "Role & Access Control",
+    "headings": [
+      "Role & Permission Access Controls"
+    ],
+    "text": " owner's global controls - these settings only affect your organization. Not yet toggled here means the platform default applies.\nPERMISSION\tMANAGER\tINSTRUCTOR\tLEARNER\nModerate community content\t\ndefault\n\t\ndefault\n\t\ndefault\n\nSend communications/announcements\t\ndefault\n\t\ndefault\n\t\ndefault\n\nView analytics\t\ndefault\n\t\ndefault\n\t\ndefault\n\nManage cohorts\t\ndefault\n\t\ndefault\n\t\ndefault\n\nAdministrative sections (compliance)\t\ndefault\n\t\ndefault\n\t\ndefault\n\nView other learners' data\t\ndefault\n\t\ndefault\n\t\ndefault\n\nIssue certificates directly to learners\t\ndefault\n\t\ndefault\n\t\ndefault\n\nCreate and manage assessments\t\ndefault\n\t\ndefault\n\t\ndefault\n\nAssign resources to individual learners\t\ndefault\n\t\ndefault\n\t\ndefault",
+    "overflow": false,
+    "brokenImages": [],
+    "crash": false,
+    "errors": []
+  },
+  {
+    "role": "admin",
+    "name": "Role & Access Control mobile",
+    "headings": [
+      "Role & Permission Access Controls"
+    ],
+    "text": " owner's global controls - these settings only affect your organization. Not yet toggled here means the platform default applies.\nPERMISSION\tMANAGER\tINSTRUCTOR\tLEARNER\nModerate community content\t\ndefault\n\t\ndefault\n\t\ndefault\n\nSend communications/announcements\t\ndefault\n\t\ndefault\n\t\ndefault\n\nView analytics\t\ndefault\n\t\ndefault\n\t\ndefault\n\nManage cohorts\t\ndefault\n\t\ndefault\n\t\ndefault\n\nAdministrative sections (compliance)\t\ndefault\n\t\ndefault\n\t\ndefault\n\nView other learners' data\t\ndefault\n\t\ndefault\n\t\ndefault\n\nIssue certificates directly to learners\t\ndefault\n\t\ndefault\n\t\ndefault\n\nCreate and manage assessments\t\ndefault\n\t\ndefault\n\t\ndefault\n\nAssign resources to individual learners\t\ndefault\n\t\ndefault\n\t\ndefault",
+    "overflow": false,
+    "brokenImages": [],
+    "crash": false,
+    "errors": []
+  },
+  {
+    "role": "admin",
+    "name": "Email Center",
+    "headings": [
+      "Email Center & Broadcasts"
+    ],
+    "text": " this\nEvery option here is resolved from your own organization's members, so a send can never reach anyone outside this workspace.\nAll members\nEveryone in this organization\nLearners only\nMembers with the learner role\nInstructors only\nMembers with the instructor role\nLearners falling behind\nAnyone flagged behind pace\nA specific cohort\nPick a cohort below\nPick individually\nChoose exact recipients\n14 recipients\n2 members skipped - no email address on file\nSee the list\nMessage\nSUBJECT\nBODY\nDELIVERY CHANNELS\nEmail\nSent through the broadcast function\nIn-app notification\nAppears in their notification bell\nPush notification\nNot wired up yet - no push delivery exists in this app\nSend to 14 recipients",
+    "overflow": false,
+    "brokenImages": [],
+    "crash": false,
+    "errors": []
+  },
+  {
+    "role": "admin",
+    "name": "Email Center mobile",
+    "headings": [
+      "Email Center & Broadcasts"
+    ],
+    "text": " this\nEvery option here is resolved from your own organization's members, so a send can never reach anyone outside this workspace.\nAll members\nEveryone in this organization\nLearners only\nMembers with the learner role\nInstructors only\nMembers with the instructor role\nLearners falling behind\nAnyone flagged behind pace\nA specific cohort\nPick a cohort below\nPick individually\nChoose exact recipients\n14 recipients\n2 members skipped - no email address on file\nSee the list\nMessage\nSUBJECT\nBODY\nDELIVERY CHANNELS\nEmail\nSent through the broadcast function\nIn-app notification\nAppears in their notification bell\nPush notification\nNot wired up yet - no push delivery exists in this app\nSend to 14 recipients",
+    "overflow": false,
+    "brokenImages": [],
+    "crash": false,
+    "errors": []
+  },
+  {
+    "role": "admin",
+    "name": "Seats & Licensing",
+    "headings": [],
+    "text": "n\nLearner\nOrg Link\nSeat in use\nDO\nDavid Osei\nLearner\nOrg Link\nSeat in use\nPN\nPriya Nair\nLearner\nSeat in use\nAC\nAmara Chen\nLearner\nOrg Link\nSeat in use\nDO\nDavid Osei\nLearner\nOrg Link\nSeat in use\nPN\nPriya Nair\nLearner\nOrg Link\nSeat in use\nMW\nMarcus Webb\nLearner\nSeat in use\nFD\nFatima Diallo\nLearner\nOrg Link\nSeat in use\nLT\nLiam Torres\nLearner\nOrg Link\nSeat in use\nNA\nNgozi Adeyemi\nLearner\nOrg Link\nSeat in use\nSK\nSofia Kim\nLearner\nSeat in use\nJR\nJordan Reyes\nMentor\nSeat in use\nWA\nWale Adebayo\nMentor\nSeat in use\nDM\nDemo Manager\nManager\nSeat in use\nPurchase history\nEvery row is a confirmed charge recorded against a real payment reference.\nDATE\tSEATS\tAMOUNT\tREFERENCE\nNo seats have been purchased yet.",
+    "overflow": false,
+    "brokenImages": [],
+    "crash": false,
+    "errors": []
+  },
+  {
+    "role": "admin",
+    "name": "Seats & Licensing mobile",
+    "headings": [],
+    "text": "n\nLearner\nOrg Link\nSeat in use\nDO\nDavid Osei\nLearner\nOrg Link\nSeat in use\nPN\nPriya Nair\nLearner\nSeat in use\nAC\nAmara Chen\nLearner\nOrg Link\nSeat in use\nDO\nDavid Osei\nLearner\nOrg Link\nSeat in use\nPN\nPriya Nair\nLearner\nOrg Link\nSeat in use\nMW\nMarcus Webb\nLearner\nSeat in use\nFD\nFatima Diallo\nLearner\nOrg Link\nSeat in use\nLT\nLiam Torres\nLearner\nOrg Link\nSeat in use\nNA\nNgozi Adeyemi\nLearner\nOrg Link\nSeat in use\nSK\nSofia Kim\nLearner\nSeat in use\nJR\nJordan Reyes\nMentor\nSeat in use\nWA\nWale Adebayo\nMentor\nSeat in use\nDM\nDemo Manager\nManager\nSeat in use\nPurchase history\nEvery row is a confirmed charge recorded against a real payment reference.\nDATE\tSEATS\tAMOUNT\tREFERENCE\nNo seats have been purchased yet.",
+    "overflow": false,
+    "brokenImages": [],
+    "crash": false,
+    "errors": []
+  },
+  {
+    "role": "admin",
+    "name": "Payouts",
+    "headings": [
+      "Instructor Payouts & Settlements"
+    ],
+    "text": "ics Hub\nPLATFORM\nSettings Hub\nDark Theme\nSwitch Dashboard\nSign Out\nPayouts\nInstructor withdrawal requests and per-instructor payout access\nM\nMember\nMember\nSign Out\nInstructor Payouts & Settlements\n\nReview and approve withdrawal requests, manage per-instructor payout access, and track verified ledger settlements.\n\nRefresh\nAwaiting decision\n0\nRequests to review\nPending amount\n0\nTotal requested, not yet settled\nApproved / paid\n0\nCleared for withdrawal\nPayouts enabled\n0/2\nInstructors allowed to withdraw\nWithdrawal requests (0)\nPayout access (2)\nPending only\nApproved\nPaid\nRejected\nAll statuses\nINSTRUCTOR\tAMOUNT\tMETHOD\tSTATUS\tACTIONS\nNo withdrawal requests have been submitted in this organization.",
+    "overflow": false,
+    "brokenImages": [],
+    "crash": false,
+    "errors": []
+  },
+  {
+    "role": "admin",
+    "name": "Payouts mobile",
+    "headings": [
+      "Instructor Payouts & Settlements"
+    ],
+    "text": "TS\nAnalytics Hub\nPLATFORM\nSettings Hub\nDark Theme\nSwitch Dashboard\nSign Out\nPayouts\nInstructor withdrawal requests and per-instructor payout access\nM\nMember\nMember\nInstructor Payouts & Settlements\n\nReview and approve withdrawal requests, manage per-instructor payout access, and track verified ledger settlements.\n\nRefresh\nAwaiting decision\n0\nRequests to review\nPending amount\n0\nTotal requested, not yet settled\nApproved / paid\n0\nCleared for withdrawal\nPayouts enabled\n0/2\nInstructors allowed to withdraw\nWithdrawal requests (0)\nPayout access (2)\nPending only\nApproved\nPaid\nRejected\nAll statuses\nINSTRUCTOR\tAMOUNT\tMETHOD\tSTATUS\tACTIONS\nNo withdrawal requests have been submitted in this organization.",
+    "overflow": false,
+    "brokenImages": [],
+    "crash": false,
+    "errors": []
+  },
+  {
+    "role": "admin",
+    "name": "Integrations",
+    "headings": [
+      "API & Event Integrations"
+    ],
+    "text": "ACES\nAdmin\nInstructor View\nManager View\nWORKSPACE\nDashboard\nDemo Requests\nWorkforce Intelligence\nLEARNING\nCourses\nLearning Paths\nCohorts\nLearner Progress\nStudy Groups\nLeaderboard & Ranks\nAssessments & Quizzes\nPEOPLE\nUsers & Access\nRole & Access Control\nOPERATIONS\nEmail Center\nSeats & Licensing\nPayouts\nIntegrations\nContent Moderation\nINSIGHTS\nAnalytics Hub\nPLATFORM\nSettings Hub\nDark Theme\nSwitch Dashboard\nSign Out\nIntegrations\nConnect webhooks for platform events\nM\nMember\nMember\nSign Out\nAPI & Event Integrations\n\nConfigure secure webhooks, third-party LMS bridges, and event notification streams.\n\nNew Webhook\nRecent dispatch log\nINTEGRATION\tEVENT\tSTATUS\tWHEN\nNo webhook deliveries recorded yet.",
+    "overflow": false,
+    "brokenImages": [],
+    "crash": false,
+    "errors": []
+  },
+  {
+    "role": "admin",
+    "name": "Integrations mobile",
+    "headings": [
+      "API & Event Integrations"
+    ],
+    "text": "⌘K\nWORKSPACES\nAdmin\nInstructor View\nManager View\nWORKSPACE\nDashboard\nDemo Requests\nWorkforce Intelligence\nLEARNING\nCourses\nLearning Paths\nCohorts\nLearner Progress\nStudy Groups\nLeaderboard & Ranks\nAssessments & Quizzes\nPEOPLE\nUsers & Access\nRole & Access Control\nOPERATIONS\nEmail Center\nSeats & Licensing\nPayouts\nIntegrations\nContent Moderation\nINSIGHTS\nAnalytics Hub\nPLATFORM\nSettings Hub\nDark Theme\nSwitch Dashboard\nSign Out\nIntegrations\nConnect webhooks for platform events\nM\nMember\nMember\nAPI & Event Integrations\n\nConfigure secure webhooks, third-party LMS bridges, and event notification streams.\n\nNew Webhook\nRecent dispatch log\nINTEGRATION\tEVENT\tSTATUS\tWHEN\nNo webhook deliveries recorded yet.",
+    "overflow": false,
+    "brokenImages": [],
+    "crash": false,
+    "errors": []
+  },
+  {
+    "role": "admin",
+    "name": "Content Moderation",
+    "headings": [
+      "Content & Safety Moderation"
+    ],
+    "text": "& Safety Moderation\n\nReview flagged posts, policy violations, AI confidence scores, and community safety reports.\n\nAI Guardrails Active\nAutomated Moderation Engine\n1 item awaiting review\nAI Manual Mode\nTurn off AI so it doesn't reply automatically - your own message goes out through the chat bot/assistant instead. Community content itself lives inside a study group, a cohort, or a direct instructor conversation - there isn't much for AI to flag there beyond what's already covered below.\nAI Coach - Manual Mode\nAI Insights - Manual Mode\nAUTHOR\tCONTENT\tAI CONFIDENCE\tREASON\tACTIONS\n\nLI\nLiam Torres\n\t\nAnyone have the answer key for the compliance quiz?\n\t62%\tFlagged by AI moderation\t\nApprove\nRemove",
+    "overflow": false,
+    "brokenImages": [],
+    "crash": false,
+    "errors": []
+  },
+  {
+    "role": "admin",
+    "name": "Content Moderation mobile",
+    "headings": [
+      "Content & Safety Moderation"
+    ],
+    "text": "& Safety Moderation\n\nReview flagged posts, policy violations, AI confidence scores, and community safety reports.\n\nAI Guardrails Active\nAutomated Moderation Engine\n1 item awaiting review\nAI Manual Mode\nTurn off AI so it doesn't reply automatically - your own message goes out through the chat bot/assistant instead. Community content itself lives inside a study group, a cohort, or a direct instructor conversation - there isn't much for AI to flag there beyond what's already covered below.\nAI Coach - Manual Mode\nAI Insights - Manual Mode\nAUTHOR\tCONTENT\tAI CONFIDENCE\tREASON\tACTIONS\n\nLI\nLiam Torres\n\t\nAnyone have the answer key for the compliance quiz?\n\t62%\tFlagged by AI moderation\t\nApprove\nRemove",
+    "overflow": false,
+    "brokenImages": [],
+    "crash": false,
+    "errors": []
+  },
+  {
+    "role": "admin",
+    "name": "Analytics Hub",
+    "headings": [
+      "Institutional Analytics & AI Usage"
+    ],
+    "text": "zes created - the honest proxy for credits used, since no separate credits-balance table exists\nENROLLMENT & COMPLETION TREND (LAST 6 MONTHS)\nMay\nJun\nJul\nAug\nSep\nOct\nEnrollments\nCompleted\nTOP COURSES\nBy real enrollment count in your organization\nAI Fundamentals\n8 enrolled • 3 completed\nLeadership Essentials\n3 enrolled • 2 completed\nWorkplace Compliance 101\n1 enrolled • 1 completed\nData Literacy for Teams\n1 enrolled • 0 completed\nMOST ACTIVE COMMUNITY\nCohorts ranked by real posts and membership\nQ1 Onboarding Cohort\n4 members • 14 updates\nGENERAL OVERVIEW\n1\nStudy groups\n4\nCertificates issued\n91%\nAvg. score\nAI COACH UTILIZATION\nAI Coach calls\n18,450\nAll time\n5,920\nLast 30 days\n1,840\nLast 7 days",
+    "overflow": false,
+    "brokenImages": [],
+    "crash": false,
+    "errors": []
+  },
+  {
+    "role": "admin",
+    "name": "Analytics Hub mobile",
+    "headings": [
+      "Institutional Analytics & AI Usage"
+    ],
+    "text": "zes created - the honest proxy for credits used, since no separate credits-balance table exists\nENROLLMENT & COMPLETION TREND (LAST 6 MONTHS)\nMay\nJun\nJul\nAug\nSep\nOct\nEnrollments\nCompleted\nTOP COURSES\nBy real enrollment count in your organization\nAI Fundamentals\n8 enrolled • 3 completed\nLeadership Essentials\n3 enrolled • 2 completed\nWorkplace Compliance 101\n1 enrolled • 1 completed\nData Literacy for Teams\n1 enrolled • 0 completed\nMOST ACTIVE COMMUNITY\nCohorts ranked by real posts and membership\nQ1 Onboarding Cohort\n4 members • 14 updates\nGENERAL OVERVIEW\n1\nStudy groups\n4\nCertificates issued\n91%\nAvg. score\nAI COACH UTILIZATION\nAI Coach calls\n18,450\nAll time\n5,920\nLast 30 days\n1,840\nLast 7 days",
+    "overflow": false,
+    "brokenImages": [],
+    "crash": false,
+    "errors": []
+  },
+  {
+    "role": "admin",
+    "name": "Settings Hub",
+    "headings": [
+      "Settings Hub & Preferences"
+    ],
+    "text": "ble AI Insights\nTurn off to hide AI Insights for your learners entirely.\nManual Mode\nReplace personalized AI Insights with your own announcement.\nGamification & Badges\nEnable streaks, points & badges\nEnable learner motivation loops across courses and milestones.\nLeaderboard Rankings\nShow leaderboard rankings\nDisplay peer rankings in the Community view.\nDatabase & Mock Data Mode\nToggle demo prototype data vs live production database records\nREAL DB ONLY\nInclude Mock & Demo Courses\nWhen connecting your live Supabase database, turn this off to show only your real organization tables.\nPurge All Mock Data\nRestore Demo Data\nTheme & Appearance\nSwitch between light mode and high-contrast dark theme.",
+    "overflow": false,
+    "brokenImages": [],
+    "crash": false,
+    "errors": []
+  },
+  {
+    "role": "admin",
+    "name": "Settings Hub mobile",
+    "headings": [
+      "Settings Hub & Preferences"
+    ],
+    "text": "ble AI Insights\nTurn off to hide AI Insights for your learners entirely.\nManual Mode\nReplace personalized AI Insights with your own announcement.\nGamification & Badges\nEnable streaks, points & badges\nEnable learner motivation loops across courses and milestones.\nLeaderboard Rankings\nShow leaderboard rankings\nDisplay peer rankings in the Community view.\nDatabase & Mock Data Mode\nToggle demo prototype data vs live production database records\nREAL DB ONLY\nInclude Mock & Demo Courses\nWhen connecting your live Supabase database, turn this off to show only your real organization tables.\nPurge All Mock Data\nRestore Demo Data\nTheme & Appearance\nSwitch between light mode and high-contrast dark theme.",
+    "overflow": false,
+    "brokenImages": [],
+    "crash": false,
+    "errors": []
+  },
+  {
+    "role": "admin",
+    "name": "mobile current page",
+    "headings": [
+      "Settings Hub & Preferences"
+    ],
+    "text": "ble AI Insights\nTurn off to hide AI Insights for your learners entirely.\nManual Mode\nReplace personalized AI Insights with your own announcement.\nGamification & Badges\nEnable streaks, points & badges\nEnable learner motivation loops across courses and milestones.\nLeaderboard Rankings\nShow leaderboard rankings\nDisplay peer rankings in the Community view.\nDatabase & Mock Data Mode\nToggle demo prototype data vs live production database records\nREAL DB ONLY\nInclude Mock & Demo Courses\nWhen connecting your live Supabase database, turn this off to show only your real organization tables.\nPurge All Mock Data\nRestore Demo Data\nTheme & Appearance\nSwitch between light mode and high-contrast dark theme.",
+    "overflow": false,
+    "brokenImages": [],
+    "crash": false,
+    "errors": []
+  },
+  {
+    "role": "manager",
+    "name": "initial",
+    "headings": [
+      "Team Oversight & Compliance Hub"
+    ],
+    "text": " a member to inspect demonstrated competencies and gaps.\nAmara Chen\n2 demonstrated • 0 gaps\nDavid Osei\n0 demonstrated • 2 gaps\nPriya Nair\n1 demonstrated • 1 gaps\nMarcus Webb\n1 demonstrated • 1 gaps\nFatima Diallo\n0 demonstrated • 1 gaps\nMy Notes\nYour own running notes for analysis - visible to you and your org admin, not posted anywhere public.\nAdd Note\nFatima and Liam are both falling behind on AI Fundamentals - worth a check-in this week.\n10/20/2026, 3:57:28 PM\nWe value your privacy\n\nWe use cookies for essential functionality and, with your consent, for analytics and marketing. You can change your choices anytime from Profile > Privacy & Data.\n\nManage cookies\nReject non-essential\nAccept all",
+    "overflow": false,
+    "brokenImages": [],
+    "crash": false,
+    "errors": []
+  },
+  {
+    "role": "manager",
+    "name": "Manager View",
+    "headings": [
+      "Team Oversight & Compliance Hub"
+    ],
+    "text": "mara Chen\nDavid Osei\nPriya Nair\nTeam Skill Snapshot\nCompletion by course category across your direct reports.\nCompliance\n100% avg (2 enrollments)\nAI\n78% avg (5 enrollments)\nLeadership\n62% avg (3 enrollments)\nSkill Gaps by Member\nClick a member to inspect demonstrated competencies and gaps.\nAmara Chen\n2 demonstrated • 0 gaps\nDavid Osei\n0 demonstrated • 2 gaps\nPriya Nair\n1 demonstrated • 1 gaps\nMarcus Webb\n1 demonstrated • 1 gaps\nFatima Diallo\n0 demonstrated • 1 gaps\nMy Notes\nYour own running notes for analysis - visible to you and your org admin, not posted anywhere public.\nAdd Note\nFatima and Liam are both falling behind on AI Fundamentals - worth a check-in this week.\n10/20/2026, 3:57:28 PM",
+    "overflow": false,
+    "brokenImages": [],
+    "crash": false,
+    "errors": []
+  },
+  {
+    "role": "manager",
+    "name": "Manager View mobile",
+    "headings": [
+      "Team Oversight & Compliance Hub"
+    ],
+    "text": "mara Chen\nDavid Osei\nPriya Nair\nTeam Skill Snapshot\nCompletion by course category across your direct reports.\nCompliance\n100% avg (2 enrollments)\nAI\n78% avg (5 enrollments)\nLeadership\n62% avg (3 enrollments)\nSkill Gaps by Member\nClick a member to inspect demonstrated competencies and gaps.\nAmara Chen\n2 demonstrated • 0 gaps\nDavid Osei\n0 demonstrated • 2 gaps\nPriya Nair\n1 demonstrated • 1 gaps\nMarcus Webb\n1 demonstrated • 1 gaps\nFatima Diallo\n0 demonstrated • 1 gaps\nMy Notes\nYour own running notes for analysis - visible to you and your org admin, not posted anywhere public.\nAdd Note\nFatima and Liam are both falling behind on AI Fundamentals - worth a check-in this week.\n10/20/2026, 3:57:28 PM",
+    "overflow": false,
+    "brokenImages": [],
+    "crash": false,
+    "errors": []
+  },
+  {
+    "role": "manager",
+    "name": "Workforce Intelligence",
+    "headings": [
+      "Workforce Intelligence & Skill Radar"
+    ],
+    "text": "sessment results for this pathway\n0/2 Completed\nAI Fundamentals: Course Completed\nIn Progress (65%)\nWorkplace Compliance 101: Course Completed\nIn Progress (30%)\nSkill Growth Recommendation\nAmara Chen hasn't completed any assessments in this pathway yet - recommendations will appear once real scores come in.\nAssign Recommended Module →\nExport Development Plan (CSV)\nSkill gaps by department\nReal course-category completion, broken down by department - the lowest scores are the closest thing this data supports to \"where the gaps are.\"\nUnspecified\n68% avg (8 enrollments)\nCompletion by course category\nAI\n78% avg (5 enrollments)\nLeadership\n62% avg (3 enrollments)\nCompliance\n100% avg (4 enrollments)",
+    "overflow": false,
+    "brokenImages": [],
+    "crash": false,
+    "errors": []
+  },
+  {
+    "role": "manager",
+    "name": "Workforce Intelligence mobile",
+    "headings": [
+      "Workforce Intelligence & Skill Radar"
+    ],
+    "text": "sessment results for this pathway\n0/2 Completed\nAI Fundamentals: Course Completed\nIn Progress (65%)\nWorkplace Compliance 101: Course Completed\nIn Progress (30%)\nSkill Growth Recommendation\nAmara Chen hasn't completed any assessments in this pathway yet - recommendations will appear once real scores come in.\nAssign Recommended Module →\nExport Development Plan (CSV)\nSkill gaps by department\nReal course-category completion, broken down by department - the lowest scores are the closest thing this data supports to \"where the gaps are.\"\nUnspecified\n68% avg (8 enrollments)\nCompletion by course category\nAI\n78% avg (5 enrollments)\nLeadership\n62% avg (3 enrollments)\nCompliance\n100% avg (4 enrollments)",
+    "overflow": false,
+    "brokenImages": [],
+    "crash": false,
+    "errors": []
+  },
+  {
+    "role": "manager",
+    "name": "mobile current page",
+    "headings": [
+      "Workforce Intelligence & Skill Radar"
+    ],
+    "text": "sessment results for this pathway\n0/2 Completed\nAI Fundamentals: Course Completed\nIn Progress (65%)\nWorkplace Compliance 101: Course Completed\nIn Progress (30%)\nSkill Growth Recommendation\nAmara Chen hasn't completed any assessments in this pathway yet - recommendations will appear once real scores come in.\nAssign Recommended Module →\nExport Development Plan (CSV)\nSkill gaps by department\nReal course-category completion, broken down by department - the lowest scores are the closest thing this data supports to \"where the gaps are.\"\nUnspecified\n68% avg (8 enrollments)\nCompletion by course category\nAI\n78% avg (5 enrollments)\nLeadership\n62% avg (3 enrollments)\nCompliance\n100% avg (4 enrollments)",
+    "overflow": false,
+    "brokenImages": [],
+    "crash": false,
+    "errors": []
+  },
+  {
+    "role": "owner",
+    "name": "initial",
+    "headings": [
+      "Welcome back, Demo Admin"
+    ],
+    "text": "y Log\nRecent admin actions within your own organization.\nissue certificate directly: Amara Chen\n10/21/2026, 2:57:33 PM\nassign compliance course: Fatima Diallo\n10/20/2026, 3:57:33 PM\nreview certificate: Priya Nair\n10/19/2026, 3:57:33 PM\nMy Notes\nYour own running notes for analysis - visible to you and your org admin, not posted anywhere public.\nAdd Note\nFatima and Liam are both falling behind on AI Fundamentals - worth a check-in this week.\n10/20/2026, 3:57:33 PM\nWe value your privacy\n\nWe use cookies for essential functionality and, with your consent, for analytics and marketing. You can change your choices anytime from Profile > Privacy & Data.\n\nManage cookies\nReject non-essential\nAccept all",
+    "overflow": false,
+    "brokenImages": [
+      "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=400&auto=format&fit=crop&q=80"
+    ],
+    "crash": false,
+    "errors": []
+  },
+  {
+    "role": "owner",
+    "name": "owner dashboard",
+    "headings": [
+      "Train AI Platform Overview"
+    ],
+    "text": "opy\n\tGROWTH\tactive\nLive Platform Audit Stream\nReal-time events from safe_admin_audit_log\nStreaming\nSuper Admin created: info@trainailtd.com with platform-wide privileges\n1 hour ago\nPlatform tenant status updated: Enterprise SLA verified\n3 hours ago\nAI Assessment edge pipeline processed 450 requests\n6 hours ago\nGlobal course sync completed: 48 active courses verified\nYesterday\nPlatform Health\nLive Supabase database telemetry check on page boot.\nDatabase reachable\nLast checked: 3:57:32 PM\nTenant Churn History\nAggregated from real admin audit log events.\n0\nSuspended, 30d\n0\nSuspended, 90d\n0\nActive Tenants\nCampaign Attribution\nUTM tracking grouped by campaign source.\nNo campaign-tagged leads yet.",
+    "overflow": false,
+    "brokenImages": [],
+    "crash": false,
+    "errors": []
+  },
+  {
+    "role": "owner",
+    "name": "Overview",
+    "headings": [
+      "Train AI Platform Overview"
+    ],
+    "text": "opy\n\tGROWTH\tactive\nLive Platform Audit Stream\nReal-time events from safe_admin_audit_log\nStreaming\nSuper Admin created: info@trainailtd.com with platform-wide privileges\n1 hour ago\nPlatform tenant status updated: Enterprise SLA verified\n3 hours ago\nAI Assessment edge pipeline processed 450 requests\n6 hours ago\nGlobal course sync completed: 48 active courses verified\nYesterday\nPlatform Health\nLive Supabase database telemetry check on page boot.\nDatabase reachable\nLast checked: 3:57:32 PM\nTenant Churn History\nAggregated from real admin audit log events.\n0\nSuspended, 30d\n0\nSuspended, 90d\n0\nActive Tenants\nCampaign Attribution\nUTM tracking grouped by campaign source.\nNo campaign-tagged leads yet.",
+    "overflow": false,
+    "brokenImages": [],
+    "crash": false,
+    "errors": []
+  },
+  {
+    "role": "owner",
+    "name": "Overview mobile",
+    "headings": [
+      "Train AI Platform Overview"
+    ],
+    "text": "opy\n\tGROWTH\tactive\nLive Platform Audit Stream\nReal-time events from safe_admin_audit_log\nStreaming\nSuper Admin created: info@trainailtd.com with platform-wide privileges\n1 hour ago\nPlatform tenant status updated: Enterprise SLA verified\n3 hours ago\nAI Assessment edge pipeline processed 450 requests\n6 hours ago\nGlobal course sync completed: 48 active courses verified\nYesterday\nPlatform Health\nLive Supabase database telemetry check on page boot.\nDatabase reachable\nLast checked: 3:57:32 PM\nTenant Churn History\nAggregated from real admin audit log events.\n0\nSuspended, 30d\n0\nSuspended, 90d\n0\nActive Tenants\nCampaign Attribution\nUTM tracking grouped by campaign source.\nNo campaign-tagged leads yet.",
+    "overflow": false,
+    "brokenImages": [],
+    "crash": false,
+    "errors": []
+  },
+  {
+    "role": "owner",
+    "name": "Demo Requests",
+    "headings": [
+      "Inbound Demos & Walkthrough Pipeline"
+    ],
+    "text": "s, scheduled institutional walkthroughs, and attendee details.\nTENANT\nAll Organizations (Global)\nGlobal Digital Training Institute (+ Super Admin)\nTrain AI Executive Leadership Academy\nAdvanced AI Engineering Academy\nM\nMember\nMember\nSign Out\nInbound Demos & Walkthrough Pipeline\n\nReal-time booking submissions from educational institutions, non-profits, and corporate enterprises.\n\nExport Requests (CSV)\nTotal Inbound\n0\nAll logged demo requests\nScheduled Sessions\n0\nDate & time confirmed\nNew Inquiries\n0\nAwaiting first outreach\nClosed / Completed\n0\nOnboarded or finished\nAll Requests\n0\nScheduled\n0\nNew Inquiries\n0\nClosed\n0\nNo demo requests found\n\nNo demo requests logged under this status filter yet.",
+    "overflow": false,
+    "brokenImages": [],
+    "crash": false,
+    "errors": []
+  },
+  {
+    "role": "owner",
+    "name": "Demo Requests mobile",
+    "headings": [
+      "Inbound Demos & Walkthrough Pipeline"
+    ],
+    "text": " Tracks\nPlatform Emails\nSupport Queue\nAccess Control\nDark Theme\nSwitch Dashboard\nSign Out\nInstitutional Demo & Appointment Requests\nReview incoming booking requests, scheduled institutional walkthroughs, and attendee details.\nM\nMember\nMember\nInbound Demos & Walkthrough Pipeline\n\nReal-time booking submissions from educational institutions, non-profits, and corporate enterprises.\n\nExport Requests (CSV)\nTotal Inbound\n0\nAll logged demo requests\nScheduled Sessions\n0\nDate & time confirmed\nNew Inquiries\n0\nAwaiting first outreach\nClosed / Completed\n0\nOnboarded or finished\nAll Requests\n0\nScheduled\n0\nNew Inquiries\n0\nClosed\n0\nNo demo requests found\n\nNo demo requests logged under this status filter yet.",
+    "overflow": false,
+    "brokenImages": [],
+    "crash": false,
+    "errors": []
+  },
+  {
+    "role": "owner",
+    "name": "Organizations",
+    "headings": [
+      "Multi-Tenant Organizations & Invite Link Directory"
+    ],
+    "text": "Training Institute (+ Super Admin)\nID: dt-org-1...\nactive\nMEMBERS\n3850 users\nTIER\nEnterprise\nShareable Invite Link\n/?join=digital-training-hq\nCopy\nTrack\nDedicated RLS schema isolation • Strict Multi-Tenancy\nCreated 11/1/2024\nView\nManage\nTrain AI Executive Leadership Academy\nID: dt-org-2...\nactive\nMEMBERS\n850 users\nTIER\nEnterprise\nShareable Invite Link\n/?join=trainai-exec\nCopy\nTrack\nDedicated RLS schema isolation • Strict Multi-Tenancy\nCreated 1/8/2025\nView\nManage\nAdvanced AI Engineering Academy\nID: dt-org-3...\nactive\nMEMBERS\n1200 users\nTIER\nGrowth\nShareable Invite Link\n/?join=ai-engineering-academy\nCopy\nTrack\nDedicated RLS schema isolation • Strict Multi-Tenancy\nCreated 2/14/2025\nView\nManage",
+    "overflow": false,
+    "brokenImages": [],
+    "crash": false,
+    "errors": []
+  },
+  {
+    "role": "owner",
+    "name": "Organizations mobile",
+    "headings": [
+      "Multi-Tenant Organizations & Invite Link Directory"
+    ],
+    "text": "Training Institute (+ Super Admin)\nID: dt-org-1...\nactive\nMEMBERS\n3850 users\nTIER\nEnterprise\nShareable Invite Link\n/?join=digital-training-hq\nCopy\nTrack\nDedicated RLS schema isolation • Strict Multi-Tenancy\nCreated 11/1/2024\nView\nManage\nTrain AI Executive Leadership Academy\nID: dt-org-2...\nactive\nMEMBERS\n850 users\nTIER\nEnterprise\nShareable Invite Link\n/?join=trainai-exec\nCopy\nTrack\nDedicated RLS schema isolation • Strict Multi-Tenancy\nCreated 1/8/2025\nView\nManage\nAdvanced AI Engineering Academy\nID: dt-org-3...\nactive\nMEMBERS\n1200 users\nTIER\nGrowth\nShareable Invite Link\n/?join=ai-engineering-academy\nCopy\nTrack\nDedicated RLS schema isolation • Strict Multi-Tenancy\nCreated 2/14/2025\nView\nManage",
+    "overflow": false,
+    "brokenImages": [],
+    "crash": false,
+    "errors": []
+  },
+  {
+    "role": "owner",
+    "name": "Org Onboarding",
+    "headings": [],
+    "text": "re\nmanager fixture\nowner fixture\nOWNER\nSearch platform...\n⌘K\nPLATFORM OWNER\nOverview\nDemo Requests\nOrganizations\nOrg Onboarding\nBranding\nPlatform Settings\nLearning Tracks\nPlatform Emails\nSupport Queue\nAccess Control\nDark Theme\nSwitch Dashboard\nSign Out\nSet up new organization\nGuided onboarding. Every step performs a real, saved action\nM\nMember\nMember\nSign Out\n1\nOrganization\n2\nBranding\n3\nInvite people\n4\nFirst cohort\n5\nFinish\nStep 1: Organization details\nCreate a brand-new organization, or resume onboarding one that already exists in the database but has no members yet.\nCreate new organization\nResume an existing organization\nORGANIZATION NAME\nURL SLUG\nCUSTOM DOMAIN (OPTIONAL)\nCreate & continue",
+    "overflow": false,
+    "brokenImages": [],
+    "crash": false,
+    "errors": []
+  },
+  {
+    "role": "owner",
+    "name": "Org Onboarding mobile",
+    "headings": [],
+    "text": "min fixture\nmanager fixture\nowner fixture\nOWNER\nSearch platform...\n⌘K\nPLATFORM OWNER\nOverview\nDemo Requests\nOrganizations\nOrg Onboarding\nBranding\nPlatform Settings\nLearning Tracks\nPlatform Emails\nSupport Queue\nAccess Control\nDark Theme\nSwitch Dashboard\nSign Out\nSet up new organization\nGuided onboarding. Every step performs a real, saved action\nM\nMember\nMember\n1\nOrganization\n2\nBranding\n3\nInvite people\n4\nFirst cohort\n5\nFinish\nStep 1: Organization details\nCreate a brand-new organization, or resume onboarding one that already exists in the database but has no members yet.\nCreate new organization\nResume an existing organization\nORGANIZATION NAME\nURL SLUG\nCUSTOM DOMAIN (OPTIONAL)\nCreate & continue",
+    "overflow": false,
+    "brokenImages": [],
+    "crash": false,
+    "errors": []
+  },
+  {
+    "role": "owner",
+    "name": "Branding",
+    "headings": [
+      "White-Label & Brand Studio"
+    ],
+    "text": "brand palettes, and theme tokens per tenant\nM\nMember\nMember\nSign Out\nWhite-Label & Brand Studio\n\nCustomize institution logos, custom accent palettes, domain hostnames, and CSS design tokens per tenant.\n\nTenant Customization\nSELECT TENANT ORGANIZATION\nGlobal Digital Training Institute (+ Super Admin)\nTrain AI Executive Leadership Academy\nAdvanced AI Engineering Academy\nPRIMARY BRAND COLOR\nSECONDARY ACCENT COLOR\nINTERFACE THEME\nLight Theme\nDark Theme\nORGANIZATION LOGO\nDrop custom logo or click to upload\nMax 5MB\nCUSTOM CSS (OPTIONAL)\nSave Branding Settings\nLive Learner Portal Preview\nLive Preview\nG\nGlobal Digital Training Institute (+ Super Admin)\nEnterprise AI Academy\nEnroll\nTrack Progress\n72%",
+    "overflow": false,
+    "brokenImages": [],
+    "crash": false,
+    "errors": []
+  },
+  {
+    "role": "owner",
+    "name": "Branding mobile",
+    "headings": [
+      "White-Label & Brand Studio"
+    ],
+    "text": "e logos, brand palettes, and theme tokens per tenant\nM\nMember\nMember\nWhite-Label & Brand Studio\n\nCustomize institution logos, custom accent palettes, domain hostnames, and CSS design tokens per tenant.\n\nTenant Customization\nSELECT TENANT ORGANIZATION\nGlobal Digital Training Institute (+ Super Admin)\nTrain AI Executive Leadership Academy\nAdvanced AI Engineering Academy\nPRIMARY BRAND COLOR\nSECONDARY ACCENT COLOR\nINTERFACE THEME\nLight Theme\nDark Theme\nORGANIZATION LOGO\nDrop custom logo or click to upload\nMax 5MB\nCUSTOM CSS (OPTIONAL)\nSave Branding Settings\nLive Learner Portal Preview\nLive Preview\nG\nGlobal Digital Training Institute (+ Super Admin)\nEnterprise AI Academy\nEnroll\nTrack Progress\n72%",
+    "overflow": false,
+    "brokenImages": [],
+    "crash": false,
+    "errors": []
+  },
+  {
+    "role": "owner",
+    "name": "Platform Settings",
+    "headings": [
+      "Platform Architecture & Settings"
+    ],
+    "text": "ttings\n\nConfigure global database connectivity, platform feature flags, demo mock toggles, and environment key-value pairs.\n\nDatabase & Mock Data Management\nControl demo sandbox data vs live production database records\nLIVE DATABASE MODE\nACTIVE SUPABASE DATABASE\nTrain AI Unified Database (jeobggrtxeybxvlwpxvn)\nConnected & Unified\nInclude Mock & Demo Masterclasses\nWhen enabled, fallback masterclasses with YouTube video tutorials, interactive transcripts, and demo Q&A threads are shown for prototyping.\nPurge All Mock Data (Leave Only Real DB)\nRestore Demo Data\nGlobal Feature Flags\nAllow self-registration\nSave global settings\nOther settings\nNew setting\nNo other platform settings configured yet.",
+    "overflow": false,
+    "brokenImages": [],
+    "crash": false,
+    "errors": []
+  },
+  {
+    "role": "owner",
+    "name": "Platform Settings mobile",
+    "headings": [
+      "Platform Architecture & Settings"
+    ],
+    "text": "ttings\n\nConfigure global database connectivity, platform feature flags, demo mock toggles, and environment key-value pairs.\n\nDatabase & Mock Data Management\nControl demo sandbox data vs live production database records\nLIVE DATABASE MODE\nACTIVE SUPABASE DATABASE\nTrain AI Unified Database (jeobggrtxeybxvlwpxvn)\nConnected & Unified\nInclude Mock & Demo Masterclasses\nWhen enabled, fallback masterclasses with YouTube video tutorials, interactive transcripts, and demo Q&A threads are shown for prototyping.\nPurge All Mock Data (Leave Only Real DB)\nRestore Demo Data\nGlobal Feature Flags\nAllow self-registration\nSave global settings\nOther settings\nNew setting\nNo other platform settings configured yet.",
+    "overflow": false,
+    "brokenImages": [],
+    "crash": false,
+    "errors": []
+  },
+  {
+    "role": "owner",
+    "name": "Learning Tracks",
+    "headings": [],
+    "text": "Isolated local audit\npublic fixture\nlearner fixture\nmentor fixture\nadmin fixture\nmanager fixture\nowner fixture\nOWNER\nSearch platform...\n⌘K\nPLATFORM OWNER\nOverview\nDemo Requests\nOrganizations\nOrg Onboarding\nBranding\nPlatform Settings\nLearning Tracks\nPlatform Emails\nSupport Queue\nAccess Control\nDark Theme\nSwitch Dashboard\nSign Out\nLearning Tracks\nSystem-wide learning tracks & career paths\nM\nMember\nMember\nSign Out\nGenerative AI & Agentic Systems\n16 associated courses\n2400 enrollments\n16 Courses\nCloud Native & DevOps Engineering\n18 associated courses\n1950 enrollments\n18 Courses\nSpatial UI & Design Systems\n14 associated courses\n1550 enrollments\n14 Courses",
+    "overflow": false,
+    "brokenImages": [],
+    "crash": false,
+    "errors": []
+  },
+  {
+    "role": "owner",
+    "name": "Learning Tracks mobile",
+    "headings": [],
+    "text": "Isolated local audit\npublic fixture\nlearner fixture\nmentor fixture\nadmin fixture\nmanager fixture\nowner fixture\nOWNER\nSearch platform...\n⌘K\nPLATFORM OWNER\nOverview\nDemo Requests\nOrganizations\nOrg Onboarding\nBranding\nPlatform Settings\nLearning Tracks\nPlatform Emails\nSupport Queue\nAccess Control\nDark Theme\nSwitch Dashboard\nSign Out\nLearning Tracks\nSystem-wide learning tracks & career paths\nM\nMember\nMember\nGenerative AI & Agentic Systems\n16 associated courses\n2400 enrollments\n16 Courses\nCloud Native & DevOps Engineering\n18 associated courses\n1950 enrollments\n18 Courses\nSpatial UI & Design Systems\n14 associated courses\n1550 enrollments\n14 Courses",
+    "overflow": false,
+    "brokenImages": [],
+    "crash": false,
+    "errors": []
+  },
+  {
+    "role": "owner",
+    "name": "Platform Emails",
+    "headings": [
+      "Platform Broadcasts & Dispatch"
+    ],
+    "text": "atch\n\nDispatch platform-wide announcements, emergency maintenance notices, and multi-channel system notifications.\n\nSend Broadcast Email\nAll users\nActive users (last 30 days)\nInactive users (30+ days)\nActive instructors\nInactive instructors\nOrganization admins\nReferral sign-ups\nSara Foundation Africa (partner org)\nSpecific email address...\nEmail\nIn-app notification (specific email only)\nDevice push notification (specific email only)\nPreview recipient count\nBroadcast email\nCampaign History\nRefresh\nWelcome to Train AI Platform Q3\nall · 1420/0 sent · 980 opened · 10/20/2026, 3:57:39 PM\nsent\nNew AI Certification Paths Available\nactive_users · 850/0 sent · 610 opened · 10/18/2026, 3:57:39 PM\nsent",
+    "overflow": false,
+    "brokenImages": [],
+    "crash": false,
+    "errors": []
+  },
+  {
+    "role": "owner",
+    "name": "Platform Emails mobile",
+    "headings": [
+      "Platform Broadcasts & Dispatch"
+    ],
+    "text": "atch\n\nDispatch platform-wide announcements, emergency maintenance notices, and multi-channel system notifications.\n\nSend Broadcast Email\nAll users\nActive users (last 30 days)\nInactive users (30+ days)\nActive instructors\nInactive instructors\nOrganization admins\nReferral sign-ups\nSara Foundation Africa (partner org)\nSpecific email address...\nEmail\nIn-app notification (specific email only)\nDevice push notification (specific email only)\nPreview recipient count\nBroadcast email\nCampaign History\nRefresh\nWelcome to Train AI Platform Q3\nall · 1420/0 sent · 980 opened · 10/20/2026, 3:57:39 PM\nsent\nNew AI Certification Paths Available\nactive_users · 850/0 sent · 610 opened · 10/18/2026, 3:57:39 PM\nsent",
+    "overflow": false,
+    "brokenImages": [],
+    "crash": false,
+    "errors": []
+  },
+  {
+    "role": "owner",
+    "name": "Support Queue",
+    "headings": [],
+    "text": "Isolated local audit\npublic fixture\nlearner fixture\nmentor fixture\nadmin fixture\nmanager fixture\nowner fixture\nOWNER\nSearch platform...\n⌘K\nPLATFORM OWNER\nOverview\nDemo Requests\nOrganizations\nOrg Onboarding\nBranding\nPlatform Settings\nLearning Tracks\nPlatform Emails\nSupport Queue\nAccess Control\nDark Theme\nSwitch Dashboard\nSign Out\nSupport Queue\nEvery organization's support requests, in one place - 0 open\nM\nMember\nMember\nSign Out\nAll tickets (0)\nNo support tickets yet.\nGeneral Platform Feedback\nFeedback submitted from learner and organization profile screens.\nSofia Kim\nFeature request\nWould love a dark mode toggle that syncs across devices.\n★ 4/5 stars",
+    "overflow": false,
+    "brokenImages": [],
+    "crash": false,
+    "errors": []
+  },
+  {
+    "role": "owner",
+    "name": "Support Queue mobile",
+    "headings": [],
+    "text": "Isolated local audit\npublic fixture\nlearner fixture\nmentor fixture\nadmin fixture\nmanager fixture\nowner fixture\nOWNER\nSearch platform...\n⌘K\nPLATFORM OWNER\nOverview\nDemo Requests\nOrganizations\nOrg Onboarding\nBranding\nPlatform Settings\nLearning Tracks\nPlatform Emails\nSupport Queue\nAccess Control\nDark Theme\nSwitch Dashboard\nSign Out\nSupport Queue\nEvery organization's support requests, in one place - 0 open\nM\nMember\nMember\nAll tickets (0)\nNo support tickets yet.\nGeneral Platform Feedback\nFeedback submitted from learner and organization profile screens.\nSofia Kim\nFeature request\nWould love a dark mode toggle that syncs across devices.\n★ 4/5 stars",
+    "overflow": false,
+    "brokenImages": [],
+    "crash": false,
+    "errors": []
+  },
+  {
+    "role": "owner",
+    "name": "Access Control",
+    "headings": [],
+    "text": " on their account so they can sign in and re-enroll. Calls the same real, already-deployed admin-reset-mfa function used by the 1.0 reference codebase.\nReset 2FA\nRoles & Permissions Matrix\nBacked by role_permissions_matrix. Applies platform-wide, across every organization.\nPERMISSION\tSuper Admin\tAdmin\tManager\tInstructor\tLearner\nManage users\t\n\t\n\t\n\t\n\t\n\nManage courses\t\n\t\n\t\n\t\n\t\n\nManage cohorts\t\n\t\n\t\n\t\n\t\n\nManage compliance\t\n\t\n\t\n\t\n\t\n\nView analytics\t\n\t\n\t\n\t\n\t\nImpersonation / View As\nEvery view is logged\nRead-only snapshot of a user's profile, enrollments, and AI Coach conversations. For troubleshooting, not for taking action as them. Every call writes an audit log entry first, unconditionally.\nSearch",
+    "overflow": false,
+    "brokenImages": [],
+    "crash": false,
+    "errors": []
+  },
+  {
+    "role": "owner",
+    "name": "Access Control mobile",
+    "headings": [],
+    "text": " on their account so they can sign in and re-enroll. Calls the same real, already-deployed admin-reset-mfa function used by the 1.0 reference codebase.\nReset 2FA\nRoles & Permissions Matrix\nBacked by role_permissions_matrix. Applies platform-wide, across every organization.\nPERMISSION\tSuper Admin\tAdmin\tManager\tInstructor\tLearner\nManage users\t\n\t\n\t\n\t\n\t\n\nManage courses\t\n\t\n\t\n\t\n\t\n\nManage cohorts\t\n\t\n\t\n\t\n\t\n\nManage compliance\t\n\t\n\t\n\t\n\t\n\nView analytics\t\n\t\n\t\n\t\n\t\nImpersonation / View As\nEvery view is logged\nRead-only snapshot of a user's profile, enrollments, and AI Coach conversations. For troubleshooting, not for taking action as them. Every call writes an audit log entry first, unconditionally.\nSearch",
+    "overflow": false,
+    "brokenImages": [],
+    "crash": false,
+    "errors": []
+  },
+  {
+    "role": "owner",
+    "name": "mobile current page",
+    "headings": [],
+    "text": " on their account so they can sign in and re-enroll. Calls the same real, already-deployed admin-reset-mfa function used by the 1.0 reference codebase.\nReset 2FA\nRoles & Permissions Matrix\nBacked by role_permissions_matrix. Applies platform-wide, across every organization.\nPERMISSION\tSuper Admin\tAdmin\tManager\tInstructor\tLearner\nManage users\t\n\t\n\t\n\t\n\t\n\nManage courses\t\n\t\n\t\n\t\n\t\n\nManage cohorts\t\n\t\n\t\n\t\n\t\n\nManage compliance\t\n\t\n\t\n\t\n\t\n\nView analytics\t\n\t\n\t\n\t\n\t\nImpersonation / View As\nEvery view is logged\nRead-only snapshot of a user's profile, enrollments, and AI Coach conversations. For troubleshooting, not for taking action as them. Every call writes an audit log entry first, unconditionally.\nSearch",
+    "overflow": false,
+    "brokenImages": [],
+    "crash": false,
+    "errors": []
+  }
+]

@@ -611,7 +611,8 @@ export function LearningPathsScreen({ orgId, orgSelector, setScreen }) {
 
         <div className="ta-col ta-gap12">
           {pathsQuery.loading && <div className="ta-empty">Loading learning paths...</div>}
-          {!pathsQuery.loading && paths.length === 0 && (
+          {pathsQuery.error && <div className="ta-empty" role="alert">Could not load learning paths. <button className="ta-btn ta-btn-outline" onClick={pathsQuery.refetch}>Retry</button></div>}
+          {!pathsQuery.loading && !pathsQuery.error && paths.length === 0 && (
             <div className="ta-empty">
               <MapIcon size={28} style={{ opacity: 0.4, marginBottom: 8 }} />
               <div>No learning paths yet. Create one to guide learners through an ordered set of courses.</div>

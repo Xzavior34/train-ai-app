@@ -1,3 +1,4 @@
+import { CourseImage } from "../../components/common/CourseImage.jsx";
 import React, { useState, useEffect, useContext, useRef, useMemo, createContext } from "react";
 import {
   Home, BookOpen, Zap, Plus, Users, Settings, ArrowLeft, GraduationCap, Bookmark, Clock, CheckCircle2,
@@ -1074,7 +1075,7 @@ export function CourseThumb({ course, size = 56, rounded = 8 }) {
       background: "#0F172A",
       boxShadow: "0 2px 6px rgba(15,23,42,0.06)"
     }}>
-      <img
+      <CourseImage
         src={imgSrc}
         alt=""
         onError={() => setErrored(true)}

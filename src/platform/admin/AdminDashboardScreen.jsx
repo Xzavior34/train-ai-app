@@ -56,7 +56,7 @@ export function AdminDashboardScreen({ orgId, profileQuery, setScreen, orgSelect
   }
 
 
-  const totalUsers = statsQuery.data ? (statsQuery.data.activeStudents + statsQuery.data.mentors + statsQuery.data.otherUsers) : 0;
+  const totalUsers = statsQuery.data ? (statsQuery.data.totalMembers ?? (statsQuery.data.activeStudents + statsQuery.data.mentors + statsQuery.data.otherUsers)) : 0;
   const orgStats = statsQuery.data ? [
     {
       label: "Active learners",
@@ -139,6 +139,8 @@ export function AdminDashboardScreen({ orgId, profileQuery, setScreen, orgSelect
               <SkeletonCard key={i} height={100} />
             ))}
           </div>
+        ) : statsQuery.error ? (
+          <div className="ta-card" role="alert" style={{ padding: 16 }}>Could not load dashboard totals. <button className="ta-btn ta-btn-outline" onClick={statsQuery.refetch}>Retry</button></div>
         ) : (
           <div className="ta-grid ta-grid-5 anim-stagger">
             {orgStats.map(s => <StatCard key={s.label} stat={s} />)}

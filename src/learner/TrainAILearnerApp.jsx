@@ -90,8 +90,9 @@ export default function TrainAILearnerApp({ isActive = true, onSwitchToPlatform,
   // Listen for theme changes from Platform/Owner dashboards
   useEffect(() => {
     function onExternalThemeChange(e) {
-      if (e.detail && typeof e.detail.dark === "boolean" && e.detail.dark !== dark) {
-        setDark(e.detail.dark);
+      const nextDark = e.detail?.dark ?? e.detail?.isDark;
+      if (typeof nextDark === "boolean" && nextDark !== dark) {
+        setDark(nextDark);
       }
     }
     window.addEventListener("trainai-theme-change", onExternalThemeChange);
@@ -808,6 +809,8 @@ export default function TrainAILearnerApp({ isActive = true, onSwitchToPlatform,
                     };
                   })}
                   coursesLoading={coursesLoading}
+                  coursesError={learnerData.coursesQuery.error || learnerData.enrollmentsQuery.error || learnerData.userProfileQuery.error}
+                  onRetryCourses={() => { learnerData.coursesQuery.refetch(); learnerData.enrollmentsQuery.refetch(); learnerData.userProfileQuery.refetch(); }}
                   courseSearch={courseSearch} setCourseSearch={setCourseSearch}
                   courseLevelFilter={courseLevelFilter} setCourseLevelFilter={setCourseLevelFilter}
                   courseSourceTab={courseSourceTab} setCourseSourceTab={setCourseSourceTab}

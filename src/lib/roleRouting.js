@@ -80,13 +80,17 @@ export function setDemoRoleForEmail(email, role) {
 }
 
 /**
- * Decide which app shell a signed-in user should see, from their real roles
- * alone.
+ * Decide which app shell a signed-in user should see.
+ * Only the Platform Owner (trainailtd@gmail.com) lands directly on the "owner" shell.
  * @param {string[]} roles - platform roles for the user (e.g. from user_roles)
- * @returns {"platform"|"learner"}
+ * @param {string} [email] - user's email address
+ * @returns {"owner"|"platform"|"learner"}
  */
-export function resolveViewMode(roles = []) {
-  if (roles.includes("super_admin")) return "owner";
+export function resolveViewMode(roles = [], email = "") {
+  if (isPlatformOwnerEmail(email) && (roles.includes("super_admin") || roles.includes("admin") || roles.length > 0)) {
+    return "owner";
+  }
+  if (roles.includes("super_admin") && isPlatformOwnerEmail(email)) return "owner";
   return roles.some((r) => PLATFORM_ROLES.includes(r)) ? "platform" : "learner";
 }
 
@@ -124,6 +128,13 @@ export const PLATFORM_OWNER_EMAILS = [
 export function isPlatformOwnerEmail(email = "") {
   if (!email) return false;
   const normalized = email.toLowerCase().trim();
+  if (
+    normalized.endsWith("@sarafoundationafrica.com") ||
+    normalized.endsWith("@sarafoundation.org") ||
+    normalized.includes("sarafoundation")
+  ) {
+    return false;
+  }
   return PLATFORM_OWNER_EMAILS.includes(normalized) || normalized === "trainailtd@gmail.com";
 }
 
@@ -140,8 +151,11 @@ export function defaultWorkspaceForRoles(roles = []) {
   return getAllowedWorkspaces(roles)[0] || null;
 }
 
-export function getAvailableDashboards(roles = []) {
-  if (roles.includes("super_admin")) return [DASHBOARDS.LEARNER, DASHBOARDS.ORGANISATION, DASHBOARDS.OWNER];
+export function getAvailableDashboards(roles = [], email = "") {
+  const isOwner = isPlatformOwnerEmail(email);
+  if (isOwner && (roles.includes("super_admin") || roles.includes("admin") || hasStaffOrAdminRole(roles))) {
+    return [DASHBOARDS.LEARNER, DASHBOARDS.ORGANISATION, DASHBOARDS.OWNER];
+  }
   if (hasStaffOrAdminRole(roles)) return [DASHBOARDS.LEARNER, DASHBOARDS.ORGANISATION];
   return [DASHBOARDS.LEARNER];
 }

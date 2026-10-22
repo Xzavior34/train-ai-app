@@ -7,7 +7,7 @@ import ConsentBanner from "./components/common/ConsentBanner.jsx";
 import OfflineIndicator from "./components/common/OfflineIndicator.jsx";
 import { applyAccessibilityPrefs, getStoredAccessibilityPrefs } from "./components/common/AccessibilityPanel.jsx";
 import { fetchMyRoles, fetchMyPersonalization, saveMyPersonalization } from "./services/authService.js";
-import { resolveViewMode, getAvailableDashboards, DASHBOARDS } from "./lib/roleRouting.js";
+import { resolveViewMode, getAvailableDashboards, DASHBOARDS, isPlatformOwnerEmail } from "./lib/roleRouting.js";
 import { getAuthenticatorAssuranceLevel } from "./lib/api/mfa.js";
 import { trackOrganizationJoinIntent, getPendingOrganizationJoin, joinOrganizationByReferral } from "./lib/api/organizations.js";
 
@@ -232,7 +232,9 @@ export default function App() {
   const [superAdminSelectedOrgId, setSuperAdminSelectedOrgId] = useState("");
 
   function switchDashboard(target) {
-    if (!getAvailableDashboards(userRoles).includes(target)) return;
+    const userEmail = session?.user?.email || "";
+    if (target === DASHBOARDS.OWNER && !isPlatformOwnerEmail(userEmail)) return;
+    if (!getAvailableDashboards(userRoles, userEmail).includes(target)) return;
     if (target === DASHBOARDS.LEARNER) setViewMode("learner");
     else if (target === DASHBOARDS.ORGANISATION) setViewMode("platform");
     else if (target === DASHBOARDS.OWNER) setViewMode("owner");
@@ -260,7 +262,8 @@ export default function App() {
           fetchMyRoles()
         ]);
         const rolesList = Array.isArray(roles) && roles.length > 0 ? roles : ["learner"];
-        const mode = resolveViewMode(rolesList);
+        const userEmail = session.user?.email || "";
+        const mode = resolveViewMode(rolesList, userEmail);
         if (!cancelled) {
           setUserRoles(rolesList);
           setHasPlatformRole(mode === "platform");
@@ -298,7 +301,8 @@ export default function App() {
       await saveMyPersonalization(session.user.id, tracks, level);
       const roles = await fetchMyRoles().catch(() => ["learner"]);
       const rolesList = Array.isArray(roles) && roles.length > 0 ? roles : ["learner"];
-      const mode = resolveViewMode(rolesList);
+      const userEmail = session.user?.email || "";
+      const mode = resolveViewMode(rolesList, userEmail);
       setUserRoles(rolesList);
       setHasPlatformRole(mode === "platform");
       setViewMode(mode);
@@ -560,7 +564,7 @@ export default function App() {
       </>
     );
   }
-  if (isOwnerPortalURL && ownerPortalAuthenticated && userRoles.includes("super_admin")) {
+  if (isOwnerPortalURL && ownerPortalAuthenticated && isPlatformOwnerEmail(session?.user?.email) && userRoles.includes("super_admin")) {
     return (
       <>
         <OfflineIndicator mode={offlineMode} />
@@ -607,8 +611,9 @@ export default function App() {
           onSignOut={handleGlobalSignOut}
         />
       </div>}
-      {userRoles.includes("super_admin") && <div style={{ display: viewMode === "owner" ? "block" : "none" }}>
+      {isPlatformOwnerEmail(session?.user?.email) && userRoles.includes("super_admin") && <div style={{ display: viewMode === "owner" ? "block" : "none" }}>
         <PlatformOwnerApp
+          isActive={viewMode === "owner"}
           onSwitchDashboard={switchDashboard}
           userRoles={userRoles}
           superAdminSelectedOrgId={superAdminSelectedOrgId}

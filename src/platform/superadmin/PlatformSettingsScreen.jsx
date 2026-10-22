@@ -174,45 +174,22 @@ export function PlatformSettingsScreen({ activeProject, projectSessionStatus, on
                 </span>
               </div>
 
-              {/* Active Supabase Multi-Project Switcher */}
-              {onSwitchProject && (
-                <div style={{ marginTop: 16, padding: "12px 14px", background: "var(--surface-2)", borderRadius: 8, border: "1px solid var(--border)" }}>
-                  <div className="ta-row ta-between" style={{ flexWrap: "wrap", gap: 8, marginBottom: 8 }}>
-                    <div style={{ fontSize: 11, fontWeight: 800, color: "var(--text-3)", textTransform: "uppercase", letterSpacing: ".06em" }}>
-                      Active Supabase Project
-                    </div>
+              {/* Active Supabase Unified Database Status */}
+              <div style={{ marginTop: 16, padding: "12px 14px", background: "var(--surface-2)", borderRadius: 8, border: "1px solid var(--border)" }}>
+                <div className="ta-row ta-between" style={{ flexWrap: "wrap", gap: 8, marginBottom: 8 }}>
+                  <div style={{ fontSize: 11, fontWeight: 800, color: "var(--text-3)", textTransform: "uppercase", letterSpacing: ".06em" }}>
+                    Active Supabase Database
                   </div>
-                  <div className="ta-row ta-gap8" style={{ flexWrap: "wrap" }}>
-                    {PROJECT_KEYS.map((key) => {
-                      const status = projectSessionStatus?.[key];
-                      const isActive = key === activeProject;
-                      return (
-                        <button
-                          key={key}
-                          className={isActive ? "ta-btn ta-btn-primary ta-btn-sm" : "ta-btn ta-btn-outline ta-btn-sm"}
-                          style={{ padding: "6px 12px", fontSize: 12, borderRadius: 8 }}
-                          onClick={() => !isActive && onSwitchProject(key)}
-                          title={
-                            status === "not_configured" ? "No real project connected yet - demo mode"
-                            : status === "authenticated" ? "You have an active session here"
-                            : "Configured, but you are not signed in here yet"
-                          }
-                        >
-                          {PROJECT_LABELS[key]}
-                          {status === "not_configured" && " (demo)"}
-                          {status === "no_session" && " (not signed in)"}
-                        </button>
-                      );
-                    })}
-                  </div>
-                  {projectSessionStatus?.[activeProject] === "no_session" && (
-                    <div style={{ fontSize: 11.5, color: "var(--warning, #D97706)", marginTop: 8, lineHeight: 1.4 }}>
-                      This project is configured, but you don't have a session here yet - sign in with an account that has
-                      super_admin access in this specific project to see its real data.
-                    </div>
-                  )}
                 </div>
-              )}
+                <div className="ta-row ta-gap8" style={{ alignItems: "center", flexWrap: "wrap" }}>
+                  <span className="ta-btn ta-btn-primary ta-btn-sm" style={{ padding: "6px 12px", fontSize: 12, borderRadius: 8, display: "inline-flex", alignItems: "center", gap: 6, cursor: "default" }}>
+                    <Server size={14} /> Train AI Unified Database (jeobggrtxeybxvlwpxvn)
+                  </span>
+                  <span style={{ fontSize: 11.5, color: "var(--success, #16A34A)", fontWeight: 600, display: "inline-flex", alignItems: "center", gap: 4 }}>
+                    <CheckCircle2 size={13} /> Connected &amp; Unified
+                  </span>
+                </div>
+              </div>
 
               <div style={{ marginTop: 16 }}>
                 <div className="ta-row ta-between" style={{ alignItems: "center" }}>

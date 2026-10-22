@@ -1,0 +1,14 @@
+[
+  {
+    "name": "Saved shared-catalog course appears once in member tracking",
+    "status": "PASS"
+  },
+  {
+    "name": "A course at 100 percent is counted and displayed as completed",
+    "status": "PASS"
+  },
+  {
+    "name": "Saved shared learning path retains its course order and progress",
+    "status": "PASS"
+  }
+]

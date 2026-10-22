@@ -3,7 +3,7 @@ import { CheckCircle2 } from "lucide-react";
 import { usePlatformData } from "./hooks/usePlatformData.js";
 import { useSupabaseQuery } from "../lib/useSupabaseQuery.js";
 import { SUPABASE_PROJECTS, activeProject, getSupabaseClientForProject, setActiveSupabaseProject } from "../services/supabaseClient.js";
-import { TOKENS, OwnerSidebar, DashboardSwitcher, MobileMenuContext, ToastContext, NavigationContext, SignOutContext } from "./components/PlatformUI.jsx";
+import { TOKENS, OwnerSidebar, DashboardSwitcher, MobileMenuContext, ToastContext, NavigationContext, WorkspaceContext, ActiveDashboardContext, SignOutContext } from "./components/PlatformUI.jsx";
 import { OverviewScreen } from "./superadmin/OverviewScreen.jsx";
 import { OrganizationsScreen } from "./superadmin/OrganizationsScreen.jsx";
 import { OrgOnboardingWizard } from "./superadmin/OrgOnboardingWizard.jsx";
@@ -15,55 +15,16 @@ import { AccessControlScreen } from "./superadmin/AccessControlScreen.jsx";
 import { SupportQueueScreen } from "./superadmin/SupportQueueScreen.jsx";
 import { DemoRequestsScreen } from "./superadmin/DemoRequestsScreen.jsx";
 import { fetchAllOrganizationsWithUserCounts } from "../lib/api/platform.js";
-import { getAvailableDashboards, DASHBOARDS } from "../lib/roleRouting.js";
+import { getAvailableDashboards, DASHBOARDS, isPlatformOwnerEmail } from "../lib/roleRouting.js";
 
 const PROJECT_LABELS = {
-  [SUPABASE_PROJECTS.ORGANIZATION_DB]: "Train AI 2.0 Organization Database (Platform Owner, Digital Users & B2B Orgs)",
-  [SUPABASE_PROJECTS.SARA_FOUNDATION]: "Train AI 2.0 Sara Foundation (Dedicated)",
+  [SUPABASE_PROJECTS.ORGANIZATION_DB]: "Train AI Unified Database (jeobggrtxeybxvlwpxvn)",
+  [SUPABASE_PROJECTS.SARA_FOUNDATION]: "Train AI Unified Database (jeobggrtxeybxvlwpxvn)",
 };
 
 const PROJECT_KEYS = [
   SUPABASE_PROJECTS.ORGANIZATION_DB,
-  SUPABASE_PROJECTS.SARA_FOUNDATION,
 ];
-
-function ProjectSwitcherBanner({ activeProject: current, projectSessionStatus, onSwitch }) {
-  return (
-    <div className="ta-card ta-mt16" style={{ background: "var(--surface-2)" }}>
-      <div className="ta-row ta-between" style={{ flexWrap: "wrap", gap: 8 }}>
-        <div style={{ fontSize: 11.5, fontWeight: 700, color: "var(--text-2)" }}>DATABASE / PROJECT</div>
-        <div className="ta-row ta-gap8" style={{ flexWrap: "wrap" }}>
-          {PROJECT_KEYS.map((key) => {
-            const status = projectSessionStatus?.[key];
-            const isActive = key === current;
-            return (
-              <button
-                key={key}
-                className={isActive ? "ta-btn ta-btn-primary ta-btn-sm" : "ta-btn ta-btn-outline ta-btn-sm"}
-                onClick={() => !isActive && onSwitch(key)}
-                title={
-                  status === "not_configured" ? "No real project connected yet - demo mode"
-                  : status === "authenticated" ? "You have an active session here"
-                  : "Configured, but you are not signed in here yet"
-                }
-              >
-                {PROJECT_LABELS[key]}
-                {status === "not_configured" && " (demo)"}
-                {status === "no_session" && " (not signed in)"}
-              </button>
-            );
-          })}
-        </div>
-      </div>
-      {projectSessionStatus?.[current] === "no_session" && (
-        <div style={{ fontSize: 11.5, color: "var(--warning, #B45309)", marginTop: 8 }}>
-          This project is configured, but you don't have a session here yet - sign in with an account that has
-          super_admin access in this specific project to see its real data.
-        </div>
-      )}
-    </div>
-  );
-}
 
 // The Platform Owner Dashboard - a genuinely separate top-level dashboard,
 // not a tab inside the Organisation dashboard's Sidebar the way it used to
@@ -72,6 +33,7 @@ function ProjectSwitcherBanner({ activeProject: current, projectSessionStatus, o
 // "learner" and TrainAIPlatformApp for "organisation" - three real
 // dashboards, not one dashboard with a hidden extra tab.
 export default function PlatformOwnerApp({
+  isActive = true,
   onSwitchDashboard,
   userRoles: userRolesProp,
   superAdminSelectedOrgId: controlledOrgId,
@@ -80,21 +42,44 @@ export default function PlatformOwnerApp({
 } = {}) {
   const { session, profileQuery, userRoles: hookRoles } = usePlatformData();
   const userRoles = userRolesProp || hookRoles;
+  const userEmail = session?.user?.email || profileQuery?.data?.email || "";
 
   useEffect(() => {
     setActiveSupabaseProject(SUPABASE_PROJECTS.ORGANIZATION_DB);
   }, []);
 
+  if (session && !isPlatformOwnerEmail(userEmail)) {
+    return (
+      <div style={{ padding: 40, textAlign: "center", color: "#0F172A", background: "#F8FAFC", minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
+        <h2 style={{ fontSize: 22, fontWeight: 700, marginBottom: 8 }}>Access Restricted</h2>
+        <p style={{ color: "#64748B", maxWidth: 440 }}>The Platform Owner Dashboard is strictly reserved for Train AI staff (trainailtd@gmail.com). Organization administrators manage their cohorts and learners from the Organisation Dashboard.</p>
+        <button
+          onClick={() => onSwitchDashboard ? onSwitchDashboard(DASHBOARDS.ORGANISATION) : window.location.reload()}
+          style={{ marginTop: 20, padding: "10px 24px", background: "#2563EB", color: "#fff", border: "none", borderRadius: 8, cursor: "pointer", fontWeight: 600, fontSize: 14 }}
+        >
+          Return to Organisation Dashboard
+        </button>
+      </div>
+    );
+  }
+
   const allOrgsQuery = useSupabaseQuery(async () => fetchAllOrganizationsWithUserCounts(), [activeProject]);
   const allOrgs = allOrgsQuery.data || [];
+  const digitalOrg = allOrgs.find((o) => o.slug === "tech-learning" || o.slug === "digital-users") || allOrgs[0];
   const [internalOrgId, setInternalOrgId] = useState("");
-  const selectedOrgId = controlledOrgId !== undefined ? controlledOrgId : internalOrgId;
+  const selectedOrgId = (controlledOrgId !== undefined && controlledOrgId !== "") ? controlledOrgId : (internalOrgId || digitalOrg?.id || "");
   const setSelectedOrgId = controlledSetOrgId || setInternalOrgId;
   const orgSelector = {
     orgs: allOrgs,
     selectedOrgId: selectedOrgId,
     onSelectOrg: (id) => setSelectedOrgId(id),
   };
+
+  useEffect(() => {
+    if (!controlledOrgId && digitalOrg?.id && controlledSetOrgId) {
+      controlledSetOrgId(digitalOrg.id);
+    }
+  }, [controlledOrgId, digitalOrg?.id, controlledSetOrgId]);
 
   const [projectSessionStatus, setProjectSessionStatus] = useState({});
   useEffect(() => {
@@ -151,6 +136,8 @@ export default function PlatformOwnerApp({
   }, []);
 
   return (
+    <ActiveDashboardContext.Provider value={isActive}>
+    <WorkspaceContext.Provider value={"owner"}>
     <SignOutContext.Provider value={onSignOut}>
       <NavigationContext.Provider value={(target) => setScreen(target)}>
         <MobileMenuContext.Provider value={() => setMobileOpen(true)}>
@@ -222,5 +209,7 @@ export default function PlatformOwnerApp({
       </MobileMenuContext.Provider>
     </NavigationContext.Provider>
   </SignOutContext.Provider>
+    </WorkspaceContext.Provider>
+    </ActiveDashboardContext.Provider>
 );
 }

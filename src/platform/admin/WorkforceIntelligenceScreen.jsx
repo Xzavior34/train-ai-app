@@ -1,5 +1,5 @@
 import React, { useState, useContext } from "react";
-import { TopBar, StatCard, ProgressBar, Tag, ToastContext, exportRowsAsCsv } from "../components/PlatformUI.jsx";
+import { TopBar, Avatar, StatCard, ProgressBar, Tag, ToastContext, exportRowsAsCsv } from "../components/PlatformUI.jsx";
 import { 
   Brain, ClipboardCheck, AlertTriangle, Bot, 
   TrendingUp, CheckCircle2, Circle, ArrowRight, UserCheck, 
@@ -305,7 +305,9 @@ export function WorkforceIntelligenceScreen({ orgId, orgSelector, currentUserId 
         <div className="ta-card" style={{ padding: 16, borderRadius: 10, background: "var(--surface-2)" }}>
           <div className="ta-row ta-between" style={{ flexWrap: "wrap", gap: 12 }}>
             <div className="ta-row ta-gap10">
-              <img 
+              <Avatar
+                size={44}
+                initials={(currentLearner.name || "Learner").split(" ").map(part => part[0]).join("").slice(0, 2)}
                 src={currentLearner.avatar} 
                 alt={currentLearner.name}
                 style={{ width: 44, height: 44, borderRadius: 8, objectFit: "cover", border: "2px solid var(--primary)" }}

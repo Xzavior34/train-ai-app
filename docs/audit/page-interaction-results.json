@@ -1,0 +1,33 @@
+{
+  "checks": [
+    {
+      "name": "Sign-in password visibility and sign-up browser Back",
+      "status": "PASS"
+    },
+    {
+      "name": "Forgot-password form opens",
+      "status": "PASS"
+    },
+    {
+      "name": "Marketplace dialog closes with Escape and restores focus on mobile",
+      "status": "PASS"
+    },
+    {
+      "name": "Users & Access tabs, table scrolling, filtering and invite dialog",
+      "status": "PASS"
+    },
+    {
+      "name": "Manager search only offers working manager pages",
+      "status": "PASS"
+    },
+    {
+      "name": "Owner search opens the owner Organizations page",
+      "status": "PASS"
+    },
+    {
+      "name": "Theme stays dark after switching from staff to learner",
+      "status": "PASS"
+    }
+  ],
+  "errors": []
+}

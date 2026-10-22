@@ -85,11 +85,16 @@ async function runVerification() {
   process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
   const { createClient } = require("@supabase/supabase-js");
   const testClient = createClient(
-    "https://djikuoucsuhdiyrhsduz.supabase.co",
-    "sb_publishable_mZQWX6ByDTehCprpYsP85g_1NCE0NIx"
+    "https://jeobggrtxeybxvlwpxvn.supabase.co",
+    "sb_publishable_BvoX4QvVa1-pG6mx7NsVUQ_4GXGlwaJ"
   );
 
-  const testEmail = "confirmtest_1791994309552@gmail.com";
+  const testEmail = `confirmtest_${Date.now()}@gmail.com`;
+  // Ensure unconfirmed user exists on jeobggrtxeybxvlwpxvn
+  await testClient.auth.signUp({
+    email: testEmail,
+    password: "Password123!",
+  });
   // Attempt with wrong password: must fail with invalid_credentials
   const wrongRes = await testClient.auth.signInWithPassword({
     email: testEmail,

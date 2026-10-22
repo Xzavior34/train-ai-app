@@ -37,7 +37,10 @@ test('Instructor workspace routing follows trusted roles without admin fallback'
  assert.deepEqual(getAllowedWorkspaces(['mentor']),['mentor']);
  assert.equal(resolveViewMode(['mentor']),'platform');
  assert(!getAvailableDashboards(['learner'],'trainailtd@gmail.com').includes('owner'));
- assert(getAvailableDashboards(['super_admin'],'someone@example.invalid').includes('owner'));
+ assert(getAvailableDashboards(['super_admin'],'trainailtd@gmail.com').includes('owner'));
+ assert(!getAvailableDashboards(['super_admin'],'someone@example.invalid').includes('owner'));
+ assert(!getAvailableDashboards(['admin','super_admin'],'info@sarafoundationafrica.com').includes('owner'));
+ assert.deepEqual(getAvailableDashboards(['admin'],'info@sarafoundationafrica.com'),['learner','organisation']);
 });
 
 test('Role lookup uses the authenticated RPC and falls back during schema-cache drift',async()=>{

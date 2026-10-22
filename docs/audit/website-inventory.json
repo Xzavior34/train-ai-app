@@ -804,7 +804,7 @@
       "file": "src/learner/screens/LeaderboardScreen.jsx",
       "name": "LeaderboardScreen",
       "status": "PASS",
-      "renderedBytes": 8562
+      "renderedBytes": 8603
     },
     {
       "file": "src/learner/screens/LessonScreen.jsx",
@@ -864,7 +864,7 @@
       "file": "src/pages/auth/AuthPage.jsx",
       "name": "AuthPage",
       "status": "PASS",
-      "renderedBytes": 6491
+      "renderedBytes": 6672
     },
     {
       "file": "src/pages/auth/MfaChallengeScreen.jsx",
@@ -894,7 +894,7 @@
       "file": "src/pages/public/AppointmentBookingPage.jsx",
       "name": "AppointmentBookingPage",
       "status": "PASS",
-      "renderedBytes": 23751
+      "renderedBytes": 23978
     },
     {
       "file": "src/pages/public/CertificateVerificationPage.jsx",
@@ -906,7 +906,7 @@
       "file": "src/pages/public/LandingPage.jsx",
       "name": "LandingPage",
       "status": "PASS",
-      "renderedBytes": 55641
+      "renderedBytes": 55649
     },
     {
       "file": "src/pages/public/MarketplacePage.jsx",
@@ -918,7 +918,7 @@
       "file": "src/pages/public/PlatformScreensTour.jsx",
       "name": "PlatformScreensTour",
       "status": "PASS",
-      "renderedBytes": 10353
+      "renderedBytes": 10361
     },
     {
       "file": "src/platform/admin/AdminAnalyticsScreen.jsx",
@@ -1176,7 +1176,7 @@
   "missingAssets": [],
   "databaseContracts": {
     "literalTables": 118,
-    "literalRpcs": 75,
+    "literalRpcs": 76,
     "missingRelations": [],
     "missingRpcs": []
   },

@@ -6,7 +6,7 @@ import { useSupabaseQuery } from "../lib/useSupabaseQuery.js";
 import { fetchMentorProfile, fetchCohortSessions, fetchMyManagedStudyGroups } from "../lib/api/schemaHelper.js";
 import { fetchMentorActiveCohorts } from "../lib/api/platform.js";
 import { fetchLeaderboard } from "../lib/api/learner.js";
-import { TOKENS, Sidebar, DashboardSwitcher, MobileMenuContext, ToastContext, NavigationContext, SignOutContext } from "./components/PlatformUI.jsx";
+import { TOKENS, Sidebar, DashboardSwitcher, MobileMenuContext, ToastContext, NavigationContext, WorkspaceContext, ActiveDashboardContext, SignOutContext } from "./components/PlatformUI.jsx";
 import { OrgPaymentCallbackScreen } from "./OrgPaymentCallbackScreen.jsx";
 import { AdminDashboardScreen } from "./admin/AdminDashboardScreen.jsx";
 import { PeopleScreen } from "./admin/PeopleScreen.jsx";
@@ -51,7 +51,7 @@ import { defaultWorkspaceForRoles, getAllowedWorkspaces, getAvailableDashboards,
 // organization role; Admin/Manager/Instructor is the full set.
 import { fetchAllOrganizationsWithUserCounts } from "../lib/api/platform.js";
 
-export default function TrainAIPlatformApp({ onSwitchToLearner, onSwitchDashboard, userRoles: userRolesProp, superAdminSelectedOrgId, setSuperAdminSelectedOrgId, onSignOut } = {}) {
+export default function TrainAIPlatformApp({ isActive = true, onSwitchToLearner, onSwitchDashboard, userRoles: userRolesProp, superAdminSelectedOrgId, setSuperAdminSelectedOrgId, onSignOut } = {}) {
   const { session, profileQuery, orgId, userRoles: fallbackUserRoles } = usePlatformData();
   const userRoles = userRolesProp && userRolesProp.length ? userRolesProp : fallbackUserRoles;
 
@@ -79,24 +79,35 @@ export default function TrainAIPlatformApp({ onSwitchToLearner, onSwitchDashboar
   ), [session?.user?.id]);
   const mentorLeaderboardQuery = useSupabaseQuery(async () => fetchLeaderboard(50), []);
 
+  const userEmail = session?.user?.email || profileQuery?.data?.email || "";
+  const isSuperAdminUser = isPlatformOwnerEmail(userEmail) && userRoles.includes("super_admin");
+
   const allOrgsQuery = useSupabaseQuery(async () => {
-    if (userRoles.includes("super_admin")) {
+    if (isSuperAdminUser) {
       return await fetchAllOrganizationsWithUserCounts();
     }
     return [];
-  }, [userRoles]);
+  }, [isSuperAdminUser]);
   const allOrgs = allOrgsQuery.data || [];
 
-  // superAdminSelectedOrgId is now a prop from App.jsx, shared with
-  // PlatformOwnerApp - Super Admin picking "View" on an org from the Owner
-  // dashboard needs this to survive the switch into this component, which
-  // local state here couldn't do once Owner became a separate top-level
-  // component instead of a workspace tab inside this one.
-  const effectiveOrgId = (userRoles.includes("super_admin") && superAdminSelectedOrgId) ? superAdminSelectedOrgId : orgId;
+  // Default to the canonical Digital Users organization (tech-learning) where
+  // unaffiliated / direct signups land, so the Platform Owner immediately
+  // sees and manages the public/individual learners without an extra click.
+  const digitalOrg = allOrgs.find((o) => o.slug === "tech-learning" || o.slug === "digital-users") || allOrgs[0];
+  const defaultOrgId = digitalOrg ? digitalOrg.id : (orgId || "tech-learning");
+  const effectiveOrgId = (isSuperAdminUser && superAdminSelectedOrgId)
+    ? superAdminSelectedOrgId
+    : (isSuperAdminUser ? defaultOrgId : orgId);
 
-  const orgSelector = userRoles.includes("super_admin") ? {
+  useEffect(() => {
+    if (isSuperAdminUser && !superAdminSelectedOrgId && digitalOrg?.id) {
+      setSuperAdminSelectedOrgId?.(digitalOrg.id);
+    }
+  }, [isSuperAdminUser, superAdminSelectedOrgId, digitalOrg?.id, setSuperAdminSelectedOrgId]);
+
+  const orgSelector = isSuperAdminUser ? {
     orgs: allOrgs,
-    selectedOrgId: superAdminSelectedOrgId,
+    selectedOrgId: effectiveOrgId,
     onSelectOrg: (id) => setSuperAdminSelectedOrgId(id),
   } : null;
 
@@ -196,6 +207,8 @@ export default function TrainAIPlatformApp({ onSwitchToLearner, onSwitchDashboar
   }
 
   return (
+    <ActiveDashboardContext.Provider value={isActive}>
+    <WorkspaceContext.Provider value={workspace}>
     <SignOutContext.Provider value={onSignOut}>
       <NavigationContext.Provider value={navigateToScreen}>
         <MobileMenuContext.Provider value={() => setMobileOpen(true)}>
@@ -218,7 +231,7 @@ export default function TrainAIPlatformApp({ onSwitchToLearner, onSwitchDashboar
             <div className="ta-main">
               {workspace === "admin" && (
                 <>
-                  {screen === "dashboard" && <AdminDashboardScreen orgId={effectiveOrgId} profileQuery={profileQuery} setScreen={setScreen} orgSelector={orgSelector} isPlatformOwner={userRoles.includes("super_admin")} />}
+                  {screen === "dashboard" && <AdminDashboardScreen orgId={effectiveOrgId} profileQuery={profileQuery} setScreen={setScreen} orgSelector={orgSelector} isPlatformOwner={isSuperAdminUser} />}
                   {screen === "demos" && <DemoRequestsScreen orgSelector={orgSelector} />}
                   {screen === "people" && <PeopleScreen orgId={effectiveOrgId} orgSelector={orgSelector} setScreen={setScreen} currentUserId={session?.user?.id} />}
                   {screen === "content" && <ContentScreen orgId={effectiveOrgId} orgSelector={orgSelector} setScreen={setScreen} selectedCourseId={selectedCourseId} setSelectedCourseId={setSelectedCourseId} currentUserId={session?.user?.id} />}
@@ -233,7 +246,7 @@ export default function TrainAIPlatformApp({ onSwitchToLearner, onSwitchDashboar
                   {screen === "workforce" && <WorkforceIntelligenceScreen orgId={effectiveOrgId} orgSelector={orgSelector} currentUserId={session?.user?.id} />}
                   {screen === "moderation" && <ModerationScreen orgSelector={orgSelector} setScreen={setScreen} orgId={effectiveOrgId} currentUserId={session?.user?.id} />}
                   {screen === "studygroups" && <AdminStudyGroupsScreen orgId={effectiveOrgId} orgSelector={orgSelector} />}
-                  {screen === "analytics" && <AdminAnalyticsScreen orgId={effectiveOrgId} orgSelector={orgSelector} setScreen={setScreen} isPlatformOwner={userRoles.includes("super_admin")} />}
+                  {screen === "analytics" && <AdminAnalyticsScreen orgId={effectiveOrgId} orgSelector={orgSelector} setScreen={setScreen} isPlatformOwner={isSuperAdminUser} />}
                   {screen === "cohorts" && (
                     <CohortsScreen
                       orgId={effectiveOrgId}
@@ -260,7 +273,7 @@ export default function TrainAIPlatformApp({ onSwitchToLearner, onSwitchDashboar
                   {screen === "leaderboard" && <LeaderboardScreen back={() => setScreen("dashboard")} push={(s) => setScreen(s)} />}
                   {screen === "assessments" && <AssessmentsScreen orgId={effectiveOrgId} orgSelector={orgSelector} setScreen={setScreen} setSelectedCourseId={setSelectedCourseId} scope="admin" />}
                   {screen === "roleaccess" && <OrgRoleAccessScreen orgId={effectiveOrgId} orgSelector={orgSelector} currentUserId={session?.user?.id} />}
-                  {screen === "integrations" && <IntegrationsScreen orgId={effectiveOrgId} userId={session?.user?.id} orgSelector={orgSelector} setScreen={setScreen} isPlatformOwner={userRoles.includes("super_admin")} />}
+                  {screen === "integrations" && <IntegrationsScreen orgId={effectiveOrgId} userId={session?.user?.id} orgSelector={orgSelector} setScreen={setScreen} isPlatformOwner={isSuperAdminUser} />}
                   {screen === "settings" && <SettingsHubScreen orgId={effectiveOrgId} profileQuery={profileQuery} orgSelector={orgSelector} setScreen={setScreen} userEmail={session?.user?.email} session={session} />}
                 </>
               )}
@@ -325,7 +338,7 @@ export default function TrainAIPlatformApp({ onSwitchToLearner, onSwitchDashboar
               currentDashboard={DASHBOARDS.ORGANISATION}
               availableDashboards={getAvailableDashboards(userRoles, session?.user?.email || profileQuery?.data?.email)}
               roleLabel={
-                userRoles.includes("super_admin")
+                isSuperAdminUser
                   ? "Super Admin"
                   : userRoles.includes("admin") || userRoles.includes("manager")
                     ? "Admin"
@@ -344,5 +357,7 @@ export default function TrainAIPlatformApp({ onSwitchToLearner, onSwitchDashboar
     </MobileMenuContext.Provider>
   </NavigationContext.Provider>
 </SignOutContext.Provider>
+    </WorkspaceContext.Provider>
+    </ActiveDashboardContext.Provider>
 );
 }

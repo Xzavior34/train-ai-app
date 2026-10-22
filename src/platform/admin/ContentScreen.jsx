@@ -1,3 +1,4 @@
+import { CourseImage } from "../../components/common/CourseImage.jsx";
 import React, { useState, useEffect, useContext } from "react";
 import { TopBar, Tag, ToastContext, Switch } from "../components/PlatformUI.jsx";
 import { Plus, ArrowLeft, Save, Trash2, BookOpen, Layers, Users, Eye, CheckCircle2, Clock, DollarSign, Upload, FileText, Settings, ShieldCheck, X, Check, GraduationCap, Award, ChevronUp, ChevronDown, Brain } from "lucide-react";
@@ -299,7 +300,7 @@ export function ContentScreen({ orgId, orgSelector, setScreen, selectedCourseId,
               <div className="ta-row ta-between ta-gap16" style={{ flexWrap: "wrap" }}>
                 <div className="ta-row ta-gap16" style={{ minWidth: 0, flex: 1 }}>
                   {activeCourse.cover_image_url ? (
-                    <img
+                    <CourseImage
                       src={activeCourse.cover_image_url}
                       alt=""
                       style={{ width: 100, height: 75, objectFit: "cover", borderRadius: 10, flexShrink: 0, border: "1px solid var(--border)" }}
@@ -476,7 +477,7 @@ export function ContentScreen({ orgId, orgSelector, setScreen, selectedCourseId,
                   <div style={{ fontWeight: 700, fontSize: 16 }}>Cover Image & Media</div>
                   {editCoverImageUrl && (
                     <div style={{ borderRadius: 10, overflow: "hidden", border: "1px solid var(--border)", maxHeight: 180 }}>
-                      <img src={editCoverImageUrl} alt="Cover Preview" style={{ width: "100%", height: 180, objectFit: "cover" }} />
+                      <CourseImage src={editCoverImageUrl} alt="Cover Preview" style={{ width: "100%", height: 180, objectFit: "cover" }} />
                     </div>
                   )}
 
@@ -1212,7 +1213,7 @@ export function ContentScreen({ orgId, orgSelector, setScreen, selectedCourseId,
                 return (
                   <div key={c.id} className="ta-card ta-card-hover" style={{ display: "flex", flexDirection: "column", height: "100%", padding: 0, overflow: "hidden", borderRadius: 10, border: "1px solid var(--border)" }}>
                     <div style={{ position: "relative", width: "100%", height: 148, overflow: "hidden", background: "#0F172A" }}>
-                      <img
+                      <CourseImage
                         src={coverImg}
                         alt=""
                         style={{ width: "100%", height: "100%", objectFit: "cover" }}
