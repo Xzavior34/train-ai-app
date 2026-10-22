@@ -54,6 +54,25 @@ try {
   await page.getByRole('button', { name: /Chat History/ }).click();
   await page.setViewportSize({ width: 360, height: 844 });
   await check('coach-mobile');
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await page.locator('.tai-sub-item').filter({ hasText: /^Feed$/ }).click();
+  await page.getByRole('button', { name: 'Open post by Fixture author' }).waitFor();
+  if (await page.getByText('END_OF_FULL_POST', { exact: false }).count()) throw new Error('Feed renders the entire post before opening it');
+  await check('feed-desktop');
+  await page.getByRole('button', { name: 'Open post by Fixture author' }).click();
+  await page.getByText('END_OF_FULL_POST', { exact: false }).waitFor();
+  await page.getByText('A comment from another member.', { exact: true }).waitFor();
+  await page.getByLabel('Your comment').fill('Fixture reply persists after reopening.');
+  await page.getByRole('button', { name: 'Post comment', exact: true }).click();
+  await page.getByText('Fixture reply persists after reopening.', { exact: true }).waitFor();
+  await check('post-detail-desktop');
+  await page.setViewportSize({ width: 360, height: 844 });
+  await check('post-detail-mobile');
+  await page.getByRole('button', { name: 'Back', exact: true }).click();
+  await page.getByRole('heading', { name: 'Community feed', exact: true }).waitFor();
+  await check('feed-mobile');
+  await page.getByRole('button', { name: /2 comments/ }).click();
+  await page.getByText('Fixture reply persists after reopening.', { exact: true }).waitFor();
   if (errors.length) throw new Error(errors.join('\n'));
   console.log(JSON.stringify({ status: 'PASS', results }, null, 2));
 } finally {

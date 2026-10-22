@@ -1,652 +1,181 @@
-import React, { useState } from "react";
-import { TopBar, Avatar, Tag, timeAgo, initialsOf } from "../components/LearnerUI.jsx";
-import {
-  MessageSquare, Heart, Send, Search, Filter, MessageCircle,
-  Share2, MoreVertical, Plus, CheckCircle2, User, Flame, BookOpen, Users, ArrowLeft
-} from "lucide-react";
+import React, { useEffect, useState } from "react";
+import { TopBar, Avatar, timeAgo, initialsOf } from "../components/LearnerUI.jsx";
+import { Heart, MessageSquare, Plus, Search, Send } from "lucide-react";
 import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
-import {
-  fetchCommunityPosts, createCommunityPost, togglePostReaction,
-  addPostComment, deleteCommunityPost
-} from "../../lib/api/schemaHelper.js";
+import { fetchCommunityPosts, createCommunityPost, togglePostReaction, addPostComment } from "../../lib/api/schemaHelper.js";
 
-const FEED_TAGS = [
-  "All",
-  "General",
-  "AI & ML",
-  "Web Development",
-  "Projects",
-  "Questions",
-  "Announcements",
-  "Study Lounge"
-];
+const TYPE_LABELS = { general: "General", question: "Questions", tip: "Tips", announcement: "Announcements" };
+const authorName = row => row?.user_profiles?.display_name || row?.user_profiles?.full_name || row?.author?.display_name || "Community member";
+const postComments = post => post?.post_comments || post?.comments || [];
+const postReactions = post => post?.post_reactions || post?.reactions || [];
 
-export function CommunityFeedScreen({
-  session,
-  userProfile,
-  showToast = () => {},
-  back,
-  push,
-  goTab
-}) {
-  const [selectedTag, setSelectedTag] = useState("All");
-  const [searchQuery, setSearchQuery] = useState("");
-  const [composerOpen, setComposerOpen] = useState(false);
-  const [newPostText, setNewPostText] = useState("");
-  const [newPostTag, setNewPostTag] = useState("General");
-  const [submittingPost, setSubmittingPost] = useState(false);
-  const [expandedCommentsPostId, setExpandedCommentsPostId] = useState(null);
-  const [commentInputs, setCommentInputs] = useState({});
-  const [submittingComment, setSubmittingComment] = useState(false);
-
-  // Live posts query
-  const postsQuery = useSupabaseQuery(async () => {
-    return fetchCommunityPosts();
-  }, []);
-
-  const posts = postsQuery.data || [];
-
-  // Filtered posts
-  const filteredPosts = posts.filter(post => {
-    const matchesTag = selectedTag === "All" || (post.category || post.tags?.[0] || "General").toLowerCase() === selectedTag.toLowerCase();
-    const query = searchQuery.trim().toLowerCase();
-    const matchesSearch = !query ||
-      (post.content || post.body || "").toLowerCase().includes(query) ||
-      (post.title || "").toLowerCase().includes(query) ||
-      (post.author?.full_name || post.user_profiles?.full_name || "").toLowerCase().includes(query);
-    return matchesTag && matchesSearch;
-  });
-
-  const handleCreatePost = async (e) => {
-    e?.preventDefault();
-    if (!newPostText.trim()) {
-      showToast("Please enter some content for your post", "warning");
-      return;
-    }
-    if (!session?.user?.id) {
-      showToast("Please sign in to create a post", "error");
-      return;
-    }
-
-    setSubmittingPost(true);
-    try {
-      await createCommunityPost({
-        userId: session.user.id,
-        content: newPostText.trim(),
-        category: newPostTag,
-        tags: [newPostTag]
-      });
-      setNewPostText("");
-      setComposerOpen(false);
-      showToast("Post shared with the community!", "success");
-      postsQuery.refetch();
-    } catch (err) {
-      console.error("Failed to create post:", err);
-      showToast(err.message || "Failed to publish post", "error");
-    } finally {
-      setSubmittingPost(false);
-    }
-  };
-
-  const handleToggleLike = async (postId) => {
-    if (!session?.user?.id) {
-      showToast("Please sign in to like posts", "warning");
-      return;
-    }
-    try {
-      await togglePostReaction(postId, session.user.id);
-      postsQuery.refetch();
-    } catch (err) {
-      console.error("Failed to toggle reaction:", err);
-    }
-  };
-
-  const handleAddComment = async (postId) => {
-    const text = commentInputs[postId]?.trim();
-    if (!text) return;
-    if (!session?.user?.id) {
-      showToast("Please sign in to reply", "warning");
-      return;
-    }
-
-    setSubmittingComment(true);
-    try {
-      await addPostComment(postId, session.user.id, text);
-      setCommentInputs(prev => ({ ...prev, [postId]: "" }));
-      showToast("Comment added", "success");
-      postsQuery.refetch();
-    } catch (err) {
-      console.error("Failed to add comment:", err);
-      showToast("Failed to post comment", "error");
-    } finally {
-      setSubmittingComment(false);
-    }
-  };
-
-  const handleAuthorClick = (authorId) => {
-    if (!authorId) return;
-    if (push) {
-      push("mentors", { mentorId: authorId });
-    }
-  };
-
-  return (
-    <div className="tai-fade-in" style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-      <TopBar title="Community Feed" sub="Real-time discussions, questions, and insights" onBack={back} />
-
-      {/* =========================================================================
-          HERO BANNER: Matching platform fluid entrance design language
-          ========================================================================= */}
-      <div
-        className="tai-card tai-hero-card anim-fluid-entrance"
-        style={{
-          borderRadius: 14,
-          padding: "clamp(18px, 2.5vw, 24px)",
-          position: "relative",
-          overflow: "hidden"
-        }}
-      >
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 16, position: "relative", zIndex: 1 }}>
-          <div style={{ maxWidth: 560 }}>
-            <div style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "5px 12px", borderRadius: 999, background: "rgba(37, 99, 235, 0.25)", border: "1px solid rgba(59, 130, 246, 0.45)", fontSize: 11, fontWeight: 800, color: "#60A5FA", marginBottom: 10 }}>
-              <Flame size={13} color="#60A5FA" />
-              <span style={{ letterSpacing: "0.04em" }}>LIVE COMMUNITY FEED</span>
-            </div>
-            <h1 className="tai-hero-title" style={{ margin: 0, fontSize: "clamp(20px, 2.4vw, 26px)", fontWeight: 800, color: "#FFFFFF", lineHeight: 1.25 }}>
-              Connect, Learn & Share with Peers
-            </h1>
-            <p className="tai-hero-desc" style={{ margin: "8px 0 0 0", fontSize: 13, color: "rgba(255, 255, 255, 0.85)", lineHeight: 1.5 }}>
-              Ask questions, showcase your projects, discuss AI developments, and engage with verified instructors and peers.
-            </p>
-          </div>
-
-          <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
-            <button
-              type="button"
-              className="tai-btn tai-btn-primary"
-              onClick={() => setComposerOpen(true)}
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: 8,
-                padding: "10px 18px",
-                borderRadius: 10,
-                fontWeight: 700,
-                fontSize: 13,
-                background: "#2563EB",
-                color: "#FFFFFF",
-                border: "none",
-                boxShadow: "0 4px 14px rgba(37, 99, 235, 0.4)"
-              }}
-            >
-              <Plus size={16} />
-              <span>Create Post</span>
-            </button>
-            <button
-              type="button"
-              className="tai-btn"
-              onClick={() => push ? push("mentors") : goTab?.("community")}
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: 8,
-                padding: "10px 16px",
-                borderRadius: 10,
-                fontWeight: 700,
-                fontSize: 13,
-                background: "rgba(37, 99, 235, 0.28)",
-                border: "1.5px solid #3B82F6",
-                color: "#60A5FA",
-                cursor: "pointer",
-                transition: "all 0.15s ease"
-              }}
-            >
-              <Users size={16} color="#60A5FA" />
-              <span>Instructors</span>
-            </button>
-          </div>
-        </div>
-
-        {/* Community Stat Pills */}
-        <div style={{ display: "flex", gap: 20, flexWrap: "wrap", marginTop: 20, paddingTop: 16, borderTop: "1px solid rgba(255, 255, 255, 0.12)" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12, color: "rgba(255, 255, 255, 0.85)" }}>
-            <MessageCircle size={14} color="#60A5FA" />
-            <strong style={{ color: "#FFFFFF" }}>{posts.length}</strong> Total Posts
-          </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12, color: "rgba(255, 255, 255, 0.85)" }}>
-            <BookOpen size={14} color="#60A5FA" />
-            <strong style={{ color: "#FFFFFF" }}>Verified</strong> Instructors Active
-          </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12, color: "rgba(255, 255, 255, 0.85)" }}>
-            <CheckCircle2 size={14} color="#34D399" />
-            <strong style={{ color: "#FFFFFF" }}>Real-time</strong> Synced
-          </div>
-        </div>
-      </div>
-
-      {/* =========================================================================
-          COMPOSER DRAWER / CARD
-          ========================================================================= */}
-      {composerOpen && (
-        <div className="tai-card" style={{ padding: 20, borderRadius: 14, border: "1px solid var(--primary)" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-              <Avatar
-                src={userProfile?.avatar_url || session?.user?.user_metadata?.avatar_url}
-                name={userProfile?.full_name || session?.user?.email || "You"}
-                size={36}
-              />
-              <div>
-                <div style={{ fontWeight: 700, fontSize: 14, color: "var(--text)" }}>
-                  {userProfile?.full_name || session?.user?.email || "Share an Update"}
-                </div>
-                <div style={{ fontSize: 11, color: "var(--text-3)" }}>
-                  Posting publicly to Community Feed
-                </div>
-              </div>
-            </div>
-            <button
-              type="button"
-              className="tai-btn tai-btn-ghost"
-              onClick={() => setComposerOpen(false)}
-              style={{ fontSize: 12, padding: "4px 8px" }}
-            >
-              Cancel
-            </button>
-          </div>
-
-          <textarea
-            value={newPostText}
-            onChange={(e) => setNewPostText(e.target.value)}
-            placeholder="What would you like to discuss or share with the community today?"
-            rows={4}
-            className="tai-input"
-            style={{
-              width: "100%",
-              boxSizing: "border-box",
-              padding: 12,
-              borderRadius: 10,
-              fontSize: 14,
-              fontFamily: "inherit",
-              resize: "vertical",
-              color: "var(--text)",
-              background: "var(--surface-2)"
-            }}
-          />
-
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 14, flexWrap: "wrap", gap: 10 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <span style={{ fontSize: 12, color: "var(--text-2)" }}>Category:</span>
-              <select
-                value={newPostTag}
-                onChange={(e) => setNewPostTag(e.target.value)}
-                style={{
-                  padding: "6px 12px",
-                  borderRadius: 8,
-                  background: "var(--surface-2)",
-                  border: "1px solid var(--border)",
-                  color: "var(--text)",
-                  fontSize: 12
-                }}
-              >
-                {FEED_TAGS.filter(t => t !== "All").map(t => (
-                  <option key={t} value={t}>{t}</option>
-                ))}
-              </select>
-            </div>
-
-            <button
-              type="button"
-              className="tai-btn tai-btn-primary"
-              onClick={handleCreatePost}
-              disabled={submittingPost || !newPostText.trim()}
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: 8,
-                padding: "8px 18px",
-                borderRadius: 8,
-                fontWeight: 700,
-                fontSize: 13
-              }}
-            >
-              <Send size={14} />
-              <span>{submittingPost ? "Publishing..." : "Publish Post"}</span>
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* =========================================================================
-          FILTERS & SEARCH BAR
-          ========================================================================= */}
-      <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-        <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
-          <div style={{ flex: 1, minWidth: 240, position: "relative" }}>
-            <Search size={16} style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", color: "var(--text-3)" }} />
-            <input
-              type="text"
-              className="tai-input"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search posts, topics, or authors..."
-              style={{
-                width: "100%",
-                boxSizing: "border-box",
-                padding: "9px 12px 9px 36px",
-                borderRadius: 10,
-                background: "var(--surface)",
-                border: "1.5px solid var(--border)",
-                color: "var(--text)",
-                fontSize: 13
-              }}
-            />
-          </div>
-
-          {!composerOpen && (
-            <button
-              type="button"
-              className="tai-btn tai-btn-primary"
-              onClick={() => setComposerOpen(true)}
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: 6,
-                padding: "9px 16px",
-                borderRadius: 10,
-                fontSize: 13,
-                fontWeight: 600
-              }}
-            >
-              <Plus size={15} />
-              <span>New Post</span>
-            </button>
-          )}
-        </div>
-
-        {/* Tag pills */}
-        <div style={{ display: "flex", gap: 8, overflowX: "auto", paddingBottom: 4, scrollbarWidth: "none" }}>
-          {FEED_TAGS.map(tag => {
-            const active = selectedTag === tag;
-            return (
-              <button
-                key={tag}
-                type="button"
-                onClick={() => setSelectedTag(tag)}
-                style={{
-                  padding: "6px 14px",
-                  borderRadius: 999,
-                  fontSize: 12,
-                  fontWeight: active ? 700 : 500,
-                  background: active ? "var(--primary)" : "var(--surface)",
-                  color: active ? "#ffffff" : "var(--text-2)",
-                  border: active ? "1px solid var(--primary)" : "1px solid var(--border)",
-                  cursor: "pointer",
-                  whiteSpace: "nowrap",
-                  transition: "all 0.15s ease"
-                }}
-              >
-                {tag}
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* =========================================================================
-          POSTS FEED
-          ========================================================================= */}
-      {postsQuery.loading && (
-        <div className="tai-empty" style={{ padding: 40, color: "var(--text-3)" }}>
-          Loading community discussions...
-        </div>
-      )}
-
-      {!postsQuery.loading && filteredPosts.length === 0 && (
-        <div className="tai-card" style={{ padding: 40, textAlign: "center", borderRadius: 14 }}>
-          <MessageSquare size={40} color="var(--text-3)" style={{ margin: "0 auto 12px auto", opacity: 0.6 }} />
-          <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: "var(--text)" }}>
-            No posts found
-          </h3>
-          <p style={{ margin: "6px 0 16px 0", fontSize: 13, color: "var(--text-2)" }}>
-            {searchQuery || selectedTag !== "All"
-              ? "Try adjusting your search or category filter"
-              : "Be the first one to start a conversation in the community!"}
-          </p>
-          <button
-            type="button"
-            className="tai-btn tai-btn-primary"
-            onClick={() => setComposerOpen(true)}
-            style={{ display: "inline-flex", alignItems: "center", gap: 6 }}
-          >
-            <Plus size={15} />
-            <span>Create the First Post</span>
-          </button>
-        </div>
-      )}
-
-      <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-        {filteredPosts.map(post => {
-          const authorName = post.user_profiles?.full_name || post.user_profiles?.display_name || post.author?.full_name || post.author?.display_name || "Community Member";
-          const authorAvatar = post.user_profiles?.avatar_url || post.author?.avatar_url;
-          const authorRole = post.user_profiles?.role || post.author?.role || "Learner";
-          const isInstructor = authorRole === "mentor" || authorRole === "instructor" || authorRole === "admin";
-          const authorId = post.user_id || post.author_id || post.user_profiles?.id;
-          const isLiked = (post.reactions || []).some(r => r.user_id === session?.user?.id);
-          const likeCount = (post.reactions || []).length || post.like_count || 0;
-          const comments = post.comments || post.replies || [];
-          const isExpanded = expandedCommentsPostId === post.id;
-
-          return (
-            <div
-              key={post.id}
-              className="tai-card anim-fluid-entrance"
-              style={{
-                padding: 20,
-                borderRadius: 14,
-                display: "flex",
-                flexDirection: "column",
-                gap: 14,
-                background: "var(--surface)",
-                border: isInstructor ? "1.5px solid var(--primary-light, rgba(37, 99, 235, 0.4))" : "1px solid var(--border)",
-                boxShadow: "var(--shadow-card)"
-              }}
-            >
-              {/* Post Header */}
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-                <div
-                  style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer" }}
-                  onClick={() => handleAuthorClick(authorId)}
-                >
-                  <Avatar src={authorAvatar} name={authorName} size={42} />
-                  <div>
-                    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                      <span style={{ fontWeight: 800, fontSize: 14.5, color: "var(--text)" }}>
-                        {authorName}
-                      </span>
-                      {isInstructor && (
-                        <span style={{
-                          fontSize: 10,
-                          fontWeight: 800,
-                          padding: "2px 7px",
-                          borderRadius: 4,
-                          background: "var(--primary-tint)",
-                          color: "var(--primary)",
-                          border: "1px solid var(--border)"
-                        }}>
-                          INSTRUCTOR
-                        </span>
-                      )}
-                    </div>
-                    <div style={{ fontSize: 11.5, color: "var(--text-3)", marginTop: 2 }}>
-                      {timeAgo(post.created_at)} &bull; {post.category || post.tags?.[0] || "General"}
-                    </div>
-                  </div>
-                </div>
-
-                <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                  {post.category && (
-                    <Tag tone={isInstructor ? "blue" : "gray"}>
-                      {post.category}
-                    </Tag>
-                  )}
-                </div>
-              </div>
-
-              {/* Post Title */}
-              {post.title && (
-                <div style={{ fontSize: 15.5, fontWeight: 800, color: "var(--text)", lineHeight: 1.3 }}>
-                  {post.title}
-                </div>
-              )}
-
-              {/* Post Content */}
-              <div style={{
-                fontSize: 14,
-                lineHeight: 1.6,
-                color: "var(--text)",
-                whiteSpace: "pre-wrap"
-              }}>
-                {post.content || post.body}
-              </div>
-
-              {/* Post Actions Bar */}
-              <div style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 16,
-                paddingTop: 12,
-                borderTop: "1px solid var(--border)"
-              }}>
-                <button
-                  type="button"
-                  onClick={() => handleToggleLike(post.id)}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 6,
-                    background: "none",
-                    border: "none",
-                    color: isLiked ? "var(--danger, #ef4444)" : "var(--text-2)",
-                    fontSize: 13,
-                    fontWeight: 600,
-                    cursor: "pointer",
-                    padding: "4px 8px",
-                    borderRadius: 6,
-                    transition: "all 0.15s ease"
-                  }}
-                >
-                  <Heart size={16} fill={isLiked ? "#ef4444" : "none"} color={isLiked ? "#ef4444" : "currentColor"} />
-                  <span>{likeCount}</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setExpandedCommentsPostId(isExpanded ? null : post.id)}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 6,
-                    background: "none",
-                    border: "none",
-                    color: isExpanded ? "var(--primary)" : "var(--text-2)",
-                    fontSize: 13,
-                    fontWeight: 600,
-                    cursor: "pointer",
-                    padding: "4px 8px",
-                    borderRadius: 6
-                  }}
-                >
-                  <MessageSquare size={16} />
-                  <span>{comments.length} {comments.length === 1 ? "Comment" : "Comments"}</span>
-                </button>
-              </div>
-
-              {/* Expanded Comments Section */}
-              {isExpanded && (
-                <div style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: 12,
-                  marginTop: 6,
-                  padding: 14,
-                  borderRadius: 10,
-                  background: "var(--surface-2)",
-                  border: "1px solid var(--border)"
-                }}>
-                  {/* Comments list */}
-                  {comments.length > 0 ? (
-                    comments.map(c => (
-                      <div key={c.id} style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
-                        <Avatar
-                          src={c.user_profiles?.avatar_url}
-                          name={c.user_profiles?.full_name || c.user_profiles?.display_name || "Member"}
-                          size={30}
-                        />
-                        <div style={{
-                          flex: 1,
-                          background: "var(--surface)",
-                          padding: "10px 14px",
-                          borderRadius: 10,
-                          border: "1px solid var(--border)"
-                        }}>
-                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 3 }}>
-                            <span style={{ fontWeight: 800, fontSize: 12.5, color: "var(--text)" }}>
-                              {c.user_profiles?.full_name || c.user_profiles?.display_name || "Member"}
-                            </span>
-                            <span style={{ fontSize: 11, color: "var(--text-3)" }}>
-                              {timeAgo(c.created_at)}
-                            </span>
-                          </div>
-                          <div style={{ fontSize: 13, color: "var(--text)", lineHeight: 1.45 }}>
-                            {c.content || c.body}
-                          </div>
-                        </div>
-                      </div>
-                    ))
-                  ) : (
-                    <div style={{ fontSize: 12.5, color: "var(--text-3)", textAlign: "center", padding: 8 }}>
-                      No comments yet. Be the first to share your thoughts!
-                    </div>
-                  )}
-
-                  {/* Add comment input */}
-                  <div style={{ display: "flex", gap: 8, marginTop: 4 }}>
-                    <input
-                      type="text"
-                      className="tai-input"
-                      placeholder="Write a comment..."
-                      value={commentInputs[post.id] || ""}
-                      onChange={(e) => setCommentInputs(prev => ({ ...prev, [post.id]: e.target.value }))}
-                      onKeyDown={(e) => { if (e.key === "Enter") handleAddComment(post.id); }}
-                      style={{
-                        flex: 1,
-                        padding: "8px 12px",
-                        borderRadius: 8,
-                        background: "var(--surface)",
-                        border: "1px solid var(--border)",
-                        color: "var(--text)",
-                        fontSize: 13
-                      }}
-                    />
-                    <button
-                      type="button"
-                      className="tai-btn tai-btn-primary"
-                      onClick={() => handleAddComment(post.id)}
-                      disabled={submittingComment || !commentInputs[post.id]?.trim()}
-                      style={{ padding: "8px 14px", borderRadius: 8 }}
-                    >
-                      <Send size={14} />
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
+function PostText({ content }) {
+  return <div className="tai-feed-full-text">{String(content || "").split(/(https?:\/\/[^\s]+)/g).map((part, index) =>
+    /^https?:\/\//i.test(part)
+      ? <a key={index} href={part} target="_blank" rel="noopener noreferrer">{part}</a>
+      : <React.Fragment key={index}>{part}</React.Fragment>
+  )}</div>;
 }
 
+export function CommunityFeedScreen({ session, showToast = () => {}, back, push, params = {} }) {
+  const [search, setSearch] = useState("");
+  const [selectedType, setSelectedType] = useState("all");
+  const [composerOpen, setComposerOpen] = useState(false);
+  const [draft, setDraft] = useState("");
+  const [draftType, setDraftType] = useState("general");
+  const [publishing, setPublishing] = useState(false);
+  const [comment, setComment] = useState("");
+  const [replying, setReplying] = useState(false);
+  const [reacting, setReacting] = useState(null);
+  const [localPostId, setLocalPostId] = useState(null);
+  const query = useSupabaseQuery(() => fetchCommunityPosts(), []);
+  const posts = query.data || [];
+  const selectedId = params.postId || localPostId;
+  const selectedPost = posts.find(post => post.id === selectedId);
+  const filteredPosts = posts.filter(post => {
+    const text = [post.title, post.content, post.body, authorName(post)].join(" ").toLowerCase();
+    return (!search.trim() || text.includes(search.trim().toLowerCase())) &&
+      (selectedType === "all" || (post.post_type || "general") === selectedType);
+  });
+  useEffect(() => {
+    setComment("");
+    window.scrollTo({ top: 0 });
+  }, [selectedId]);
+
+  function openPost(post) {
+    if (push) push("communityFeed", { postId: post.id });
+    else setLocalPostId(post.id);
+  }
+  function closePost() {
+    if (push && back) back();
+    else setLocalPostId(null);
+  }
+  async function publish(event) {
+    event.preventDefault();
+    if (!draft.trim() || publishing || !session?.user?.id) return;
+    setPublishing(true);
+    try {
+      await createCommunityPost({ userId: session.user.id, content: draft.trim(), postType: draftType });
+      setDraft("");
+      setComposerOpen(false);
+      query.refetch();
+      showToast("Post submitted. It will appear once approved.");
+    } catch (error) { showToast(error.message || "Could not publish your post. Please retry."); }
+    finally { setPublishing(false); }
+  }
+  async function like(post) {
+    if (!session?.user?.id || reacting) return;
+    setReacting(post.id);
+    try {
+      await togglePostReaction(post.id, session.user.id);
+      query.refetch();
+    } catch (error) { showToast(error.message || "Could not update your reaction."); }
+    finally { setReacting(null); }
+  }
+  async function reply(event) {
+    event.preventDefault();
+    if (!selectedId || !comment.trim() || replying || !session?.user?.id) return;
+    setReplying(true);
+    try {
+      await addPostComment(selectedId, session.user.id, comment.trim());
+      setComment("");
+      query.refetch();
+    } catch (error) { showToast(error.message || "Could not post your comment. Please retry."); }
+    finally { setReplying(false); }
+  }
+  function header(post) {
+    const name = authorName(post);
+    return <div className="tai-feed-author">
+      <Avatar size={38} src={post.user_profiles?.avatar_url || post.author?.avatar_url} initials={initialsOf(name)} />
+      <div style={{ minWidth: 0 }}>
+        <div className="tai-feed-author-name">{name}</div>
+        <div className="tai-feed-meta">{timeAgo(post.created_at)} · {TYPE_LABELS[post.post_type] || "General"}</div>
+      </div>
+    </div>;
+  }
+  function actions(post, detail = false) {
+    const reactions = postReactions(post);
+    const liked = reactions.some(reaction => reaction.user_id === session?.user?.id);
+    const comments = postComments(post);
+    return <div className="tai-feed-actions">
+      <button type="button" className="tai-btn tai-btn-ghost tai-btn-sm" aria-pressed={liked}
+        disabled={reacting === post.id} onClick={() => like(post)}>
+        <Heart size={16} fill={liked ? "currentColor" : "none"} />
+        {reactions.length || post.like_count || 0} likes
+      </button>
+      {!detail && <button type="button" className="tai-btn tai-btn-ghost tai-btn-sm" onClick={() => openPost(post)}>
+        <MessageSquare size={16} />{comments.length} comments
+      </button>}
+      {!detail && <button type="button" className="tai-btn tai-btn-ghost tai-btn-sm" onClick={() => openPost(post)}>Read post →</button>}
+    </div>;
+  }
+
+  return <div className="tai-feed-page tai-fade-in">
+    {selectedId ? <>
+      <TopBar title="Discussion" onBack={closePost} />
+      {query.loading && !selectedPost ? <div className="tai-card tai-empty">Loading discussion...</div> :
+        selectedPost ? <>
+          <article className="tai-card tai-feed-detail">
+            {header(selectedPost)}
+            {selectedPost.title && <h1 className="tai-feed-post-title">{selectedPost.title}</h1>}
+            <PostText content={selectedPost.content || selectedPost.body} />
+            {actions(selectedPost, true)}
+          </article>
+          <section className="tai-card tai-feed-comments" aria-label="Comments">
+            <h2 className="tai-title-sm">Comments ({postComments(selectedPost).length})</h2>
+            {postComments(selectedPost).length === 0 && <p className="tai-body-text">No comments yet. Start the conversation.</p>}
+            {postComments(selectedPost).map(item => <article key={item.id} className="tai-feed-comment">
+              <Avatar size={30} initials={initialsOf(authorName(item))} src={item.user_profiles?.avatar_url} />
+              <div style={{ minWidth: 0, flex: 1 }}>
+                <div className="tai-feed-author-name">{authorName(item)} <span className="tai-feed-meta">{timeAgo(item.created_at)}</span></div>
+                <PostText content={item.content || item.body} />
+              </div>
+            </article>)}
+            <form onSubmit={reply} className="tai-feed-reply">
+              <label htmlFor="feed-comment" className="tai-label">Your comment</label>
+              <textarea id="feed-comment" className="tai-input" rows={3} placeholder="Write a comment..."
+                value={comment} onChange={event => setComment(event.target.value)} required />
+              <button className="tai-btn tai-btn-primary" disabled={replying || !comment.trim() || !session?.user?.id}>
+                <Send size={15} />{replying ? "Posting..." : "Post comment"}
+              </button>
+            </form>
+          </section>
+        </> : <div className="tai-card tai-empty" role="status">This post is unavailable. <button className="tai-btn tai-btn-outline" onClick={closePost}>Back to feed</button></div>}
+    </> : <>
+      <div className="tai-card tai-hero-card tai-feed-hero">
+        <div><h1 className="tai-hero-title">Community feed</h1><p className="tai-hero-desc">Updates and conversations from your community.</p></div>
+        <button type="button" className="tai-btn tai-btn-primary" onClick={() => setComposerOpen(value => !value)}><Plus size={16} />Create post</button>
+      </div>
+      {composerOpen && <form className="tai-card tai-feed-composer" onSubmit={publish}>
+        <label htmlFor="feed-draft" className="tai-title-sm">New post</label>
+        <textarea id="feed-draft" className="tai-input" rows={5} placeholder="What would you like to share?"
+          value={draft} onChange={event => setDraft(event.target.value)} required />
+        <label htmlFor="feed-type" className="tai-label">Post type</label>
+        <select id="feed-type" className="tai-input" value={draftType} onChange={event => setDraftType(event.target.value)}>
+          {Object.entries(TYPE_LABELS).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
+        </select>
+        <div className="tai-feed-actions"><button className="tai-btn tai-btn-primary" disabled={publishing || !draft.trim()}>{publishing ? "Publishing..." : "Publish post"}</button>
+          <button type="button" className="tai-btn tai-btn-outline" onClick={() => setComposerOpen(false)}>Cancel</button></div>
+      </form>}
+      <div className="tai-feed-search"><Search size={17} aria-hidden="true" /><input className="tai-input" aria-label="Search community posts"
+        placeholder="Search posts or people" value={search} onChange={event => setSearch(event.target.value)} /></div>
+      <div className="tai-scrollx" aria-label="Filter posts">
+        {[["all", "All"], ...Object.entries(TYPE_LABELS)].map(([value, label]) => <button type="button" key={value}
+          className={`tai-btn tai-btn-sm ${selectedType === value ? "tai-btn-primary" : "tai-btn-outline"}`}
+          aria-pressed={selectedType === value} onClick={() => setSelectedType(value)}>{label}</button>)}
+      </div>
+      {query.error && <div className="tai-card" role="alert">Could not load posts. <button className="tai-btn tai-btn-outline" onClick={query.refetch}>Retry</button></div>}
+      {query.loading && <div className="tai-card tai-empty">Loading posts...</div>}
+      {!query.loading && filteredPosts.length === 0 && <div className="tai-card tai-empty">No posts found.</div>}
+      {filteredPosts.map(post => <article key={post.id} className="tai-card tai-feed-preview">
+        {header(post)}
+        <button type="button" className="tai-feed-open" onClick={() => openPost(post)} aria-label={`Open post by ${authorName(post)}`}>
+          {post.title && <h2 className="tai-feed-post-title">{post.title}</h2>}
+          <p>{String(post.content || post.body || "").replace(/\s+/g, " ").slice(0, 280)}{String(post.content || post.body || "").length > 280 ? "…" : ""}</p>
+        </button>
+        {actions(post)}
+      </article>)}
+    </>}
+  </div>;
+}
 export default CommunityFeedScreen;

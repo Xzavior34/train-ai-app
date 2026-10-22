@@ -36,7 +36,7 @@ export function TracksScreen() {
               >
                 <div className="ta-row ta-between" style={{ gap: 8, alignItems: "center" }}>
                   <div className="ta-row ta-gap12" style={{ minWidth: 0, flex: 1 }}>
-                    <div style={{ width: 38, height: 38, borderRadius: 8, background: "var(--primary-tint)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                    <div className="ta-decoration-icon" style={{ width: 38, height: 38, borderRadius: 8, background: "var(--primary-tint)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                       <Map size={18} color="var(--primary)" />
                     </div>
                     <div style={{ minWidth: 0, flex: 1 }}>

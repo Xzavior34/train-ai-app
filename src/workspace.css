@@ -1,0 +1,71 @@
+/* Shared surfaces for learner, organisation, instructor and owner workspaces. */
+.ta.ta {
+  --shadow-card: 0 1px 3px rgba(15,23,42,.04);
+  --shadow-hover: 0 2px 8px rgba(15,23,42,.07);
+  --shadow-btn: none;
+  --glass-surface: var(--surface);
+  --glass-elevated: var(--surface-2);
+  --glass-border: var(--border);
+  --glass-shadow: var(--shadow-card);
+  --glass-specular: transparent;
+  --glass-blur-sm: none;
+  --glass-blur-md: none;
+}
+.ta .ta-card { background:var(--surface); border:1px solid var(--border); box-shadow:var(--shadow-card) !important; }
+.ta .ta-hero-banner.ta-hero-banner, .ta .tai-hero-card.tai-hero-card {
+  background:#142747 !important; border:1px solid #243d61 !important;
+  box-shadow:none !important; backdrop-filter:none !important;
+}
+.ta .ta-sidebar { background:var(--surface) !important; box-shadow:none !important; }
+.ta .ta-nav-item { border-radius:7px; min-height:38px; font-family:inherit; }
+.ta .ta-btn { box-shadow:none !important; }
+.ta .ta-ws-item.active, .ta .ta-avatar { box-shadow:none !important; }
+.ta .ta-hero-title { font-size:clamp(21px,2.3vw,28px); }
+.ta .ta-hero-desc { max-width:65ch; line-height:1.5; }
+.ta .tai-decoration-icon, .ta .ta-decoration-icon {
+  background:transparent !important; border:0 !important; border-radius:0 !important;
+  box-shadow:none !important; width:auto !important; height:auto !important;
+  padding:0 !important; min-width:24px; flex-shrink:0;
+}
+.ta .lucide-sparkles { display:none; }
+.ta .ta-avatar { background:var(--surface-2); color:var(--text-2); }
+.tai-feed-page { width:100%; max-width:860px; margin:0 auto; display:flex; flex-direction:column; gap:16px; }
+.tai-feed-hero { display:flex; align-items:center; justify-content:space-between; gap:16px; padding:20px !important; }
+.tai-feed-hero h1 { margin:0; font-size:24px; line-height:1.25; }
+.tai-feed-hero p { margin:6px 0 0; font-size:13px; line-height:1.5; }
+.tai-feed-search { display:flex; align-items:center; position:relative; }
+.tai-feed-search > svg { position:absolute; left:14px; color:var(--text-2); pointer-events:none; }
+.tai-feed-search > input { padding-left:40px; background:var(--surface); }
+.tai-feed-preview, .tai-feed-detail, .tai-feed-comments, .tai-feed-composer { display:flex; flex-direction:column; gap:16px; }
+.tai-feed-author { display:flex; align-items:center; gap:10px; min-width:0; }
+.tai-feed-author-name { font-size:13px; font-weight:700; overflow-wrap:anywhere; }
+.tai-feed-meta { font-size:11px; color:var(--text-2); font-weight:400; margin-top:3px; }
+.tai-feed-post-title { font-size:18px; line-height:1.4; margin:0 0 8px; color:var(--text); overflow-wrap:anywhere; }
+.tai-feed-open { display:block; width:100%; background:none; border:0; padding:0; text-align:left; color:var(--text); cursor:pointer; font:inherit; }
+.tai-feed-open p { font-size:14px; line-height:1.65; margin:0; display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden; overflow-wrap:anywhere; }
+.tai-feed-open:focus-visible { outline:2px solid var(--primary); outline-offset:5px; border-radius:3px; }
+.tai-feed-actions { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+.tai-feed-preview > .tai-feed-actions, .tai-feed-detail > .tai-feed-actions { border-top:1px solid var(--border); padding-top:10px; }
+.tai-feed-full-text { font-size:14px; line-height:1.75; white-space:pre-wrap; overflow-wrap:anywhere; }
+.tai-feed-full-text a { color:var(--primary); text-decoration:underline; }
+.tai-feed-comment { display:flex; gap:10px; padding:12px 0; border-bottom:1px solid var(--border); }
+.tai-feed-comment .tai-feed-full-text { margin-top:6px; font-size:13px; }
+.tai-feed-reply { display:flex; flex-direction:column; gap:10px; padding-top:12px; }
+.tai-feed-reply button { align-self:flex-start; }
+@media (max-width:899px) {
+  .ta .ta-content { padding:16px 12px calc(24px + env(safe-area-inset-bottom)); min-width:0; }
+  .ta .ta-main, .ta .ta-content > *, .ta .ta-card > * { min-width:0; max-width:100%; }
+  .ta .ta-card { padding:16px; border-radius:10px; overflow-wrap:anywhere; }
+  .ta .ta-responsive-grid, .ta .ta-grid2, .ta .ta-grid3, .ta .ta-grid4 { grid-template-columns:minmax(0,1fr) !important; }
+  .ta .ta-btn { min-height:40px; white-space:normal; }
+  .ta input, .ta textarea, .ta select { min-width:0; max-width:100%; font-size:16px !important; }
+  .ta .ta-table-wrap { max-width:100%; overflow-x:auto; }
+  .ta .ta-hero-banner { padding:18px 16px !important; }
+  .ta .ta-hero-title { font-size:22px !important; }
+  .ta .ta-hero-actions { flex-wrap:wrap; width:100%; }
+  .tai-feed-page { gap:12px; }
+  .tai-feed-hero { padding:16px !important; flex-wrap:wrap; gap:12px; }
+  .tai-feed-hero h1 { font-size:21px !important; }
+  .tai-feed-hero p { font-size:12px; }
+  .tai-feed-preview, .tai-feed-detail, .tai-feed-comments { padding:16px !important; }
+}

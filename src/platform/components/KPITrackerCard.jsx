@@ -140,7 +140,7 @@ export function KPITrackerCard({ organizationId, showToast }) {
       {/* Header */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 12, marginBottom: 16 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <div
+          <div className="ta-decoration-icon"
             style={{
               width: 38, height: 38, borderRadius: 10,
               background: "rgba(37,99,235,0.08)", color: "#2563EB",
@@ -495,7 +495,7 @@ export function KPITrackerCard({ organizationId, showToast }) {
                 onChange={(e) => setNewTitle(e.target.value)}
               />
 
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 12 }}>
+              <div className="ta-responsive-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 12 }}>
                 <div>
                   <label style={{ fontSize: 11.5, fontWeight: 700, color: "#64748B", textTransform: "uppercase" }}>
                     Category
@@ -532,7 +532,7 @@ export function KPITrackerCard({ organizationId, showToast }) {
                 </div>
               </div>
 
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 16 }}>
+              <div className="ta-responsive-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 16 }}>
                 <div>
                   <label style={{ fontSize: 11.5, fontWeight: 700, color: "#64748B", textTransform: "uppercase" }}>
                     Owner / Team

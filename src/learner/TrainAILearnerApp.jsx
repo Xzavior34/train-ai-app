@@ -992,6 +992,7 @@ export default function TrainAILearnerApp({ isActive = true, onSwitchToPlatform,
               )}
               {(screen === "communityFeed" || screen === "feed") && (
                 <CommunityFeedScreen
+                  params={params}
                   session={session}
                   userProfile={user}
                   showToast={showToast}

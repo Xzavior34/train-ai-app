@@ -138,7 +138,7 @@ export function PlatformSettingsScreen({ activeProject, projectSessionStatus, on
                 Platform Architecture &amp; Settings
               </h1>
               <p className="ta-hero-desc">
-                Configure global database connectivity, platform feature flags, demo mock toggles, and environment key-value pairs.
+                Manage platform configuration and feature availability.
               </p>
             </div>
           </div>
@@ -150,77 +150,7 @@ export function PlatformSettingsScreen({ activeProject, projectSessionStatus, on
         {!settingsQuery.loading && (
           <>
             {/* Database & Mock Data Management Card */}
-            <div className="ta-card" style={{ border: "1.5px solid var(--primary-light, #60A5FA)", background: "var(--surface)", borderRadius: 10 }}>
-              <div className="ta-row ta-between" style={{ paddingBottom: 12, borderBottom: "1px solid var(--border)" }}>
-                <div className="ta-row ta-gap10">
-                  <div style={{ width: 36, height: 36, borderRadius: 8, background: "var(--primary-tint)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                    <Database size={18} color="var(--primary)" />
-                  </div>
-                  <div>
-                    <div className="ta-title" style={{ fontSize: 16, fontWeight: 800 }}>Database &amp; Mock Data Management</div>
-                    <div className="ta-sub" style={{ fontSize: 12, color: "var(--text-3)", marginTop: 2 }}>
-                      Control demo sandbox data vs live production database records
-                    </div>
-                  </div>
-                </div>
-
-                <span style={{
-                  fontSize: 11, fontWeight: 800, padding: "3px 10px", borderRadius: 8,
-                  background: mockDataActive ? "var(--warning-bg, #FEF3C7)" : "var(--success-bg, #DCFCE7)",
-                  color: mockDataActive ? "var(--warning, #D97706)" : "var(--success, #16A34A)",
-                  border: `1px solid ${mockDataActive ? "var(--warning-border, #FDE68A)" : "var(--success-border, #BBF7D0)"}`
-                }}>
-                  {mockDataActive ? "DEMO MODE (MOCK ACTIVE)" : "LIVE DATABASE MODE"}
-                </span>
-              </div>
-
-              {/* Active Supabase Unified Database Status */}
-              <div style={{ marginTop: 16, padding: "12px 14px", background: "var(--surface-2)", borderRadius: 8, border: "1px solid var(--border)" }}>
-                <div className="ta-row ta-between" style={{ flexWrap: "wrap", gap: 8, marginBottom: 8 }}>
-                  <div style={{ fontSize: 11, fontWeight: 800, color: "var(--text-3)", textTransform: "uppercase", letterSpacing: ".06em" }}>
-                    Active Supabase Database
-                  </div>
-                </div>
-                <div className="ta-row ta-gap8" style={{ alignItems: "center", flexWrap: "wrap" }}>
-                  <span className="ta-btn ta-btn-primary ta-btn-sm" style={{ padding: "6px 12px", fontSize: 12, borderRadius: 8, display: "inline-flex", alignItems: "center", gap: 6, cursor: "default" }}>
-                    <Server size={14} /> Train AI Unified Database (jeobggrtxeybxvlwpxvn)
-                  </span>
-                  <span style={{ fontSize: 11.5, color: "var(--success, #16A34A)", fontWeight: 600, display: "inline-flex", alignItems: "center", gap: 4 }}>
-                    <CheckCircle2 size={13} /> Connected &amp; Unified
-                  </span>
-                </div>
-              </div>
-
-              <div style={{ marginTop: 16 }}>
-                <div className="ta-row ta-between" style={{ alignItems: "center" }}>
-                  <div style={{ minWidth: 0, flex: 1, paddingRight: 16 }}>
-                    <div style={{ fontWeight: 700, fontSize: 14, color: "var(--text)" }}>Include Mock &amp; Demo Masterclasses</div>
-                    <div style={{ fontSize: 12.5, color: "var(--text-2)", marginTop: 4, lineHeight: 1.5 }}>
-                      When enabled, fallback masterclasses with YouTube video tutorials, interactive transcripts, and demo Q&amp;A threads are shown for prototyping.
-                    </div>
-                  </div>
-                  <Switch on={mockDataActive} onChange={() => handleToggleMockData(!mockDataActive)} />
-                </div>
-
-                <div className="ta-row ta-gap10 ta-mt20" style={{ flexWrap: "wrap" }}>
-                  <button
-                    className="ta-btn ta-btn-danger"
-                    style={{ fontWeight: 700, fontSize: 13, display: "inline-flex", alignItems: "center", gap: 6 }}
-                    onClick={handlePurgeAllMock}
-                  >
-                    <Trash2 size={15} /> Purge All Mock Data (Leave Only Real DB)
-                  </button>
-
-                  <button
-                    className="ta-btn ta-btn-outline"
-                    style={{ fontWeight: 700, fontSize: 13, display: "inline-flex", alignItems: "center", gap: 6 }}
-                    onClick={handleRestoreMock}
-                  >
-                    <RefreshCw size={14} /> Restore Demo Data
-                  </button>
-                </div>
-              </div>
-            </div>
+            <div className="ta-card"><div className="ta-title">Platform data</div><p className="ta-sub">Workspaces display saved platform records. Sample courses and demo-data controls are disabled.</p></div>
 
             <div className="ta-card" style={{ borderRadius: 10 }}>
               <div className="ta-title">Global Feature Flags</div>

@@ -713,7 +713,9 @@ export const TOKENS = `
 // was previously generating throwaway stock-photo URLs per table row.
 export function Avatar({ initials, size = 36, style = {}, src }) {
   const [failed, setFailed] = useState(false);
-  if (src && !failed) {
+  useEffect(() => setFailed(false), [src]);
+  const isStockPhoto = typeof src === "string" && /(?:unsplash\.com|pexels\.com|pravatar\.cc|randomuser\.me|picsum\.photos|ui-avatars\.com|dicebear\.com)/i.test(src);
+  if (src && !isStockPhoto && !failed) {
     return (
       <img
         className="ta-avatar"
@@ -724,7 +726,7 @@ export function Avatar({ initials, size = 36, style = {}, src }) {
       />
     );
   }
-  return <div className="ta-avatar" style={{ width: size, height: size, fontSize: size * 0.36, ...style }}>{initials}</div>;
+  return <div className="ta-avatar" style={{ width: size, height: size, fontSize: size * 0.36, background: "var(--surface-2)", color: "var(--text-2)", ...style }}>{initials}</div>;
 }
 
 export function ProgressBar({ value, height = 7 }) {
@@ -1382,7 +1384,7 @@ function SearchResultRow({ icon: Icon, name, detail, type, onClick }) {
       onMouseEnter={(e) => e.currentTarget.style.background = "var(--surface-2)"}
       onMouseLeave={(e) => e.currentTarget.style.background = "transparent"}
     >
-      <div style={{ width: 32, height: 32, borderRadius: 8, background: "var(--surface-2)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+      <div className="ta-decoration-icon" style={{ width: 32, height: 32, borderRadius: 8, background: "var(--surface-2)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
         <Icon size={16} color="var(--primary)" />
       </div>
       <div style={{ flex: 1, minWidth: 0 }}>

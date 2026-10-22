@@ -306,7 +306,7 @@ export function ContentScreen({ orgId, orgSelector, setScreen, selectedCourseId,
                       style={{ width: 100, height: 75, objectFit: "cover", borderRadius: 10, flexShrink: 0, border: "1px solid var(--border)" }}
                     />
                   ) : (
-                    <div style={{ width: 100, height: 75, borderRadius: 10, background: "var(--surface-2)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, border: "1px solid var(--border)" }}>
+                    <div className="ta-decoration-icon" style={{ width: 100, height: 75, borderRadius: 10, background: "var(--surface-2)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, border: "1px solid var(--border)" }}>
                       <BookOpen size={32} color="var(--primary)" />
                     </div>
                   )}
@@ -319,7 +319,7 @@ export function ContentScreen({ orgId, orgSelector, setScreen, selectedCourseId,
                     </div>
                     <div style={{ fontWeight: 800, fontSize: 20, color: "var(--text)" }}>{editTitle || activeCourse.title}</div>
                     <div style={{ fontSize: 12, color: "var(--text-2)", marginTop: 4 }}>
-                      {activeCourse.enrollment_count || 0} Learners Enrolled · {editLessons.length} Lessons · {editHours || 0} Total Hours
+                      {activeCourse.enrollment_count > 0 ? `${activeCourse.enrollment_count} learners enrolled · ` : ""}{editLessons.length} lessons{editHours > 0 ? ` · ${editHours} hours` : ""}
                     </div>
                   </div>
                 </div>
@@ -1018,7 +1018,7 @@ export function ContentScreen({ orgId, orgSelector, setScreen, selectedCourseId,
 
                       <div>
                         <div className="ta-label">Certificate Visual Style</div>
-                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6, marginTop: 4 }}>
+                        <div className="ta-responsive-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6, marginTop: 4 }}>
                           {Object.values(CERTIFICATE_THEMES).map((th) => (
                             <button
                               key={th.id}
@@ -1267,7 +1267,7 @@ export function ContentScreen({ orgId, orgSelector, setScreen, selectedCourseId,
 
                       <div className="ta-row ta-between" style={{ marginTop: 14, paddingTop: 12, borderTop: "1px solid var(--border)", gap: 8, flexWrap: "wrap" }}>
                         <div style={{ fontSize: 12, color: "var(--text-3)", fontWeight: 600, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                          {c.enrollment_count || 8} Enrolled • {c.lessons?.length || 4} Lessons
+                          {c.enrollment_count > 0 ? `${c.enrollment_count} enrolled · ` : ""}{c.lessons?.length ?? 0} lessons
                         </div>
                         <button className="ta-btn ta-btn-primary ta-btn-sm" style={{ flexShrink: 0 }} onClick={() => setActiveCourseId(c.id)}>
                           <Settings size={13} /> Manage Course

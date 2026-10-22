@@ -402,7 +402,7 @@ export function MenteesScreen({ mentorId, orgSelector, setScreen, setSelectedLea
                     />
                   </div>
 
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+                  <div className="ta-responsive-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
                     <div>
                       <div className="ta-label">Honors / Distinction (Optional)</div>
                       <input
@@ -428,7 +428,7 @@ export function MenteesScreen({ mentorId, orgSelector, setScreen, setSelectedLea
 
                   <div>
                     <div className="ta-label">Choose Template Style</div>
-                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6, marginTop: 4 }}>
+                    <div className="ta-responsive-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6, marginTop: 4 }}>
                       {Object.values(CERTIFICATE_THEMES).map((th) => {
                         const isSelected = certThemeId === th.id;
                         return (

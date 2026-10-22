@@ -3,7 +3,7 @@ import { supabase } from "../../lib/supabaseClient.js";
 import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
 import {
   fetchLeaderboard, fetchPublishedCourses, fetchMyEnrollments,
-  fetchPublishedLessonCounts, fetchCourseInstructorNames,
+  fetchPublishedLessonCounts, fetchCourseInstructorNames, fetchCourseReviewSummaries,
   fetchMyGamificationStats, fetchMyAchievements, fetchMyStreakActivity,
   fetchMyNotifications, fetchAvailableQuizzes,
   fetchMyQuizAttempts, fetchCourseNotes, fetchCourseReviews,
@@ -26,6 +26,7 @@ import {
 } from "../../lib/api/schemaHelper.js";
 import { initialsOf, gradForIndex, timeAgo } from "../components/LearnerUI.jsx";
 import { isRealDatabaseId } from "../../lib/mockDataManager.js";
+import { fetchCourseEnrollmentCounts } from "../../lib/api/live/learnerCourseLive.js";
 
 export function useLearnerData(session, screen, params) {
   const userProfileQuery = useSupabaseQuery(async () => {
@@ -126,10 +127,10 @@ export function useLearnerData(session, screen, params) {
   }, [session?.user?.id]);
   const lessonCountsQuery = useSupabaseQuery(async () => fetchPublishedLessonCounts(), []);
   const courseInstructorsQuery = useSupabaseQuery(async () => fetchCourseInstructorNames(), []);
-  // Course ratings/reviews summary removed from the learner-facing course
-  // list per the product brief ("Course UI... Remove: ... Ratings").
-  // fetchCourseReviewSummaries is no longer called here; the per-course
-  // detail-page reviews tab is removed too (see CourseDetailScreen.jsx).
+  const courseReviewSummariesQuery = useSupabaseQuery(() => fetchCourseReviewSummaries(), [orgId]);
+  const publishedCourseIds = (coursesQuery.data || []).map(course => course.id).join(",");
+  const courseEnrollmentCountsQuery = useSupabaseQuery(() =>
+    fetchCourseEnrollmentCounts(publishedCourseIds ? publishedCourseIds.split(",") : []), [publishedCourseIds]);
   const bookmarksQuery = useSupabaseQuery(async () => {
     if (!session?.user?.id) return [];
     return fetchMyBookmarks(session.user.id);
@@ -162,6 +163,9 @@ export function useLearnerData(session, screen, params) {
         price: Number(c.price) || 0,
         requiresApproval: !!c.requires_approval,
         instructor: instructorNames[c.id] || null,
+        studentsCount: courseEnrollmentCountsQuery.data?.[c.id] ?? 0,
+        reviewsCount: courseReviewSummariesQuery.data?.[c.id]?.count ?? 0,
+        rating: courseReviewSummariesQuery.data?.[c.id]?.avg ?? null,
       };
     });
 

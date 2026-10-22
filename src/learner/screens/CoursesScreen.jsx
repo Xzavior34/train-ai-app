@@ -355,6 +355,8 @@ export function CoursesScreen({
         title: c.title,
         description: c.tagline || c.description || `Essential course for your ${trackDisplayName}. Master production workflows and hands-on competencies.`,
         rating: c.rating ?? null,
+        reviewsCount: c.reviewsCount ?? 0,
+        studentsCount: c.studentsCount ?? 0,
         reviews: `${c.reviewsCount ?? 0} reviews`,
         enrolled: `${c.studentsCount ?? 0} Enrolled`,
         status: c.enrolled ? "In Progress" : "Required",
@@ -473,20 +475,14 @@ export function CoursesScreen({
               )}
 
               <div className="tai-row tai-gap12" style={{ flexWrap: "wrap", marginBottom: 14, fontSize: 12, color: "#94A3B8" }}>
-                <div className="tai-row tai-gap4">
-                  <span style={{ fontWeight: 800, color: "#fff" }}>{currentSpotlight.rating ?? "Unrated"}</span>
+                {currentSpotlight.reviewsCount > 0 && <div className="tai-row tai-gap4">
+                  <span style={{ fontWeight: 800, color: "#fff" }}>{currentSpotlight.rating}</span>
                   <span style={{ opacity: 0.75 }}>({currentSpotlight.reviews})</span>
-                </div>
-                <span>•</span>
-                <div className="tai-row tai-gap4">
+                </div>}
+                {currentSpotlight.studentsCount > 0 && <div className="tai-row tai-gap4">
                   <Users size={13} color="#60A5FA" />
                   <span style={{ fontWeight: 700, color: "#fff" }}>{currentSpotlight.enrolled}</span>
-                </div>
-                <span>•</span>
-                <div className="tai-row tai-gap4">
-                  <ShieldCheck size={13} color="#34D399" />
-                  <span style={{ fontWeight: 700, color: "#34D399" }}>Certificate Available</span>
-                </div>
+                </div>}
               </div>
 
               <div className="tai-row tai-gap10" style={{ flexWrap: "wrap" }}>
@@ -828,23 +824,17 @@ export function CoursesScreen({
                       </div>
                     </div>
 
-                    <div className="tai-row tai-gap8" style={{ fontSize: 12, marginBottom: 16 }}>
-                      <div className="tai-row tai-gap4" style={{ fontWeight: 800, color: "var(--text)" }}>
-                        <span>{course.rating ?? "Unrated"}</span>
-                      </div>
-                      <span style={{ color: "var(--text-3)" }}>({course.reviewsCount ?? 0})</span>
-                      <span style={{ color: "var(--text-3)" }}>•</span>
-                      <span style={{ color: "var(--text-3)", fontWeight: 600 }}>{course.studentsCount ?? 0} learners</span>
-                    </div>
+                    {(course.reviewsCount > 0 || course.studentsCount > 0) && <div className="tai-row tai-gap8" style={{ fontSize: 12, marginBottom: 16, flexWrap: "wrap" }}>
+                      {course.reviewsCount > 0 && <span style={{ fontWeight: 700 }}>{course.rating} · {course.reviewsCount} reviews</span>}
+                      {course.studentsCount > 0 && <span style={{ color: "var(--text-2)" }}>{course.studentsCount} learners</span>}
+                    </div>}
                   </div>
 
                   <div>
                     <div className="tai-row" style={{ padding: "10px 0", borderTop: "1px solid var(--border)", fontSize: 11.5, color: "var(--text-3)", fontWeight: 600, gap: 6, flexWrap: "wrap" }}>
-                      <span>{course.hours || 12} Total Hours</span>
-                      <span>•</span>
+                      {course.hours > 0 && <span>{course.hours} total hours · </span>}
                       <span>{course.lessonsCount || course.lessons || 0} Modules</span>
-                      <span>•</span>
-                      <span>{course.hasCertificate ? "Verified Certificate" : "Audited"}</span>
+                      {course.hasCertificate && <span> · Certificate available</span>}
                     </div>
 
                     {isEnrolled ? (

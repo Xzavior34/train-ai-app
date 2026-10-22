@@ -59,21 +59,21 @@ export function PortalModal({
 
   const glassCardStyle = isDark
     ? {
-        background: "rgba(17, 24, 39, 0.94)",
-        backdropFilter: "blur(24px) saturate(180%)",
-        WebkitBackdropFilter: "blur(24px) saturate(180%)",
+        background: "#111827",
+        backdropFilter: "none",
+        WebkitBackdropFilter: "none",
         border: "1px solid rgba(255, 255, 255, 0.14)",
         boxShadow:
-          "0 32px 85px -12px rgba(0, 0, 0, 0.88), 0 0 0 1px rgba(255, 255, 255, 0.08), inset 0 1px 0 0 rgba(255, 255, 255, 0.12)",
+          "0 8px 24px rgba(0, 0, 0, 0.20)",
         color: "#F8FAFC"
       }
     : {
-        background: "rgba(255, 255, 255, 0.95)",
-        backdropFilter: "blur(24px) saturate(190%)",
-        WebkitBackdropFilter: "blur(24px) saturate(190%)",
-        border: "1px solid rgba(255, 255, 255, 0.92)",
+        background: "#FFFFFF",
+        backdropFilter: "none",
+        WebkitBackdropFilter: "none",
+        border: "1px solid #E2E8F0",
         boxShadow:
-          "0 30px 75px -12px rgba(15, 23, 42, 0.22), 0 0 0 1px rgba(226, 232, 240, 0.85), inset 0 1px 0 0 rgba(255, 255, 255, 1)",
+          "0 8px 24px rgba(15, 23, 42, 0.12)",
         color: "#0F172A"
       };
 
@@ -90,9 +90,9 @@ export function PortalModal({
         width: "100vw",
         height: "100vh",
         zIndex,
-        background: isDark ? "rgba(3, 7, 18, 0.78)" : "rgba(15, 23, 42, 0.60)",
-        backdropFilter: "blur(14px)",
-        WebkitBackdropFilter: "blur(14px)",
+        background: isDark ? "rgba(3, 7, 18, 0.55)" : "rgba(15, 23, 42, 0.35)",
+        backdropFilter: "blur(3px)",
+        WebkitBackdropFilter: "blur(3px)",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",

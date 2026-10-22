@@ -154,7 +154,7 @@ export function CourseBuilderWizard({ isOpen, onClose, orgId, currentUserId, onC
     <PortalModal isOpen={isOpen} onClose={handleClose} maxWidth={720} zIndex={9999}>
       <div className="ta-row ta-between" style={{ gap: 10 }}>
         <div className="ta-row ta-gap10" style={{ minWidth: 0 }}>
-          <div style={{ width: 36, height: 36, borderRadius: 10, background: "var(--primary-tint)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+          <div className="ta-decoration-icon" style={{ width: 36, height: 36, borderRadius: 10, background: "var(--primary-tint)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
             <Wand2 size={18} color="var(--primary)" />
           </div>
           <div style={{ minWidth: 0 }}>

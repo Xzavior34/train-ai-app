@@ -1,0 +1,15 @@
+import React from 'react';
+import { renderToStaticMarkup } from 'react-dom/server';
+import assert from 'node:assert/strict';
+import { CoursesScreen } from '../../src/learner/screens/CoursesScreen.jsx';
+globalThis.localStorage = { getItem: () => null };
+const base = { id: 'fixture-course', title: 'Fixture course', category: 'AI', lessons: 3, hours: 2, progress: 0 };
+const render = patch => renderToStaticMarkup(<CoursesScreen courses={[{ ...base, ...patch }]} />);
+const empty = render({ studentsCount: 0, reviewsCount: 0, rating: null });
+assert(!/Unrated|0 learners|0 reviews|0 Enrolled/.test(empty), 'Empty course social proof must be hidden');
+const enrolled = render({ studentsCount: 7, reviewsCount: 0, rating: null });
+assert(enrolled.includes('7 learners'), 'Real enrollment count must appear');
+assert(!/Unrated|0 reviews/.test(enrolled), 'Enrollment must not invent a review');
+const reviewed = render({ studentsCount: 7, reviewsCount: 2, rating: 4.5 });
+assert(reviewed.includes('4.5') && reviewed.includes('2') && reviewed.includes('reviews'), 'Real reviews must appear');
+console.log('PASS course social proof: empty hidden, real enrollments and reviews shown independently.');

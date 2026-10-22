@@ -952,7 +952,7 @@ export function OrganizationsScreen({ orgSelector, onSwitchToOrgWorkspace, onLau
                       {/* Top Row: Org Icon, Name, and Status */}
                       <div className="ta-row ta-between" style={{ alignItems: "flex-start", marginBottom: 12, gap: 10 }}>
                         <div className="ta-row ta-gap12" style={{ minWidth: 0, flex: "1 1 auto" }}>
-                          <div style={{
+                          <div className="ta-decoration-icon" style={{
                             width: 44, height: 44, borderRadius: 8,
                             background: "var(--primary-tint)", color: "var(--primary)",
                             display: "flex", alignItems: "center", justifyContent: "center",
@@ -971,7 +971,7 @@ export function OrganizationsScreen({ orgSelector, onSwitchToOrgWorkspace, onLau
                       </div>
 
                       {/* Stats Metric Strip */}
-                      <div style={{
+                      <div className="ta-responsive-grid" style={{
                         display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10,
                         background: "var(--surface-2)", padding: "10px 14px", borderRadius: 8, marginBottom: 12
                       }}>

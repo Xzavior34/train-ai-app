@@ -196,7 +196,7 @@ export function MentorScheduleScreen({ mentorId, orgSelector }) {
           <div className="ta-card" style={{ padding: "20px 22px", background: "var(--surface)", border: "1px solid var(--border)" }}>
             <div className="ta-row ta-between">
               <span style={{ fontSize: 12.5, fontWeight: 700, color: "var(--text-3)", textTransform: "uppercase", letterSpacing: "0.04em" }}>Total Booked</span>
-              <div style={{ width: 34, height: 34, borderRadius: 10, background: "rgba(59, 130, 246, 0.12)", color: "#2563EB", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <div className="ta-decoration-icon" style={{ width: 34, height: 34, borderRadius: 10, background: "rgba(59, 130, 246, 0.12)", color: "#2563EB", display: "flex", alignItems: "center", justifyContent: "center" }}>
                 <Calendar size={18} />
               </div>
             </div>
@@ -211,7 +211,7 @@ export function MentorScheduleScreen({ mentorId, orgSelector }) {
           <div className="ta-card" style={{ padding: "20px 22px", background: "var(--surface)", border: "1px solid var(--border)" }}>
             <div className="ta-row ta-between">
               <span style={{ fontSize: 12.5, fontWeight: 700, color: "var(--text-3)", textTransform: "uppercase", letterSpacing: "0.04em" }}>Teaching Hours</span>
-              <div style={{ width: 34, height: 34, borderRadius: 10, background: "rgba(16, 185, 129, 0.12)", color: "#10B981", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <div className="ta-decoration-icon" style={{ width: 34, height: 34, borderRadius: 10, background: "rgba(16, 185, 129, 0.12)", color: "#10B981", display: "flex", alignItems: "center", justifyContent: "center" }}>
                 <Clock size={18} />
               </div>
             </div>
@@ -226,7 +226,7 @@ export function MentorScheduleScreen({ mentorId, orgSelector }) {
           <div className="ta-card" style={{ padding: "20px 22px", background: "var(--surface)", border: "1px solid var(--border)" }}>
             <div className="ta-row ta-between">
               <span style={{ fontSize: 12.5, fontWeight: 700, color: "var(--text-3)", textTransform: "uppercase", letterSpacing: "0.04em" }}>Weekly Slots</span>
-              <div style={{ width: 34, height: 34, borderRadius: 10, background: "rgba(245, 158, 11, 0.15)", color: "#F59E0B", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <div className="ta-decoration-icon" style={{ width: 34, height: 34, borderRadius: 10, background: "rgba(245, 158, 11, 0.15)", color: "#F59E0B", display: "flex", alignItems: "center", justifyContent: "center" }}>
                 <Clock size={18} />
               </div>
             </div>
@@ -307,7 +307,7 @@ export function MentorScheduleScreen({ mentorId, orgSelector }) {
               {filteredSessions.map(s => (
                 <div key={s.id} className="ta-card ta-row ta-between" style={{ padding: "18px 20px", borderRadius: 10, background: "var(--surface)", border: "1px solid var(--border)", flexWrap: "wrap", gap: 14, alignItems: "center" }}>
                   <div className="ta-row ta-gap14" style={{ minWidth: 0, flex: "1 1 260px" }}>
-                    <div style={{ width: 44, height: 44, borderRadius: 8, background: "var(--primary-tint)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                    <div className="ta-decoration-icon" style={{ width: 44, height: 44, borderRadius: 8, background: "var(--primary-tint)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                       <Calendar size={20} color="var(--primary)" />
                     </div>
                     <div style={{ minWidth: 0 }}>

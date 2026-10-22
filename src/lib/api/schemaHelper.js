@@ -571,7 +571,7 @@ export async function fetchCommunityPosts(studyGroupId = null) {
   }
 
   const { data, error } = await query;
-  if (error) { console.warn("Community posts fetch warning:", error); return []; }
+  if (error) throw new Error("Could not load community posts. Please try again.");
   const rows = data || [];
   // Batch-fetch profiles for both post authors AND comment authors in one
   // round trip, so comment threads can show real names/avatars instead of

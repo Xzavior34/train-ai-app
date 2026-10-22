@@ -79,8 +79,8 @@ export function DiscussionsScreen({ mentorId, orgSelector }) {
 
   const allDiscussions = rawDiscussions.length > 0 ? rawDiscussions.map((d, i) => ({
     ...d,
-    description: d.description || "Can you explain this concept in more detail? I want to make sure I implement the best practice for the final project submission.",
-    menteeAvatar: defaultDiscussions[i % defaultDiscussions.length].menteeAvatar,
+    description: d.description || d.content || "",
+    menteeAvatar: d.user_profiles?.avatar_url || null,
     module: d.module || "General Course Q&A",
     createdAt: d.created_at ? new Date(d.created_at).toLocaleDateString() : "Recent",
     upvotes: d.upvotes ?? 0,

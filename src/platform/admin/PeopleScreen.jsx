@@ -574,7 +574,7 @@ export function OrganizationReferralCard({ orgId, orgName, orgSlug, showToast, m
     >
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 10 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <div style={{
+          <div className="ta-decoration-icon" style={{
             width: 36, height: 36, borderRadius: 8,
             background: "#EFF6FF", color: "#2563EB",
             display: "flex", alignItems: "center", justifyContent: "center",
@@ -1023,7 +1023,7 @@ export function PeopleScreen({ orgId, orgSelector, setScreen, currentUserId }) {
                 }}
               >
                 <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                  <div style={{
+                  <div className="ta-decoration-icon" style={{
                     width: 32, height: 32, borderRadius: 8,
                     background: "#FEF3C7", color: "#B45309",
                     display: "flex", alignItems: "center", justifyContent: "center",
@@ -2499,7 +2499,7 @@ export function PeopleScreen({ orgId, orgSelector, setScreen, currentUserId }) {
                   />
                 </div>
 
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+                <div className="ta-responsive-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
                   <div>
                     <div className="ta-label">Honors / Distinction (Optional)</div>
                     <input
@@ -2525,7 +2525,7 @@ export function PeopleScreen({ orgId, orgSelector, setScreen, currentUserId }) {
 
                 <div>
                   <div className="ta-label">Choose Template Style</div>
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6, marginTop: 4 }}>
+                  <div className="ta-responsive-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6, marginTop: 4 }}>
                     {Object.values(CERTIFICATE_THEMES).map((th) => {
                       const isSelected = certThemeId === th.id;
                       return (

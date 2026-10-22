@@ -128,7 +128,7 @@ export function AdministrativeScreen({ mentorId, mentorProfileQuery, currentUser
           <div className="ta-card" style={{ padding: "20px 22px", background: "var(--surface)", border: "1px solid var(--border)" }}>
             <div className="ta-row ta-between">
               <span style={{ fontSize: 12.5, fontWeight: 700, color: "var(--text-3)", textTransform: "uppercase", letterSpacing: "0.04em" }}>Available For Withdrawal</span>
-              <div style={{ width: 34, height: 34, borderRadius: 10, background: "rgba(16, 185, 129, 0.15)", color: "#10B981", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <div className="ta-decoration-icon" style={{ width: 34, height: 34, borderRadius: 10, background: "rgba(16, 185, 129, 0.15)", color: "#10B981", display: "flex", alignItems: "center", justifyContent: "center" }}>
                 <DollarSign size={18} />
               </div>
             </div>
@@ -143,7 +143,7 @@ export function AdministrativeScreen({ mentorId, mentorProfileQuery, currentUser
           <div className="ta-card" style={{ padding: "20px 22px", background: "var(--surface)", border: "1px solid var(--border)" }}>
             <div className="ta-row ta-between">
               <span style={{ fontSize: 12.5, fontWeight: 700, color: "var(--text-3)", textTransform: "uppercase", letterSpacing: "0.04em" }}>Lifetime Gross Earnings</span>
-              <div style={{ width: 34, height: 34, borderRadius: 10, background: "rgba(59, 130, 246, 0.12)", color: "#2563EB", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <div className="ta-decoration-icon" style={{ width: 34, height: 34, borderRadius: 10, background: "rgba(59, 130, 246, 0.12)", color: "#2563EB", display: "flex", alignItems: "center", justifyContent: "center" }}>
                 <Wallet size={18} />
               </div>
             </div>
@@ -158,7 +158,7 @@ export function AdministrativeScreen({ mentorId, mentorProfileQuery, currentUser
           <div className="ta-card" style={{ padding: "20px 22px", background: "var(--surface)", border: "1px solid var(--border)" }}>
             <div className="ta-row ta-between">
               <span style={{ fontSize: 12.5, fontWeight: 700, color: "var(--text-3)", textTransform: "uppercase", letterSpacing: "0.04em" }}>Pending Settlement</span>
-              <div style={{ width: 34, height: 34, borderRadius: 10, background: "rgba(245, 158, 11, 0.15)", color: "#F59E0B", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <div className="ta-decoration-icon" style={{ width: 34, height: 34, borderRadius: 10, background: "rgba(245, 158, 11, 0.15)", color: "#F59E0B", display: "flex", alignItems: "center", justifyContent: "center" }}>
                 <Clock size={18} />
               </div>
             </div>
@@ -225,7 +225,7 @@ export function AdministrativeScreen({ mentorId, mentorProfileQuery, currentUser
                     <tr key={e.id || idx}>
                       <td>
                         <div className="ta-row ta-gap8">
-                          <div style={{ width: 28, height: 28, borderRadius: 8, background: "var(--primary-tint)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                          <div className="ta-decoration-icon" style={{ width: 28, height: 28, borderRadius: 8, background: "var(--primary-tint)", display: "flex", alignItems: "center", justifyContent: "center" }}>
                             <DollarSign size={14} color="var(--primary)" />
                           </div>
                           <span style={{ fontWeight: 700, color: "var(--text)" }}>{(e.earning_type || "session").replace(/_/g, " ")}</span>
