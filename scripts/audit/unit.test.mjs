@@ -6,6 +6,47 @@ import {stripTypeScriptTypes} from 'node:module';
 import {validateDemoInput} from '../../supabase/functions/_shared/demoValidation.js';
 import {normalizeCreditBalance} from '../../src/learner/utils/creditBalance.js';
 const valid={fullName:'  Fixture Prospect  ',workEmail:'  PERSON@example.invalid ',phoneNumber:'+234 800 123 4567',organizationName:'Fixture Academy',teamSize:'10-50',orgType:'Academy',scheduledDate:'2026-10-26',scheduledTime:'10:00 AM'};
+test('Post reactions validate identity and propagate database failures', async () => {
+  const file = fs.readFileSync('src/lib/api/schemaHelper.js', 'utf8');
+  const source = file.slice(file.indexOf('export async function togglePostReaction('), file.indexOf('// Delete a community post')).replace('export async function', 'async function');
+  for (const operation of ['lookup', 'insert', 'delete']) {
+    const failure = new Error('fixture ' + operation + ' denied');
+    const chain = { select: () => chain, eq: () => chain, maybeSingle: async () => ({ data: operation === 'delete' ? { id: 'reaction' } : null, error: operation === 'lookup' ? failure : null }), insert: async () => ({ error: failure }), delete: () => ({ eq: async () => ({ error: failure }) }) };
+    const context = { supabase: { from: () => chain } };
+    vm.createContext(context); vm.runInContext(source + '; globalThis.toggle = togglePostReaction;', context);
+    await assert.rejects(context.toggle({ postId: 'post', userId: 'user' }), new RegExp(operation + ' denied'));
+    await assert.rejects(context.toggle({ postId: 'post' }), /Sign in/);
+  }
+});
+async function insightsEndpoint({ authorized = true, failQuery = false, providerFails = false, scores = [], apiKey = true } = {}) {
+  let handler, calls = 0, charges = 0, refunds = 0;
+  const client = {
+    auth: { getUser: async () => ({ data: { user: { id: 'fixture-user' } } }) },
+    from: table => {
+      const query = { select: () => query, not: () => query, eq: () => query,
+        then: resolve => Promise.resolve({ data: table === 'course_enrollments' ? [{}] : table === 'quiz_attempts' ? scores.map(score => ({ score })) : [], error: failQuery ? { message: 'fixture schema mismatch' } : null }).then(resolve) };
+      return query;
+    },
+    rpc: async name => { if (name === 'consume_ai_credits') { charges++; return { data: { authorized, transaction_id: authorized ? 'charge' : null } }; } refunds++; return { data: {} }; },
+  };
+  const source = stripTypeScriptTypes(fs.readFileSync('supabase/functions/ai-insights/index.ts', 'utf8').replace('import { createClient } from "npm:@supabase/supabase-js@2";', 'const createClient = globalThis.testCreateClient;'));
+  vm.runInNewContext(source, { Deno: { env: { get: key => key === 'OPENAI_API_KEY' && !apiKey ? null : 'fixture' }, serve: fn => { handler = fn; } }, testCreateClient: () => client, Response, Request, console: { error: () => {} }, fetch: async () => { calls++; return new Response(JSON.stringify({ choices: [{ message: { content: 'Real provider summary' } }] }), { status: providerFails ? 503 : 200 }); } });
+  const response = await handler(new Request('http://localhost/fixture', { headers: { Authorization: 'Bearer fixture' } }));
+  return { response, body: await response.json(), calls, charges, refunds };
+}
+test('Insights never invent an assessment score and include real quiz results', async () => {
+  const empty = await insightsEndpoint(); assert.equal(empty.body.stats.averageScore, null);
+  const scored = await insightsEndpoint({ scores: [null, 60, 100] }); assert.equal(scored.body.stats.averageScore, 80); assert.equal(scored.charges, 1);
+});
+test('Insights query and provider configuration failures do not spend credits', async () => {
+  for (const options of [{ failQuery: true }, { apiKey: false }]) {
+    const result = await insightsEndpoint(options); assert.equal(result.response.status, 503); assert.equal(result.calls, 0); assert.equal(result.charges, 0);
+  }
+});
+test('Insights respect insufficient credits and refund failed generation', async () => {
+  const denied = await insightsEndpoint({ authorized: false }); assert.equal(denied.response.status, 402); assert.equal(denied.calls, 0);
+  const failed = await insightsEndpoint({ providerFails: true }); assert.equal(failed.response.status, 502); assert.equal(failed.refunds, 1);
+});
 test('Demo normalization preserves international contacts and marks them unverified',()=>{const result=validateDemoInput(valid);assert.equal(result.input.workEmail,'person@example.invalid');assert.equal(result.input.fullName,'Fixture Prospect');assert.equal(result.contactVerification,'unverified');});
 test('Demo invalid email, missing fields, rollover dates, controls and spam are rejected',()=>{for(const patch of [{workEmail:'not-an-email'},{fullName:''},{phoneNumber:'abc'},{scheduledDate:'2026-02-31'},{workEmail:'x@example.invalid\r\nBcc:y@example.invalid'},{website:'spam'},{fullName:'x'.repeat(161)}])assert(validateDemoInput({...valid,...patch}).error);});
 test('Zero credits remain zero and suspended org funds are unavailable',()=>{assert.deepEqual(normalizeCreditBalance({personal_balance:0,organization_balance:0}),{organizationBalance:0,personalBalance:0});assert.deepEqual(normalizeCreditBalance({personal_balance:3,org_balance:200,org_suspended:true}),{organizationBalance:0,personalBalance:3});assert.throws(()=>normalizeCreditBalance({error:'unavailable'}));});

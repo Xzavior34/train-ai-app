@@ -47,40 +47,42 @@ Deno.serve(async (req) => {
     const db = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
     // Fetch user's own data
-    const [lessonRes, enrollRes, attemptsRes] = await Promise.all([
+    const [lessonRes, enrollRes, attemptsRes, quizzesRes] = await Promise.all([
       db.from("lesson_progress").select("is_completed, time_spent_minutes").eq("user_id", userId),
       db.from("course_enrollments").select("progress_percentage, completed_at").eq("user_id", userId),
       db.from("assessment_attempts").select("score").eq("user_id", userId),
+      db.from("quiz_attempts").select("score").eq("user_id", userId).not("completed_at", "is", null),
     ]);
+    if ([lessonRes, enrollRes, attemptsRes, quizzesRes].some(result => result.error)) {
+      console.error("ai-insights: learning activity query failed", [lessonRes.error, enrollRes.error, attemptsRes.error, quizzesRes.error]);
+      return jsonResponse({ error: "Your learning activity could not be loaded. Please try again shortly.", code: "activity_unavailable" }, 503);
+    }
 
     const lessons = lessonRes.data || [];
     const enrollments = enrollRes.data || [];
-    const attempts = attemptsRes.data || [];
+    const attempts = [...(attemptsRes.data || []), ...(quizzesRes.data || [])];
 
     const completedLessons = lessons.filter((l) => l.is_completed).length;
     const totalMinutes = lessons.reduce((acc, l) => acc + (Number(l.time_spent_minutes) || 0), 0);
     const totalHours = Math.round((totalMinutes / 60) * 10) / 10;
     const enrolledCourses = enrollments.length;
 
-    const scores = attempts.map((a) => Number(a.score)).filter((s) => !isNaN(s));
-    const averageScore = scores.length > 0 ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : 85;
+    const scores = attempts.filter(a => a.score != null).map((a) => Number(a.score)).filter(Number.isFinite);
+    const averageScore = scores.length > 0 ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : null;
 
     const stats = { completedLessons, totalHours, averageScore, enrolledCourses };
 
     const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
     if (!OPENAI_API_KEY) {
-      const defaultInsights = `### 🌟 Your Learning Highlights\n- **Great momentum!** You have enrolled in ${enrolledCourses} course${enrolledCourses === 1 ? '' : 's'} and completed ${completedLessons} lesson${completedLessons === 1 ? '' : 's'}.\n- **Time Investment:** You have logged ${totalHours} hours of active learning.\n- **Assessment Performance:** Your current average score across quizzes is ${averageScore}%.\n- **Recommendation:** Keep practicing regularly to build mastery!`;
-      return jsonResponse({ insights: defaultInsights, stats });
+      return jsonResponse({ error: "AI insights are not configured yet. Your learning progress is still saved.", code: "provider_unavailable" }, 503);
     }
+    if (!lessons.length && !enrollments.length && !scores.length) return jsonResponse({ insights: "Complete a lesson or quiz to start building your learning insights.", stats });
 
     const systemPrompt = "You are a personal learning analytics coach for Train AI. Provide a concise, encouraging markdown summary (3-4 bullet points) highlighting the learner's progress, strengths, and recommended next steps based on their stats. Keep it engaging, direct, and under 200 words.";
-    const userPrompt = `Learner stats: Enrolled courses: ${enrolledCourses}, Completed lessons: ${completedLessons}, Total learning hours: ${totalHours}, Average quiz score: ${averageScore}%. Generate personalized learning insights in GitHub Markdown.`;
+    const userPrompt = `Learner stats: Enrolled courses: ${enrolledCourses}, Completed lessons: ${completedLessons}, Total learning hours: ${totalHours}, Average assessment score: ${averageScore == null ? 'No scored attempts yet' : averageScore + '%'}. Generate personalized learning insights in GitHub Markdown. Do not invent scores, strengths or achievements unsupported by these stats. Do not use emojis.`;
 
-    // Real, server-side AI credit metering - same pattern as ai-chat/
-    // ai-generate-quiz. Placed after the no-API-key fallback above on
-    // purpose: that canned response is built from the learner's own real
-    // stats with no actual model call, so it correctly consumes nothing -
-    // only a genuine provider call below is billable.
+    // Only actual provider generation is billable. Configuration, activity
+    // query failures and empty activity must never charge the learner.
     const { data: creditResult, error: creditErr } = await authClient.rpc("consume_ai_credits", {
       p_operation_key: "ai_insight",
       p_reference_id: userId,
@@ -125,7 +127,8 @@ Deno.serve(async (req) => {
     if (!resp.ok) {
       const errText = await resp.text();
       await refundOnFailure();
-      return jsonResponse({ error: `OpenAI API error: ${resp.status} ${errText.slice(0, 300)}` }, resp.status === 429 ? 429 : 502);
+      console.error("ai-insights: provider error", resp.status, errText.slice(0, 300));
+      return jsonResponse({ error: "AI insights are temporarily unavailable. Please try again shortly.", code: "provider_unavailable" }, resp.status === 429 ? 429 : 502);
     }
 
     const json = await resp.json();

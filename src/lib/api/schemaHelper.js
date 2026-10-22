@@ -671,6 +671,7 @@ export async function createCommunityPost({ userId, content, postType = "general
 }
 
 export async function addPostComment({ postId, userId, content }) {
+  if (!postId || !userId || !content?.trim()) throw new Error("A post, signed-in user and comment are required.");
   if (!supabase) return { id: `comment_${Date.now()}`, post_id: postId, user_id: userId, content };
   const { data, error } = await supabase
     .from("post_comments")
@@ -687,24 +688,27 @@ export async function addPostComment({ postId, userId, content }) {
 }
 
 export async function togglePostReaction({ postId, userId, reactionType = "like" }) {
+  if (!postId || !userId) throw new Error("Sign in and choose a post before reacting.");
   if (!supabase) return { reacted: true };
-  const { data: existing } = await supabase
+  const { data: existing, error: lookupError } = await supabase
     .from("post_reactions")
     .select("id")
     .eq("post_id", postId)
     .eq("user_id", userId)
     .eq("reaction_type", reactionType)
     .maybeSingle();
-
+  if (lookupError) throw lookupError;
   if (existing) {
-    await supabase.from("post_reactions").delete().eq("id", existing.id);
+    const { error } = await supabase.from("post_reactions").delete().eq("id", existing.id);
+    if (error) throw error;
     return { reacted: false };
   } else {
-    await supabase.from("post_reactions").insert({
+    const { error } = await supabase.from("post_reactions").insert({
       post_id: postId,
       user_id: userId,
       reaction_type: reactionType
     });
+    if (error) throw error;
     return { reacted: true };
   }
 }
@@ -1447,7 +1451,17 @@ export async function fetchAIInsights() {
   if (!supabase) return { error: "AI Insights are unavailable: Supabase isn't configured in this environment." };
   try {
     const { data, error } = await supabase.functions.invoke("ai-insights", {});
-    if (error) return { error: error.message || "Could not generate insights right now." };
+    if (error) {
+      let details = null;
+      try { details = await error.context?.json(); } catch { /* Non-JSON gateway error. */ }
+      const status = error.context?.status;
+      const messages = {
+        401: "Your session has expired. Sign in again to generate insights.",
+        402: "AI insights need additional credits. Purchase credits or contact your organization administrator.",
+        429: "AI insights are busy right now. Please try again in a few minutes.",
+      };
+      return { error: messages[status] || "AI insights are temporarily unavailable. Please try again shortly.", code: details?.code, status };
+    }
     if (!data || data.error) return { error: data?.error || "Could not generate insights right now." };
     return { insights: data.insights || "", stats: data.stats || null };
   } catch (e) {

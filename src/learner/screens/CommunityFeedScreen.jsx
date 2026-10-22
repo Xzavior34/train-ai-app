@@ -27,6 +27,7 @@ export function CommunityFeedScreen({ session, showToast = () => {}, back, push,
   const [comment, setComment] = useState("");
   const [replying, setReplying] = useState(false);
   const [reacting, setReacting] = useState(null);
+  const [reactionOverrides, setReactionOverrides] = useState({});
   const [localPostId, setLocalPostId] = useState(null);
   const query = useSupabaseQuery(() => fetchCommunityPosts(), []);
   const posts = query.data || [];
@@ -67,8 +68,9 @@ export function CommunityFeedScreen({ session, showToast = () => {}, back, push,
     if (!session?.user?.id || reacting) return;
     setReacting(post.id);
     try {
-      await togglePostReaction(post.id, session.user.id);
-      query.refetch();
+      const result = await togglePostReaction({ postId: post.id, userId: session.user.id });
+      const others = (reactionOverrides[post.id] || postReactions(post)).filter(row => row.user_id !== session.user.id);
+      setReactionOverrides(previous => ({ ...previous, [post.id]: result.reacted ? [...others, { user_id: session.user.id, reaction_type: "like" }] : others }));
     } catch (error) { showToast(error.message || "Could not update your reaction."); }
     finally { setReacting(null); }
   }
@@ -77,7 +79,7 @@ export function CommunityFeedScreen({ session, showToast = () => {}, back, push,
     if (!selectedId || !comment.trim() || replying || !session?.user?.id) return;
     setReplying(true);
     try {
-      await addPostComment(selectedId, session.user.id, comment.trim());
+      await addPostComment({ postId: selectedId, userId: session.user.id, content: comment.trim() });
       setComment("");
       query.refetch();
     } catch (error) { showToast(error.message || "Could not post your comment. Please retry."); }
@@ -94,19 +96,18 @@ export function CommunityFeedScreen({ session, showToast = () => {}, back, push,
     </div>;
   }
   function actions(post, detail = false) {
-    const reactions = postReactions(post);
+    const reactions = (reactionOverrides[post.id] || postReactions(post)).filter(row => !row.reaction_type || row.reaction_type === "like");
     const liked = reactions.some(reaction => reaction.user_id === session?.user?.id);
     const comments = postComments(post);
     return <div className="tai-feed-actions">
       <button type="button" className="tai-btn tai-btn-ghost tai-btn-sm" aria-pressed={liked}
         disabled={reacting === post.id} onClick={() => like(post)}>
         <Heart size={16} fill={liked ? "currentColor" : "none"} />
-        {reactions.length || post.like_count || 0} likes
+        {reactions.length} likes
       </button>
       {!detail && <button type="button" className="tai-btn tai-btn-ghost tai-btn-sm" onClick={() => openPost(post)}>
         <MessageSquare size={16} />{comments.length} comments
       </button>}
-      {!detail && <button type="button" className="tai-btn tai-btn-ghost tai-btn-sm" onClick={() => openPost(post)}>Read post →</button>}
     </div>;
   }
 
@@ -169,10 +170,10 @@ export function CommunityFeedScreen({ session, showToast = () => {}, back, push,
       {!query.loading && filteredPosts.length === 0 && <div className="tai-card tai-empty">No posts found.</div>}
       {filteredPosts.map(post => <article key={post.id} className="tai-card tai-feed-preview">
         {header(post)}
-        <button type="button" className="tai-feed-open" onClick={() => openPost(post)} aria-label={`Open post by ${authorName(post)}`}>
+        <div className="tai-feed-open">
           {post.title && <h2 className="tai-feed-post-title">{post.title}</h2>}
-          <p>{String(post.content || post.body || "").replace(/\s+/g, " ").slice(0, 280)}{String(post.content || post.body || "").length > 280 ? "…" : ""}</p>
-        </button>
+          <p>{String(post.content || post.body || "").replace(/\s+/g, " ").trim().slice(0, 280)}{String(post.content || post.body || "").replace(/\s+/g, " ").trim().length > 280 && <>… <button type="button" className="tai-feed-see-more" onClick={() => openPost(post)} aria-label={`See more of post by ${authorName(post)}`}>See more</button></>}</p>
+        </div>
         {actions(post)}
       </article>)}
     </>}

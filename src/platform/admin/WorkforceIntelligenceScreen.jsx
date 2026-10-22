@@ -207,13 +207,13 @@ export function WorkforceIntelligenceScreen({ orgId, orgSelector, currentUserId 
   };
 
   return (
-    <div className="ta-fade">
+    <div className="ta-fade ta-workforce-page">
       <TopBar 
         title="Workforce Intelligence & Growth" 
         sub="Readiness analytics, promotion criteria, skill profiles, and career progression." 
         orgSelector={orgSelector} 
       />
-      
+      <div className="ta-content ta-col ta-gap16">
         {wiQuery.loading && (
           <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
             <div className="ta-hero-banner" style={{ minHeight: 140, display: "flex", alignItems: "center" }}>
@@ -596,6 +596,7 @@ export function WorkforceIntelligenceScreen({ orgId, orgSelector, currentUserId 
         </>
         )}
 
+      </div>
       </div>
     );
   }

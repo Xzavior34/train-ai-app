@@ -852,7 +852,9 @@ export function AIQuizScreen({
               Skill Strengths &amp; Growth Opportunities
             </h3>
 
-            {weakAreas.length === 0 ? (
+            {!hasQuizAttempts ? (
+              <div className="tai-empty">Complete a quiz to see your strengths and areas to practise.</div>
+            ) : weakAreas.length === 0 ? (
               <div className="tai-empty">Great performance! All quiz averages are currently above 75%.</div>
             ) : (
               <div className="tai-col tai-gap10">

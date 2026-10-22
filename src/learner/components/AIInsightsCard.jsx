@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { Brain, RefreshCw, BookOpen, Clock, Target, GraduationCap } from "lucide-react";
 import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
 import { fetchAIInsights } from "../../lib/api/schemaHelper.js";
@@ -53,10 +53,7 @@ function renderInsightsText(raw) {
 // own query) so it only fires when actually mounted on the Achievements
 // screen, matching the pattern GroupChatPanel uses on CommunityScreen.
 export function AIInsightsCard({ session, credits, consumeCredit, onBuyCredits, orgId }) {
-  const insightsQuery = useSupabaseQuery(async () => {
-    if (!session?.user?.id) return null;
-    return fetchAIInsights();
-  }, [session?.user?.id]);
+  const [generation, setGeneration] = useState(0);
 
   // AI Insights manual mode - PRD 8.3, previously entirely unbuilt (only
   // AI Coach had this). When the org has switched this on, a real learner
@@ -68,18 +65,22 @@ export function AIInsightsCard({ session, credits, consumeCredit, onBuyCredits, 
   const insightsEnabled = orgInsightsSettingsQuery.data?.enabled !== false;
   const insightsManualMode = !!orgInsightsSettingsQuery.data?.manual_mode;
   const insightsManualMessage = orgInsightsSettingsQuery.data?.manual_message;
+  const ready = !orgInsightsSettingsQuery.loading && !orgInsightsSettingsQuery.error && insightsEnabled && !insightsManualMode;
+  const insightsQuery = useSupabaseQuery(async () => {
+    if (!session?.user?.id || !ready || !generation) return null;
+    const response = await fetchAIInsights();
+    if (consumeCredit) await consumeCredit(0, "refresh");
+    return response;
+  }, [session?.user?.id, ready, generation]);
 
   const result = insightsQuery.data;
   const stats = result?.stats;
   const outOfCredits = typeof credits === "number" && credits <= 0;
 
-  // The initial load (above, on mount) is free - re-running the analysis on
-  // demand via this button is a second discretionary LLM call, so it spends
-  // 1 AI credit the same way AI quiz generation does (see AIQuizScreen.jsx).
+  // Generate only on request. The server alone checks and charges credits.
   function handleRefresh() {
-    if (outOfCredits) { onBuyCredits && onBuyCredits(); return; }
-    if (consumeCredit) consumeCredit(1);
-    insightsQuery.refetch();
+    if (outOfCredits || result?.status === 402) { onBuyCredits && onBuyCredits(); return; }
+    if (ready) setGeneration(value => value + 1);
   }
 
   if (!insightsEnabled) return null;
@@ -105,8 +106,8 @@ export function AIInsightsCard({ session, credits, consumeCredit, onBuyCredits, 
         <button
           className="tai-iconbtn"
           aria-label={outOfCredits ? "Out of AI credits" : "Refresh AI insights"}
-          title={outOfCredits ? "Out of AI credits for today" : "Refresh (uses 1 AI credit)"}
-          disabled={insightsQuery.loading}
+          title={outOfCredits ? "Add AI credits" : "Generate AI insights (uses AI credits)"}
+          disabled={insightsQuery.loading || !ready}
           onClick={handleRefresh}
         >
           <RefreshCw size={14} />
@@ -117,15 +118,18 @@ export function AIInsightsCard({ session, credits, consumeCredit, onBuyCredits, 
         <div className="tai-empty tai-mt10">Analyzing your learning activity with AI...</div>
       )}
 
-      {!insightsQuery.loading && result?.error && (
-        <div className="tai-empty tai-mt10">{result.error}</div>
+      {!insightsQuery.loading && (result?.error || insightsQuery.error || orgInsightsSettingsQuery.error) && (
+        <div className="tai-mt12" role="alert">{result?.error || "We could not load insights. Please try again shortly."}</div>
       )}
 
-      {!insightsQuery.loading && !result?.error && !result?.insights && (
+      {!insightsQuery.loading && !result?.error && !insightsQuery.error && !orgInsightsSettingsQuery.error && !result?.insights && (
         <div className="tai-empty tai-mt10">
-          Complete a few lessons or quizzes first: AI insights need some learning activity to analyze.
+          {outOfCredits ? "AI insights require credits. Your course and quiz progress remains available without AI credits." : "Generate a personal summary of your learning activity when you are ready. This uses AI credits."}
         </div>
       )}
+      {!insightsQuery.loading && ready && <button type="button" className="tai-btn tai-btn-outline tai-mt12" onClick={handleRefresh}>
+        {outOfCredits || result?.status === 402 ? "Add AI credits" : generation ? "Generate again" : "Generate insights"}
+      </button>}
 
       {!insightsQuery.loading && result?.insights && (
         <>
@@ -133,7 +137,7 @@ export function AIInsightsCard({ session, credits, consumeCredit, onBuyCredits, 
             <div className="tai-row tai-gap8 tai-mt10" style={{ flexWrap: "wrap" }}>
               <span className="tai-tag"><BookOpen size={11} style={{ marginRight: 4, verticalAlign: -2 }} />{stats.completedLessons} lessons</span>
               <span className="tai-tag"><Clock size={11} style={{ marginRight: 4, verticalAlign: -2 }} />{stats.totalHours}h studied</span>
-              <span className="tai-tag"><Target size={11} style={{ marginRight: 4, verticalAlign: -2 }} />{stats.averageScore}% avg quiz score</span>
+              {stats.averageScore != null && <span className="tai-tag"><Target size={11} style={{ marginRight: 4, verticalAlign: -2 }} />{stats.averageScore}% avg assessment score</span>}
               <span className="tai-tag"><GraduationCap size={11} style={{ marginRight: 4, verticalAlign: -2 }} />{stats.enrolledCourses} courses</span>
             </div>
           )}

@@ -23,6 +23,16 @@ try {
       await page.keyboard.press('Escape');
       await page.getByText('Dashboard Switcher', { exact: true }).waitFor({ state: 'hidden' });
     }
+    if (role === 'admin') {
+      await page.locator('.ta-sidebar .ta-nav-item').filter({ hasText: /^Workforce Intelligence$/ }).click();
+      await page.getByText('Workforce Intelligence & Skill Radar', { exact: true }).waitFor();
+    }
+    const footerHeight = await page.locator('.ta-sidebar-tools:visible').evaluate(el => el.getBoundingClientRect().height);
+    if (footerHeight > 60) throw Error(role + ' sidebar controls take too much height: ' + footerHeight);
+    if (role === 'admin') {
+      const margins = await page.locator('.ta-content').evaluate(el => ({ left: parseFloat(getComputedStyle(el).paddingLeft), right: parseFloat(getComputedStyle(el).paddingRight) }));
+      if (margins.left < 16 || margins.right < 16) throw Error('Missing desktop content margins');
+    }
     for (const width of [1440, 390, 360, 768]) {
       await page.setViewportSize({ width, height: 1000 });
       await page.waitForTimeout(350);

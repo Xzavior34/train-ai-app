@@ -1022,56 +1022,24 @@ export function OwnerSidebar({ screen, setScreen, mobileOpen, onClose, onOpenDas
           })}
         </div>
 
-        <div className="ta-nav-footer">
-          {/* Dark / Light Theme Toggle */}
-          <div
-            className="ta-nav-item"
-            onClick={() => {
-              const next = !isDarkTheme;
-              setIsDarkTheme(next);
-              setGlobalThemeDark(next);
-            }}
-            title={isDarkTheme ? "Switch to Light Mode" : "Switch to Dark Mode"}
-            style={{ cursor: "pointer" }}
-          >
-            {isDarkTheme ? <Sun size={16} color="#FBBF24" /> : <Moon size={16} color="var(--text-2)" />}
-            {!effectiveMinimized && <span>{isDarkTheme ? "Light Theme" : "Dark Theme"}</span>}
-          </div>
-
-          <button
-            className="ta-toggle-btn"
-            onClick={toggleMinimized}
-            title={isMinimized ? "Expand sidebar" : "Minimize to icons"}
-            aria-label={isMinimized ? "Expand sidebar" : "Minimize to icons"}
-          >
-            {isMinimized ? <PanelLeftOpen size={16} /> : <PanelLeftClose size={16} />}
+        <div className="ta-nav-footer ta-sidebar-tools" role="group" aria-label="Workspace controls">
+          <button type="button" className="ta-sidebar-tool" onClick={() => {
+            const next = !isDarkTheme; setIsDarkTheme(next); setGlobalThemeDark(next);
+          }} title={isDarkTheme ? "Switch to Light Mode" : "Switch to Dark Mode"} aria-label={isDarkTheme ? "Switch to Light Mode" : "Switch to Dark Mode"}>
+            {isDarkTheme ? <Sun size={18} /> : <Moon size={18} />}
           </button>
-
-          {onOpenDashboardSwitcher && (
-            <div
-              className="ta-nav-item ta-nav-switcher-btn"
-              onClick={() => { onOpenDashboardSwitcher(); onClose(); }}
-              title="Switch Dashboard"
-            >
-              <Repeat size={16} />
-              <span>Switch Dashboard</span>
-              {!effectiveMinimized && <ChevronRight size={14} style={{ marginLeft: "auto" }} />}
-            </div>
-          )}
-
-          <div
-            className="ta-nav-item"
-            onClick={() => {
-              onClose();
-              if (onSignOut) onSignOut();
-              else performGlobalSignOut();
-            }}
-            title="Sign Out"
-            style={{ color: "var(--danger)", cursor: "pointer" }}
-          >
-            <LogOut size={16} />
-            {!effectiveMinimized && <span>Sign Out</span>}
-          </div>
+          <button type="button" className="ta-sidebar-tool" onClick={toggleMinimized}
+            title={isMinimized ? "Expand sidebar" : "Minimize to icons"} aria-label={isMinimized ? "Expand sidebar" : "Minimize to icons"}>
+            {isMinimized ? <PanelLeftOpen size={18} /> : <PanelLeftClose size={18} />}
+          </button>
+          {onOpenDashboardSwitcher && <button type="button" className="ta-sidebar-tool ta-nav-switcher-btn"
+            onClick={() => { onOpenDashboardSwitcher(); onClose(); }} title="Switch Dashboard" aria-label="Switch Dashboard">
+            <Repeat size={18} />
+          </button>}
+          <button type="button" className="ta-sidebar-tool" style={{ color: "var(--danger)" }} title="Sign Out" aria-label="Sign Out"
+            onClick={() => { onClose(); if (onSignOut) onSignOut(); else performGlobalSignOut(); }}>
+            <LogOut size={18} />
+          </button>
         </div>
       </aside>
     </>
@@ -1235,56 +1203,24 @@ export function Sidebar({ workspace, setWorkspace, screen, setScreen, mobileOpen
           })}
         </div>
 
-        <div className="ta-nav-footer">
-          {/* Dark / Light Theme Toggle */}
-          <div
-            className="ta-nav-item"
-            onClick={() => {
-              const next = !isDarkTheme;
-              setIsDarkTheme(next);
-              setGlobalThemeDark(next);
-            }}
-            title={isDarkTheme ? "Switch to Light Mode" : "Switch to Dark Mode"}
-            style={{ cursor: "pointer" }}
-          >
-            {isDarkTheme ? <Sun size={16} color="#FBBF24" /> : <Moon size={16} color="var(--text-2)" />}
-            {!effectiveMinimized && <span>{isDarkTheme ? "Light Theme" : "Dark Theme"}</span>}
-          </div>
-
-          <button
-            className="ta-toggle-btn"
-            onClick={toggleMinimized}
-            title={isMinimized ? "Expand sidebar" : "Minimize to icons"}
-            aria-label={isMinimized ? "Expand sidebar" : "Minimize to icons"}
-          >
-            {isMinimized ? <PanelLeftOpen size={16} /> : <PanelLeftClose size={16} />}
+        <div className="ta-nav-footer ta-sidebar-tools" role="group" aria-label="Workspace controls">
+          <button type="button" className="ta-sidebar-tool" onClick={() => {
+            const next = !isDarkTheme; setIsDarkTheme(next); setGlobalThemeDark(next);
+          }} title={isDarkTheme ? "Switch to Light Mode" : "Switch to Dark Mode"} aria-label={isDarkTheme ? "Switch to Light Mode" : "Switch to Dark Mode"}>
+            {isDarkTheme ? <Sun size={18} /> : <Moon size={18} />}
           </button>
-
-          {onOpenDashboardSwitcher && (
-            <div
-              className="ta-nav-item ta-nav-switcher-btn"
-              onClick={() => { onOpenDashboardSwitcher(); onClose(); }}
-              title="Switch Dashboard"
-            >
-              <Repeat size={16} />
-              <span>Switch Dashboard</span>
-              {!effectiveMinimized && <ChevronRight size={14} style={{ marginLeft: "auto" }} />}
-            </div>
-          )}
-
-          <div
-            className="ta-nav-item"
-            onClick={() => {
-              onClose();
-              if (onSignOut) onSignOut();
-              else performGlobalSignOut();
-            }}
-            title="Sign Out"
-            style={{ color: "var(--danger)", cursor: "pointer" }}
-          >
-            <LogOut size={16} />
-            {!effectiveMinimized && <span>Sign Out</span>}
-          </div>
+          <button type="button" className="ta-sidebar-tool" onClick={toggleMinimized}
+            title={isMinimized ? "Expand sidebar" : "Minimize to icons"} aria-label={isMinimized ? "Expand sidebar" : "Minimize to icons"}>
+            {isMinimized ? <PanelLeftOpen size={18} /> : <PanelLeftClose size={18} />}
+          </button>
+          {onOpenDashboardSwitcher && <button type="button" className="ta-sidebar-tool ta-nav-switcher-btn"
+            onClick={() => { onOpenDashboardSwitcher(); onClose(); }} title="Switch Dashboard" aria-label="Switch Dashboard">
+            <Repeat size={18} />
+          </button>}
+          <button type="button" className="ta-sidebar-tool" style={{ color: "var(--danger)" }} title="Sign Out" aria-label="Sign Out"
+            onClick={() => { onClose(); if (onSignOut) onSignOut(); else performGlobalSignOut(); }}>
+            <LogOut size={18} />
+          </button>
         </div>
       </aside>
     </>

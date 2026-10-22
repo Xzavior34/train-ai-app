@@ -42,7 +42,9 @@
 .tai-feed-meta { font-size:11px; color:var(--text-2); font-weight:400; margin-top:3px; }
 .tai-feed-post-title { font-size:18px; line-height:1.4; margin:0 0 8px; color:var(--text); overflow-wrap:anywhere; }
 .tai-feed-open { display:block; width:100%; background:none; border:0; padding:0; text-align:left; color:var(--text); cursor:pointer; font:inherit; }
-.tai-feed-open p { font-size:14px; line-height:1.65; margin:0; display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden; overflow-wrap:anywhere; }
+.tai-feed-open p { font-size:14px; line-height:1.65; margin:0; overflow-wrap:anywhere; }
+.tai-feed-see-more { display:inline; padding:0; background:none; border:0; color:var(--primary); font:inherit; font-weight:600; cursor:pointer; }
+.tai-feed-see-more:focus-visible { outline:2px solid var(--primary); outline-offset:3px; }
 .tai-feed-open:focus-visible { outline:2px solid var(--primary); outline-offset:5px; border-radius:3px; }
 .tai-feed-actions { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
 .tai-feed-preview > .tai-feed-actions, .tai-feed-detail > .tai-feed-actions { border-top:1px solid var(--border); padding-top:10px; }
@@ -69,3 +71,14 @@
   .tai-feed-hero p { font-size:12px; }
   .tai-feed-preview, .tai-feed-detail, .tai-feed-comments { padding:16px !important; }
 }
+.ta .ta-sidebar-tools { flex-direction:row; align-items:center; justify-content:space-between; gap:4px; padding-top:10px; }
+.ta .ta-sidebar-tool { display:inline-flex; align-items:center; justify-content:center; flex:1; min-width:0; height:38px; padding:8px; border:1px solid transparent; border-radius:8px; background:transparent; color:var(--text-2); cursor:pointer; }
+.ta .ta-sidebar-tool:hover { background:var(--surface-2); border-color:var(--border); }
+.ta .ta-sidebar-tool:focus-visible { outline:2px solid var(--primary); outline-offset:2px; }
+.ta .ta-sidebar-minimized .ta-sidebar-tools { flex-wrap:wrap; }
+.ta .ta-sidebar-minimized .ta-sidebar-tool { flex-basis:100%; }
+.ta .ta-workforce-page .ta-sidebar-layout { grid-template-columns:minmax(0, 1.3fr) minmax(0, 1fr); }
+.ta .ta-workforce-page .ta-sidebar-layout > * { min-width:0; }
+.ta .ta-workforce-page .ta-row.ta-between { flex-wrap:wrap; gap:12px; }
+.ta .ta-workforce-page .ta-sub { white-space:normal; overflow-wrap:anywhere; }
+@media (max-width: 1100px) { .ta .ta-workforce-page .ta-sidebar-layout { grid-template-columns:minmax(0, 1fr); } }
