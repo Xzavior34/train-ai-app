@@ -8,7 +8,7 @@ import { Skeleton, SkeletonCard } from "../../components/common/Skeleton.jsx";
 import { fetchOrgDashboardStats, fetchTodaysTasks, fetchCohortProgressSummary, fetchStudentRiskList, fetchTopMentors, fetchUpcomingOrgSessions, fetchOrganizationById, fetchOrgActivityLog } from "../../lib/api/platform.js";
 
 import { KPITrackerCard } from "../components/KPITrackerCard.jsx";
-import { OrganizationReferralCard } from "./PeopleScreen.jsx";
+import { OrganizationReferralCard } from "../components/OrganizationReferralCard.jsx";
 
 export function AdminDashboardScreen({ orgId, profileQuery, setScreen, orgSelector, isPlatformOwner }) {
   const showToast = useContext(ToastContext);
@@ -16,12 +16,12 @@ export function AdminDashboardScreen({ orgId, profileQuery, setScreen, orgSelect
   const effectiveOrgId = orgId || "demo-org-id";
   const orgQuery = useSupabaseQuery(async () => fetchOrganizationById(effectiveOrgId), [effectiveOrgId]);
   const statsQuery = useSupabaseQuery(async () => fetchOrgDashboardStats(effectiveOrgId), [effectiveOrgId]);
-  const tasksQuery = useSupabaseQuery(async () => fetchTodaysTasks(effectiveOrgId), [effectiveOrgId]);
-  const cohortProgressQuery = useSupabaseQuery(async () => fetchCohortProgressSummary(effectiveOrgId), [effectiveOrgId]);
-  const activityLogQuery = useSupabaseQuery(async () => fetchOrgActivityLog(effectiveOrgId), [effectiveOrgId]);
-  const riskQuery = useSupabaseQuery(async () => fetchStudentRiskList(effectiveOrgId), [effectiveOrgId]);
-  const mentorsQuery = useSupabaseQuery(async () => fetchTopMentors(effectiveOrgId), [effectiveOrgId]);
-  const sessionsQuery = useSupabaseQuery(async () => fetchUpcomingOrgSessions(effectiveOrgId), [effectiveOrgId]);
+  const tasksQuery = useSupabaseQuery(async () => fetchTodaysTasks(effectiveOrgId), [effectiveOrgId], { blocksPage: false });
+  const cohortProgressQuery = useSupabaseQuery(async () => fetchCohortProgressSummary(effectiveOrgId), [effectiveOrgId], { blocksPage: false });
+  const activityLogQuery = useSupabaseQuery(async () => fetchOrgActivityLog(effectiveOrgId), [effectiveOrgId], { blocksPage: false });
+  const riskQuery = useSupabaseQuery(async () => fetchStudentRiskList(effectiveOrgId), [effectiveOrgId], { blocksPage: false });
+  const mentorsQuery = useSupabaseQuery(async () => fetchTopMentors(effectiveOrgId), [effectiveOrgId], { blocksPage: false });
+  const sessionsQuery = useSupabaseQuery(async () => fetchUpcomingOrgSessions(effectiveOrgId), [effectiveOrgId], { blocksPage: false });
 
   // The real fix behind "organizations have to pay to see the admin
   // dashboard" - previously nothing checked this at all; self-serve
@@ -294,13 +294,13 @@ export function AdminDashboardScreen({ orgId, profileQuery, setScreen, orgSelect
                   <Brain size={16} style={{ flexShrink: 0 }} />
                   <span style={{ wordBreak: "break-word", lineHeight: 1.3 }}>Cohort Diagnostic Insights</span>
                 </div>
-                <Tag tone={(riskQuery.data || []).length > 0 ? "warning" : "success"}>
-                  {(riskQuery.data || []).length > 0 ? "Active Diagnostics" : "Healthy Pacing"}
+                <Tag tone={riskQuery.loading || riskQuery.error ? "default" : (riskQuery.data || []).length > 0 ? "warning" : "success"}>
+                  {riskQuery.loading ? "Checking..." : riskQuery.error ? "Unavailable" : (riskQuery.data || []).length > 0 ? "Active Diagnostics" : "Healthy Pacing"}
                 </Tag>
               </div>
 
               <div style={{ fontSize: 12.5, color: "var(--text-2)", marginTop: 10, lineHeight: 1.5 }}>
-                {(riskQuery.data || []).length > 0 ? (
+                {riskQuery.loading ? "Loading learner diagnostics..." : riskQuery.error ? "Learner diagnostics could not be loaded. Please retry." : (riskQuery.data || []).length > 0 ? (
                   <><strong>{(riskQuery.data || []).length} learners</strong> flagged for low completion trajectory:</>
                 ) : (
                   <>All active learners are currently meeting or exceeding milestone pacing.</>

@@ -3,9 +3,11 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { createRequire } from 'node:module';
 const require = createRequire(import.meta.url);
-const { chromium } = require(path.join(process.env.TEMP, 'trainai-page-check/node_modules/playwright-core'));
+const { chromium } = require(process.env.PLAYWRIGHT_MODULE || path.join(process.env.TEMP, 'trainai-learner-visual/node_modules/playwright-core'));
 const browser = await chromium.launch({ executablePath: 'C:/Program Files/Google/Chrome/Application/chrome.exe', headless: true });
 const results = [];
+const reportPath = process.env.AUDIT_REPORT_PATH || 'docs/audit/page-browser-results.json';
+fs.mkdirSync(path.dirname(reportPath), { recursive: true });
 const roles = process.argv.slice(2);
 for (const role of (roles.length ? roles : ['public', 'learner', 'mentor', 'admin', 'manager', 'owner'])) {
  const context = await browser.newContext({ viewport: { width: 1440, height: 1000 } });
@@ -25,7 +27,7 @@ for (const role of (roles.length ? roles : ['public', 'learner', 'mentor', 'admi
    crash: /Something went wrong|Application error|Could not verify your workspace access/.test(document.body.innerText),
   }));
   results.push({ role, name, ...state, errors: errors.splice(0) });
-  fs.writeFileSync('docs/audit/page-browser-results.json',JSON.stringify(results,null,2));
+  fs.writeFileSync(reportPath,JSON.stringify(results,null,2));
   console.log(JSON.stringify({role,name,headings:state.headings,overflow:state.overflow,crash:state.crash,errors:results.at(-1).errors}));
  }
  await page.goto('http://127.0.0.1:5188/?fixture_role='+role);
@@ -70,5 +72,5 @@ for (const role of (roles.length ? roles : ['public', 'learner', 'mentor', 'admi
 }
 await browser.close();
 fs.mkdirSync('docs/audit',{recursive:true});
-fs.writeFileSync('docs/audit/page-browser-results.json',JSON.stringify(results,null,2));
+fs.writeFileSync(reportPath,JSON.stringify(results,null,2));
 if(results.some(row=>row.crash||row.errors.length)) process.exitCode=1;

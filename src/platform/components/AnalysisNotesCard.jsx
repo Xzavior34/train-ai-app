@@ -12,7 +12,7 @@ import { fetchMyAnalysisNotes, addAnalysisNote, deleteAnalysisNote } from "../..
 // than three separate implementations of the same thing.
 export function AnalysisNotesCard({ authorId, organizationId }) {
   const showToast = useContext(ToastContext);
-  const notesQuery = useSupabaseQuery(async () => (authorId ? fetchMyAnalysisNotes(authorId) : []), [authorId]);
+  const notesQuery = useSupabaseQuery(async () => (authorId ? fetchMyAnalysisNotes(authorId) : []), [authorId], { blocksPage: false });
   const [newNote, setNewNote] = useState("");
   const [saving, setSaving] = useState(false);
 

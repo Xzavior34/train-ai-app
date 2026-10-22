@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from "react";
-import { PageLoadingBoundary } from "../components/common/PageLoadingBoundary.jsx";
+import React, { useState, useEffect, lazy, Suspense } from "react";
+import { PageLoadingBoundary, PageSkeleton, skeletonLayoutFor } from "../components/common/PageLoadingBoundary.jsx";
 import { CheckCircle2 } from "lucide-react";
 import { usePlatformData } from "./hooks/usePlatformData.js";
 import { useSupabaseQuery } from "../lib/useSupabaseQuery.js";
@@ -7,15 +7,7 @@ import { SUPABASE_PROJECTS, activeProject, getSupabaseClientForProject, setActiv
 import { TOKENS, OwnerSidebar, DashboardSwitcher, MobileMenuContext, ToastContext, NavigationContext, WorkspaceContext, ActiveDashboardContext, SignOutContext, WorkspaceProfileContext } from "./components/PlatformUI.jsx";
 import { OverviewScreen } from "./superadmin/OverviewScreen.jsx";
 import { OrganizationsScreen } from "./superadmin/OrganizationsScreen.jsx";
-import { OrgOnboardingWizard } from "./superadmin/OrgOnboardingWizard.jsx";
-import { BrandingScreen } from "./superadmin/BrandingScreen.jsx";
-import { PlatformSettingsScreen } from "./superadmin/PlatformSettingsScreen.jsx";
-import { TracksScreen } from "./superadmin/TracksScreen.jsx";
-import { EmailsScreen } from "./superadmin/EmailsScreen.jsx";
-import { AccessControlScreen } from "./superadmin/AccessControlScreen.jsx";
-import { SupportQueueScreen } from "./superadmin/SupportQueueScreen.jsx";
-import { DemoRequestsScreen } from "./superadmin/DemoRequestsScreen.jsx";
-import { fetchAllOrganizationsWithUserCounts } from "../lib/api/platform.js";
+import { fetchAllOrganizations } from "../lib/api/platform.js";
 import { getAvailableDashboards, DASHBOARDS, isPlatformOwnerEmail } from "../lib/roleRouting.js";
 
 const PROJECT_LABELS = {
@@ -33,7 +25,18 @@ const PROJECT_KEYS = [
 // dashboard is "owner", the same way it mounts TrainAILearnerApp for
 // "learner" and TrainAIPlatformApp for "organisation" - three real
 // dashboards, not one dashboard with a hidden extra tab.
+const lazyScreen = (load, name) => lazy(async () => ({ default: (await load())[name] }));
+const OrgOnboardingWizard = lazyScreen(() => import("./superadmin/OrgOnboardingWizard.jsx"), "OrgOnboardingWizard");
+const BrandingScreen = lazyScreen(() => import("./superadmin/BrandingScreen.jsx"), "BrandingScreen");
+const PlatformSettingsScreen = lazyScreen(() => import("./superadmin/PlatformSettingsScreen.jsx"), "PlatformSettingsScreen");
+const TracksScreen = lazyScreen(() => import("./superadmin/TracksScreen.jsx"), "TracksScreen");
+const EmailsScreen = lazyScreen(() => import("./superadmin/EmailsScreen.jsx"), "EmailsScreen");
+const AccessControlScreen = lazyScreen(() => import("./superadmin/AccessControlScreen.jsx"), "AccessControlScreen");
+const SupportQueueScreen = lazyScreen(() => import("./superadmin/SupportQueueScreen.jsx"), "SupportQueueScreen");
+const DemoRequestsScreen = lazyScreen(() => import("./superadmin/DemoRequestsScreen.jsx"), "DemoRequestsScreen");
+
 export default function PlatformOwnerApp({
+  session,
   isActive = true,
   onSwitchDashboard,
   userRoles: userRolesProp,
@@ -41,8 +44,8 @@ export default function PlatformOwnerApp({
   setSuperAdminSelectedOrgId: controlledSetOrgId,
   onSignOut
 } = {}) {
-  const { session, profileQuery, userRoles: hookRoles } = usePlatformData();
-  const userRoles = userRolesProp || hookRoles;
+  const { profileQuery } = usePlatformData(session, userRolesProp);
+  const userRoles = userRolesProp || [];
   const userEmail = session?.user?.email || profileQuery?.data?.email || "";
 
   useEffect(() => {
@@ -64,7 +67,7 @@ export default function PlatformOwnerApp({
     );
   }
 
-  const allOrgsQuery = useSupabaseQuery(async () => fetchAllOrganizationsWithUserCounts(), [activeProject]);
+  const allOrgsQuery = useSupabaseQuery(async () => fetchAllOrganizations(), [activeProject]);
   const allOrgs = allOrgsQuery.data || [];
   const digitalOrg = allOrgs.find((o) => o.slug === "tech-learning" || o.slug === "digital-users") || allOrgs[0];
   const [internalOrgId, setInternalOrgId] = useState("");
@@ -157,7 +160,9 @@ export default function PlatformOwnerApp({
                 />
 
               <div className="ta-main">
-                <PageLoadingBoundary key={`${screen}:${selectedOrgId || "all"}`} screen={screen} loading={profileQuery.loading} onOpenMenu={() => setMobileOpen(true)}>
+                <Suspense fallback={<PageSkeleton layout={skeletonLayoutFor(screen)} onOpenMenu={() => setMobileOpen(true)} />}>
+                <PageLoadingBoundary key={`${screen}:${selectedOrgId || "all"}`} screen={screen} loading={profileQuery.loading || allOrgsQuery.loading} onOpenMenu={() => setMobileOpen(true)}>
+                {!profileQuery.loading && !allOrgsQuery.loading && <>
                 {screen === "overview" && <OverviewScreen orgSelector={orgSelector} onNavigate={(scr) => setScreen(scr)} />}
                 {screen === "demos" && <DemoRequestsScreen orgSelector={orgSelector} />}
                 {screen === "orgs" && (
@@ -189,7 +194,9 @@ export default function PlatformOwnerApp({
                 {screen === "emails" && <EmailsScreen orgSelector={orgSelector} />}
                 {screen === "support" && <SupportQueueScreen currentUserId={session?.user?.id} />}
                 {screen === "access" && <AccessControlScreen orgSelector={orgSelector} />}
+                </>}
                 </PageLoadingBoundary>
+                </Suspense>
               </div>
             </div>
 

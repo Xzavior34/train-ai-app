@@ -14,7 +14,6 @@ import {
   fetchAllOrganizationsWithUserCounts,
   fetchRecentPlatformActivity,
   fetchAIUsageStats,
-  fetchWebsitePerformanceStats,
   fetchChurnSummary,
   fetchCampaignAttribution,
   checkPlatformHealth,
@@ -38,19 +37,17 @@ export function OverviewScreen({ orgSelector, onNavigate }) {
   const [tenantDateTo, setTenantDateTo] = useState("");
 
   const statsQuery = useSupabaseQuery(async () => fetchPlatformOverviewStats(), []);
-  const orgsQuery = useSupabaseQuery(async () => fetchAllOrganizationsWithUserCounts(), []);
-  const activityQuery = useSupabaseQuery(async () => fetchRecentPlatformActivity(8), []);
-  const aiUsageQuery = useSupabaseQuery(async () => fetchAIUsageStats(), []);
-  const websiteStatsQuery = useSupabaseQuery(async () => fetchWebsitePerformanceStats(), []);
-  const churnQuery = useSupabaseQuery(async () => fetchChurnSummary(), []);
-  const campaignQuery = useSupabaseQuery(async () => fetchCampaignAttribution(), []);
-  const healthQuery = useSupabaseQuery(async () => checkPlatformHealth(), []);
-  const enrollmentTrendQuery = useSupabaseQuery(async () => fetchPlatformEnrollmentTrend(6), []);
-  const aiFeatureUsageQuery = useSupabaseQuery(async () => fetchPlatformAIUsageByFeature(), []);
-  const lessonCountQuery = useSupabaseQuery(async () => fetchPlatformLessonCount(), []);
+  const orgsQuery = useSupabaseQuery(async () => fetchAllOrganizationsWithUserCounts(), [], { blocksPage: false });
+  const activityQuery = useSupabaseQuery(async () => fetchRecentPlatformActivity(8), [], { blocksPage: false });
+  const aiUsageQuery = useSupabaseQuery(async () => fetchAIUsageStats(), [], { blocksPage: false });
+  const churnQuery = useSupabaseQuery(async () => fetchChurnSummary(), [], { blocksPage: false });
+  const campaignQuery = useSupabaseQuery(async () => fetchCampaignAttribution(), [], { blocksPage: false });
+  const healthQuery = useSupabaseQuery(async () => checkPlatformHealth(), [], { blocksPage: false });
+  const enrollmentTrendQuery = useSupabaseQuery(async () => fetchPlatformEnrollmentTrend(6), [], { blocksPage: false });
+  const aiFeatureUsageQuery = useSupabaseQuery(async () => fetchPlatformAIUsageByFeature(), [], { blocksPage: false });
+  const lessonCountQuery = useSupabaseQuery(async () => fetchPlatformLessonCount(), [], { blocksPage: false });
 
   const aiUsage = aiUsageQuery.data;
-  const websiteStats = websiteStatsQuery.data;
   const stats = statsQuery.data;
   const orgs = orgsQuery.data || [];
   const activity = activityQuery.data || [];
@@ -227,7 +224,7 @@ export function OverviewScreen({ orgSelector, onNavigate }) {
               <span className="ta-row" style={{ gap: 4, color: "var(--primary)", fontWeight: 700 }}>
                 <CheckCircle2 size={14} /> Published
               </span>
-              <span style={{ color: "var(--text-3)" }}>{lessonCount} Total Lessons</span>
+              <span style={{ color: "var(--text-3)" }}>{lessonCountQuery.loading ? "..." : lessonCount} Total Lessons</span>
             </div>
           </div>
 
@@ -331,7 +328,7 @@ export function OverviewScreen({ orgSelector, onNavigate }) {
                 <div className="ta-title" style={{ fontSize: 16 }}>AI Inference Engine Telemetry</div>
                 <div className="ta-sub" style={{ fontSize: 12, marginTop: 2 }}>Breakdown by active AI feature from ai_usage_events</div>
               </div>
-              <Tag tone="primary"><Activity size={12} /> {aiUsage?.total ?? 0} Total Calls</Tag>
+              <Tag tone="primary"><Activity size={12} /> {aiUsageQuery.loading ? "..." : aiUsage?.total ?? 0} Total Calls</Tag>
             </div>
 
             <div className="ta-col ta-gap16 anim-stagger" style={{ marginTop: 18 }}>
@@ -360,12 +357,12 @@ export function OverviewScreen({ orgSelector, onNavigate }) {
                 <div className="ta-row ta-between" style={{ fontSize: 12.5 }}>
                   <span style={{ color: "var(--text-2)", fontWeight: 600 }}>Database Ping Round-Trip:</span>
                   <span style={{ color: "var(--success)", fontWeight: 800 }}>
-                    {healthQuery.data?.latencyMs != null ? `${healthQuery.data.latencyMs} ms` : "Online"}
+                    {healthQuery.loading ? "Checking..." : healthQuery.data?.latencyMs != null ? `${healthQuery.data.latencyMs} ms` : "Unavailable"}
                   </span>
                 </div>
                 <div className="ta-row ta-between" style={{ fontSize: 12.5, marginTop: 6 }}>
                   <span style={{ color: "var(--text-2)", fontWeight: 600 }}>AI Calls (Last 7 Days):</span>
-                  <span style={{ color: "var(--text)", fontWeight: 800 }}>{aiUsage?.last7d ?? 0}</span>
+                  <span style={{ color: "var(--text)", fontWeight: 800 }}>{aiUsageQuery.loading ? "..." : aiUsage?.last7d ?? 0}</span>
                 </div>
               </div>
             </div>
@@ -607,9 +604,9 @@ export function OverviewScreen({ orgSelector, onNavigate }) {
               Aggregated from real admin audit log events.
             </div>
             <div className="ta-row ta-gap16" style={{ marginTop: 14 }}>
-              <div><div style={{ fontSize: 20, fontWeight: 800, color: "var(--text)" }}>{churnQuery.data?.suspendedLast30d ?? 0}</div><div style={{ fontSize: 11, color: "var(--text-3)" }}>Suspended, 30d</div></div>
-              <div><div style={{ fontSize: 20, fontWeight: 800, color: "var(--text)" }}>{churnQuery.data?.suspendedLast90d ?? 0}</div><div style={{ fontSize: 11, color: "var(--text-3)" }}>Suspended, 90d</div></div>
-              <div><div style={{ fontSize: 20, fontWeight: 800, color: "var(--success)" }}>{churnQuery.data?.totalActive ?? 0}</div><div style={{ fontSize: 11, color: "var(--text-3)" }}>Active Tenants</div></div>
+              <div><div style={{ fontSize: 20, fontWeight: 800, color: "var(--text)" }}>{churnQuery.loading ? "..." : churnQuery.data?.suspendedLast30d ?? 0}</div><div style={{ fontSize: 11, color: "var(--text-3)" }}>Suspended, 30d</div></div>
+              <div><div style={{ fontSize: 20, fontWeight: 800, color: "var(--text)" }}>{churnQuery.loading ? "..." : churnQuery.data?.suspendedLast90d ?? 0}</div><div style={{ fontSize: 11, color: "var(--text-3)" }}>Suspended, 90d</div></div>
+              <div><div style={{ fontSize: 20, fontWeight: 800, color: "var(--success)" }}>{churnQuery.loading ? "..." : churnQuery.data?.totalActive ?? 0}</div><div style={{ fontSize: 11, color: "var(--text-3)" }}>Active Tenants</div></div>
             </div>
           </div>
 
@@ -622,7 +619,8 @@ export function OverviewScreen({ orgSelector, onNavigate }) {
               UTM tracking grouped by campaign source.
             </div>
             <div className="ta-col ta-gap6" style={{ marginTop: 14 }}>
-              {(campaignQuery.data || []).length === 0 && <div style={{ fontSize: 12, color: "var(--text-3)" }}>No campaign-tagged leads yet.</div>}
+              {campaignQuery.loading && <Skeleton height="32px" />}
+              {!campaignQuery.loading && (campaignQuery.data || []).length === 0 && <div style={{ fontSize: 12, color: "var(--text-3)" }}>{campaignQuery.error ? "Campaign data could not be loaded." : "No campaign-tagged leads yet."}</div>}
               {(campaignQuery.data || []).slice(0, 5).map((c) => (
                 <div key={c.campaign} className="ta-row ta-between" style={{ fontSize: 12.5 }}>
                   <span style={{ color: "var(--text)", fontWeight: 500 }}>{c.campaign}</span>

@@ -6,6 +6,7 @@ import LoadingScreen from "./components/common/LoadingScreen.jsx";
 import ConsentBanner from "./components/common/ConsentBanner.jsx";
 import OfflineIndicator from "./components/common/OfflineIndicator.jsx";
 import AccessRecoveryScreen from "./components/common/AccessRecoveryScreen.jsx";
+import RetainedWorkspace from "./components/common/RetainedWorkspace.jsx";
 import { checkWorkspaceAccess, isTemporaryAccessError } from "./lib/workspaceAccess.js";
 import { applyAccessibilityPrefs, getStoredAccessibilityPrefs } from "./components/common/AccessibilityPanel.jsx";
 import { fetchMyRoles, fetchMyPersonalization, saveMyPersonalization } from "./services/authService.js";
@@ -261,10 +262,7 @@ export default function App() {
     setRoleError(null);
     (async () => {
       try {
-        const [personalization, roles] = await Promise.all([
-          fetchMyPersonalization().catch(() => null),
-          checkWorkspaceAccess(fetchMyRoles)
-        ]);
+        const roles = await checkWorkspaceAccess(fetchMyRoles);
         const rolesList = Array.isArray(roles) && roles.length > 0 ? roles : ["learner"];
         const userEmail = session.user?.email || "";
         const mode = resolveViewMode(rolesList, userEmail);
@@ -273,6 +271,7 @@ export default function App() {
           setUserRoles(rolesList);
           setHasPlatformRole(mode === "platform");
           const rolesKey = session.user.id + ":" + [...rolesList].sort().join(",");
+          const firstAccess = !previousRoles.current?.startsWith(session.user.id + ":");
           if (previousRoles.current !== rolesKey) setViewMode(mode);
           previousRoles.current = rolesKey;
           // Admin-Managed Grouping: organizations/admins now control learner
@@ -286,10 +285,12 @@ export default function App() {
           // background so nothing that reads user_personalization elsewhere
           // (e.g. SkillMasteryCard) breaks on a missing row.
           setNeedsOnboarding(false);
-          if (!personalization && session?.user?.id) {
-            saveMyPersonalization(session.user.id, [], "beginner").catch(() => {});
-          }
           setOnboardingChecked(true);
+          if (firstAccess) {
+            fetchMyPersonalization().then(personalization => {
+              if (!cancelled && !personalization) return saveMyPersonalization(session.user.id, [], "beginner");
+            }).catch(() => {});
+          }
         }
       } catch (error) {
         if (!cancelled) {
@@ -556,6 +557,7 @@ export default function App() {
         <OfflineIndicator mode={offlineMode} />
         {roleConnectionWarning && <WorkspaceConnectionNotice onRetry={() => setRoleRefresh(value => value + 1)} />}
         <PlatformOwnerApp
+          session={session}
           onSwitchDashboard={switchDashboard}
           userRoles={userRoles}
           superAdminSelectedOrgId={superAdminSelectedOrgId}
@@ -579,7 +581,7 @@ export default function App() {
     <>
       <OfflineIndicator mode={offlineMode} />
       {roleConnectionWarning && <WorkspaceConnectionNotice onRetry={() => setRoleRefresh(value => value + 1)} />}
-      <div style={{ display: viewMode === "learner" ? "block" : "none" }}>
+      <RetainedWorkspace key={`learner:${session.user.id}`} active={viewMode === "learner"}>
         <TrainAILearnerApp
           isActive={viewMode === "learner"}
           onSwitchToPlatform={hasPlatformRole ? () => setViewMode("platform") : undefined}
@@ -587,9 +589,10 @@ export default function App() {
           userRoles={userRoles}
           onSignOut={handleGlobalSignOut}
         />
-      </div>
-      {userRoles.some(role => ["admin", "mentor", "manager", "super_admin"].includes(role)) && <div style={{ display: viewMode === "platform" ? "block" : "none" }}>
+      </RetainedWorkspace>
+      {userRoles.some(role => ["admin", "mentor", "manager", "super_admin"].includes(role)) && <RetainedWorkspace key={`platform:${session.user.id}`} active={viewMode === "platform"}>
         <TrainAIPlatformApp
+          session={session}
           isActive={viewMode === "platform"}
           onSwitchToLearner={() => setViewMode("learner")}
           onSwitchDashboard={switchDashboard}
@@ -598,9 +601,10 @@ export default function App() {
           setSuperAdminSelectedOrgId={setSuperAdminSelectedOrgId}
           onSignOut={handleGlobalSignOut}
         />
-      </div>}
-      {isPlatformOwnerEmail(session?.user?.email) && userRoles.includes("super_admin") && <div style={{ display: viewMode === "owner" ? "block" : "none" }}>
+      </RetainedWorkspace>}
+      {isPlatformOwnerEmail(session?.user?.email) && userRoles.includes("super_admin") && <RetainedWorkspace key={`owner:${session.user.id}`} active={viewMode === "owner"}>
         <PlatformOwnerApp
+          session={session}
           isActive={viewMode === "owner"}
           onSwitchDashboard={switchDashboard}
           userRoles={userRoles}
@@ -608,7 +612,7 @@ export default function App() {
           setSuperAdminSelectedOrgId={setSuperAdminSelectedOrgId}
           onSignOut={handleGlobalSignOut}
         />
-      </div>}
+      </RetainedWorkspace>}
       <ConsentBanner session={session} />
     </>
   );

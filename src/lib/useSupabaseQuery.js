@@ -5,14 +5,16 @@ import { PageLoadingContext } from "../components/common/PageLoadingContext.js";
 // loading/error the same way, instead of each one reinventing it.
 // `fetcher` should be an async function returning the data directly (throw
 // on error). `deps` works like useEffect's dependency array.
-export function useSupabaseQuery(fetcher, deps = []) {
+// Secondary cards can set blocksPage:false and display their local skeleton
+// without holding the entire page behind the full-page loading boundary.
+export function useSupabaseQuery(fetcher, deps = [], { blocksPage = true } = {}) {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [reloadToken, setReloadToken] = useState(0);
   const reportPageLoading = useContext(PageLoadingContext);
   const queryId = useId();
-  useEffect(() => { reportPageLoading?.(queryId, loading); }, [reportPageLoading, queryId, loading]);
+  useEffect(() => { reportPageLoading?.(queryId, blocksPage && loading); }, [reportPageLoading, queryId, loading, blocksPage]);
   useEffect(() => () => reportPageLoading?.(queryId, false), [reportPageLoading, queryId]);
 
   useEffect(() => {

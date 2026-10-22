@@ -1,0 +1,57 @@
+[
+  {
+    "role": "admin",
+    "readyMs": 943,
+    "queriesStarted": 20,
+    "apiCalls": 10,
+    "calls": [
+      "fetchCurrentUserProfile",
+      "fetchOrganizationById",
+      "fetchOrgDashboardStats",
+      "fetchTodaysTasks",
+      "fetchCohortProgressSummary",
+      "fetchOrgActivityLog",
+      "fetchUpcomingOrgSessions",
+      "fetchMyAnalysisNotes",
+      "fetchStudentRiskList",
+      "fetchTopMentors"
+    ],
+    "hiddenLearnerMounted": false,
+    "overflow": false
+  },
+  {
+    "role": "owner",
+    "readyMs": 866,
+    "queriesStarted": 17,
+    "apiCalls": 10,
+    "calls": [
+      "fetchCurrentUserProfile",
+      "fetchAllOrganizations",
+      "fetchAllPlatformUsersWithReferralTracking",
+      "fetchOrgMembers",
+      "fetchPlatformOverviewStats",
+      "fetchAllOrganizationsWithUserCounts",
+      "fetchRecentPlatformActivity",
+      "fetchAIUsageStats",
+      "fetchChurnSummary",
+      "fetchCampaignAttribution"
+    ],
+    "hiddenLearnerMounted": false,
+    "overflow": false
+  },
+  {
+    "role": "mentor",
+    "readyMs": 856,
+    "queriesStarted": 16,
+    "apiCalls": 5,
+    "calls": [
+      "fetchCurrentUserProfile",
+      "fetchMentorProfile",
+      "fetchMentorActiveCohorts",
+      "fetchMyLearnerActivityAlerts",
+      "fetchMyAnalysisNotes"
+    ],
+    "hiddenLearnerMounted": false,
+    "overflow": false
+  }
+]

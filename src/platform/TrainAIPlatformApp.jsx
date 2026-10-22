@@ -1,47 +1,15 @@
 import { LoadingSkeleton } from "./../components/common/PageLoadingBoundary.jsx";
-import { InstructorCohortsScreen } from "./mentor/InstructorCohortsScreen.jsx";
-import { PageLoadingBoundary } from "../components/common/PageLoadingBoundary.jsx";
+import { PageLoadingBoundary, PageSkeleton, skeletonLayoutFor } from "../components/common/PageLoadingBoundary.jsx";
 import { useAssignmentRefresh } from "../lib/useAssignmentRefresh.js";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, lazy, Suspense } from "react";
 import { usePlatformData } from "./hooks/usePlatformData.js";
 import { useSupabaseQuery } from "../lib/useSupabaseQuery.js";
 import { fetchMentorProfile, fetchCohortSessions, fetchMyManagedStudyGroups } from "../lib/api/schemaHelper.js";
 import { fetchMentorActiveCohorts } from "../lib/api/platform.js";
 import { fetchLeaderboard } from "../lib/api/learner.js";
 import { TOKENS, Sidebar, DashboardSwitcher, MobileMenuContext, ToastContext, NavigationContext, WorkspaceContext, ActiveDashboardContext, SignOutContext, WorkspaceProfileContext } from "./components/PlatformUI.jsx";
-import { OrgPaymentCallbackScreen } from "./OrgPaymentCallbackScreen.jsx";
 import { AdminDashboardScreen } from "./admin/AdminDashboardScreen.jsx";
-import { PeopleScreen } from "./admin/PeopleScreen.jsx";
-import { ContentScreen } from "./admin/ContentScreen.jsx";
-import { LearningPathsScreen } from "./admin/LearningPathsScreen.jsx";
-import { EmailCenterScreen } from "./admin/EmailCenterScreen.jsx";
-import { PayoutsScreen } from "./admin/PayoutsScreen.jsx";
-import { SeatsScreen } from "./admin/SeatsScreen.jsx";
-import { WorkforceIntelligenceScreen } from "./admin/WorkforceIntelligenceScreen.jsx";
-import { ModerationScreen } from "./admin/ModerationScreen.jsx";
-import { AdminStudyGroupsScreen } from "./admin/AdminStudyGroupsScreen.jsx";
-import { AdminAnalyticsScreen } from "./admin/AdminAnalyticsScreen.jsx";
-import { CohortsScreen } from "./admin/CohortsScreen.jsx";
-import { OrgRoleAccessScreen } from "./admin/OrgRoleAccessScreen.jsx";
-import { CohortDetailScreen } from "./admin/CohortDetailScreen.jsx";
-import { AssessmentsScreen } from "./admin/AssessmentsScreen.jsx";
-import { ComplianceScreen } from "./admin/ComplianceScreen.jsx";
-import { IntegrationsScreen } from "./admin/IntegrationsScreen.jsx";
-import { SettingsHubScreen } from "./admin/SettingsHubScreen.jsx";
-import { DemoRequestsScreen } from "./superadmin/DemoRequestsScreen.jsx";
-import { MentorDashboardScreen } from "./mentor/MentorDashboardScreen.jsx";
-import { MentorStudyGroupsScreen } from "./mentor/MentorStudyGroupsScreen.jsx";
-import { MentorScheduleScreen } from "./mentor/MentorScheduleScreen.jsx";
-import { MenteesScreen } from "./mentor/MenteesScreen.jsx";
-import { MentorMessagesScreen } from "./mentor/MentorMessagesScreen.jsx";
-import { DiscussionsScreen } from "./mentor/DiscussionsScreen.jsx";
-import { MentorAnalyticsScreen } from "./mentor/MentorAnalyticsScreen.jsx";
-import { AdministrativeScreen } from "./mentor/AdministrativeScreen.jsx";
-import { MentorSettingsScreen } from "./mentor/MentorSettingsScreen.jsx";
 import { CheckCircle2 } from "lucide-react";
-import { ManagerDashboardScreen } from "./manager/ManagerDashboardScreen.jsx";
-import { LeaderboardScreen } from "../learner/screens/LeaderboardScreen.jsx";
-import { CommunityScreen } from "../learner/screens/CommunityScreen.jsx";
 import { defaultWorkspaceForRoles, getAllowedWorkspaces, getAvailableDashboards, DASHBOARDS, isPlatformOwnerEmail } from "../lib/roleRouting.js";
 
 // Picks which workspace tab a signed-in platform user lands on by default,
@@ -51,42 +19,51 @@ import { defaultWorkspaceForRoles, getAllowedWorkspaces, getAvailableDashboards,
 // workspace's full CRUD screens by accident) gets its own scoped landing
 // spot instead. HR removed entirely - confirmed directly that HR is not an
 // organization role; Admin/Manager/Instructor is the full set.
-import { fetchAllOrganizationsWithUserCounts } from "../lib/api/platform.js";
+import { fetchAllOrganizations } from "../lib/api/platform.js";
 
-export default function TrainAIPlatformApp({ isActive = true, onSwitchToLearner, onSwitchDashboard, userRoles: userRolesProp, superAdminSelectedOrgId, setSuperAdminSelectedOrgId, onSignOut } = {}) {
-  const { session, profileQuery, orgId, userRoles: fallbackUserRoles } = usePlatformData();
-  const userRoles = userRolesProp && userRolesProp.length ? userRolesProp : fallbackUserRoles;
+const lazyScreen = (load, name) => lazy(async () => ({ default: (await load())[name] }));
+const InstructorCohortsScreen = lazyScreen(() => import("./mentor/InstructorCohortsScreen.jsx"), "InstructorCohortsScreen");
+const OrgPaymentCallbackScreen = lazyScreen(() => import("./OrgPaymentCallbackScreen.jsx"), "OrgPaymentCallbackScreen");
+const PeopleScreen = lazyScreen(() => import("./admin/PeopleScreen.jsx"), "PeopleScreen");
+const ContentScreen = lazyScreen(() => import("./admin/ContentScreen.jsx"), "ContentScreen");
+const LearningPathsScreen = lazyScreen(() => import("./admin/LearningPathsScreen.jsx"), "LearningPathsScreen");
+const EmailCenterScreen = lazyScreen(() => import("./admin/EmailCenterScreen.jsx"), "EmailCenterScreen");
+const PayoutsScreen = lazyScreen(() => import("./admin/PayoutsScreen.jsx"), "PayoutsScreen");
+const SeatsScreen = lazyScreen(() => import("./admin/SeatsScreen.jsx"), "SeatsScreen");
+const WorkforceIntelligenceScreen = lazyScreen(() => import("./admin/WorkforceIntelligenceScreen.jsx"), "WorkforceIntelligenceScreen");
+const ModerationScreen = lazyScreen(() => import("./admin/ModerationScreen.jsx"), "ModerationScreen");
+const AdminStudyGroupsScreen = lazyScreen(() => import("./admin/AdminStudyGroupsScreen.jsx"), "AdminStudyGroupsScreen");
+const AdminAnalyticsScreen = lazyScreen(() => import("./admin/AdminAnalyticsScreen.jsx"), "AdminAnalyticsScreen");
+const CohortsScreen = lazyScreen(() => import("./admin/CohortsScreen.jsx"), "CohortsScreen");
+const OrgRoleAccessScreen = lazyScreen(() => import("./admin/OrgRoleAccessScreen.jsx"), "OrgRoleAccessScreen");
+const CohortDetailScreen = lazyScreen(() => import("./admin/CohortDetailScreen.jsx"), "CohortDetailScreen");
+const AssessmentsScreen = lazyScreen(() => import("./admin/AssessmentsScreen.jsx"), "AssessmentsScreen");
+const ComplianceScreen = lazyScreen(() => import("./admin/ComplianceScreen.jsx"), "ComplianceScreen");
+const IntegrationsScreen = lazyScreen(() => import("./admin/IntegrationsScreen.jsx"), "IntegrationsScreen");
+const SettingsHubScreen = lazyScreen(() => import("./admin/SettingsHubScreen.jsx"), "SettingsHubScreen");
+const DemoRequestsScreen = lazyScreen(() => import("./superadmin/DemoRequestsScreen.jsx"), "DemoRequestsScreen");
+const MentorDashboardScreen = lazyScreen(() => import("./mentor/MentorDashboardScreen.jsx"), "MentorDashboardScreen");
+const MentorStudyGroupsScreen = lazyScreen(() => import("./mentor/MentorStudyGroupsScreen.jsx"), "MentorStudyGroupsScreen");
+const MentorScheduleScreen = lazyScreen(() => import("./mentor/MentorScheduleScreen.jsx"), "MentorScheduleScreen");
+const MenteesScreen = lazyScreen(() => import("./mentor/MenteesScreen.jsx"), "MenteesScreen");
+const MentorMessagesScreen = lazyScreen(() => import("./mentor/MentorMessagesScreen.jsx"), "MentorMessagesScreen");
+const DiscussionsScreen = lazyScreen(() => import("./mentor/DiscussionsScreen.jsx"), "DiscussionsScreen");
+const MentorAnalyticsScreen = lazyScreen(() => import("./mentor/MentorAnalyticsScreen.jsx"), "MentorAnalyticsScreen");
+const AdministrativeScreen = lazyScreen(() => import("./mentor/AdministrativeScreen.jsx"), "AdministrativeScreen");
+const MentorSettingsScreen = lazyScreen(() => import("./mentor/MentorSettingsScreen.jsx"), "MentorSettingsScreen");
+const ManagerDashboardScreen = lazyScreen(() => import("./manager/ManagerDashboardScreen.jsx"), "ManagerDashboardScreen");
+const LeaderboardScreen = lazyScreen(() => import("../learner/screens/LeaderboardScreen.jsx"), "LeaderboardScreen");
+const CommunityScreen = lazyScreen(() => import("../learner/screens/CommunityScreen.jsx"), "CommunityScreen");
 
-  const mentorProfileQuery = useSupabaseQuery(async () => {
-    if (!session?.user?.id) return null;
-    return fetchMentorProfile(session.user.id);
-  }, [session?.user?.id]);
-  const mentorId = mentorProfileQuery.data?.id || null;
-
-  // Real data for the mentor's "Learner Community View" - this used to render
-  // the same learner CommunityScreen but with none of its data queries wired
-  // in, so it silently showed as empty for every mentor. Wire it to the
-  // mentor's own first active cohort, their managed study groups, and the
-  // org leaderboard - the same shape the learner-facing summary expects.
-  const mentorCohortsForCommunityQuery = useSupabaseQuery(async () => (
-    session?.user?.id ? fetchMentorActiveCohorts(session.user.id) : []
-  ), [session?.user?.id]);
-  useAssignmentRefresh(session?.user?.id, mentorCohortsForCommunityQuery.refetch);
-  const mentorFirstCohort = (mentorCohortsForCommunityQuery.data || [])[0] || null;
-  const mentorCohortSessionsQuery = useSupabaseQuery(async () => (
-    mentorFirstCohort?.id ? fetchCohortSessions(mentorFirstCohort.id) : []
-  ), [mentorFirstCohort?.id]);
-  const mentorStudyGroupsQuery = useSupabaseQuery(async () => (
-    session?.user?.id ? fetchMyManagedStudyGroups(session.user.id) : []
-  ), [session?.user?.id]);
-  const mentorLeaderboardQuery = useSupabaseQuery(async () => fetchLeaderboard(50), []);
+export default function TrainAIPlatformApp({ session, isActive = true, onSwitchToLearner, onSwitchDashboard, userRoles = [], superAdminSelectedOrgId, setSuperAdminSelectedOrgId, onSignOut } = {}) {
+  const { profileQuery, orgId } = usePlatformData(session, userRoles);
 
   const userEmail = session?.user?.email || profileQuery?.data?.email || "";
   const isSuperAdminUser = isPlatformOwnerEmail(userEmail) && userRoles.includes("super_admin");
 
   const allOrgsQuery = useSupabaseQuery(async () => {
     if (isSuperAdminUser) {
-      return await fetchAllOrganizationsWithUserCounts();
+      return await fetchAllOrganizations();
     }
     return [];
   }, [isSuperAdminUser]);
@@ -128,6 +105,37 @@ export default function TrainAIPlatformApp({ isActive = true, onSwitchToLearner,
   const [switcherOpen, setSwitcherOpen] = useState(false);
 
   const screen = screenByWorkspace[workspace] || "dashboard";
+  // Unvisited dashboards are not mounted. Keep these dependencies stable when
+  // a visited workspace is hidden so switching dashboards does not clear drafts.
+  const needsMentorData = workspace === "mentor";
+  const needsMentorCommunity = needsMentorData && screen === "community";
+  const mentorProfileQuery = useSupabaseQuery(async () => {
+    if (!needsMentorData || !session?.user?.id) return null;
+    return fetchMentorProfile(session.user.id);
+  }, [session?.user?.id, needsMentorData]);
+  const mentorId = mentorProfileQuery.data?.id || null;
+
+  // Real data for the mentor's "Learner Community View" - this used to render
+  // the same learner CommunityScreen but with none of its data queries wired
+  // in, so it silently showed as empty for every mentor. Wire it to the
+  // mentor's own first active cohort, their managed study groups, and the
+  // org leaderboard - the same shape the learner-facing summary expects.
+  const mentorCohortsForCommunityQuery = useSupabaseQuery(async () => (
+    needsMentorCommunity && session?.user?.id ? fetchMentorActiveCohorts(session.user.id) : []
+  ), [session?.user?.id, needsMentorCommunity]);
+  useAssignmentRefresh(isActive && needsMentorCommunity ? session?.user?.id : null, mentorCohortsForCommunityQuery.refetch);
+  const mentorFirstCohort = (mentorCohortsForCommunityQuery.data || [])[0] || null;
+  const mentorCohortSessionsQuery = useSupabaseQuery(async () => (
+    needsMentorCommunity && mentorFirstCohort?.id ? fetchCohortSessions(mentorFirstCohort.id) : []
+  ), [mentorFirstCohort?.id, needsMentorCommunity]);
+  const mentorStudyGroupsQuery = useSupabaseQuery(async () => (
+    needsMentorCommunity && session?.user?.id ? fetchMyManagedStudyGroups(session.user.id) : []
+  ), [session?.user?.id, needsMentorCommunity]);
+  const mentorLeaderboardQuery = useSupabaseQuery(async () => needsMentorCommunity ? fetchLeaderboard(50) : [], [needsMentorCommunity]);
+  const workspaceReady = !profileQuery.loading && (!isSuperAdminUser || !allOrgsQuery.loading)
+    && (workspace !== "mentor" || !mentorProfileQuery.loading);
+
+
   function setScreen(s) {
     setScreenByWorkspace(prev => ({ ...prev, [workspace]: s }));
   }
@@ -232,10 +240,12 @@ export default function TrainAIPlatformApp({ isActive = true, onSwitchToLearner,
                 />
 
             <div className="ta-main">
+              <Suspense fallback={<PageSkeleton layout={skeletonLayoutFor(screen)} onOpenMenu={() => setMobileOpen(true)} />}>
               <PageLoadingBoundary key={`${workspace}:${screen}:${effectiveOrgId || "none"}`} screen={screen}
                 onOpenMenu={() => setMobileOpen(true)}
-                loading={profileQuery.loading || (workspace === "mentor" && mentorProfileQuery.loading)
+                loading={!workspaceReady
                   || (workspace === "mentor" && screen === "community" && (mentorStudyGroupsQuery.loading || mentorCohortsForCommunityQuery.loading || mentorLeaderboardQuery.loading))}>
+              {workspaceReady && <>
               {workspace === "admin" && (
                 <>
                   {screen === "dashboard" && <AdminDashboardScreen orgId={effectiveOrgId} profileQuery={profileQuery} setScreen={setScreen} orgSelector={orgSelector} isPlatformOwner={isSuperAdminUser} />}
@@ -325,7 +335,9 @@ export default function TrainAIPlatformApp({ isActive = true, onSwitchToLearner,
                   {screen === "workforce" && <WorkforceIntelligenceScreen orgId={effectiveOrgId} orgSelector={orgSelector} currentUserId={session?.user?.id} />}
                 </>
               )}
+              </>}
               </PageLoadingBoundary>
+              </Suspense>
             </div>
           </div>
 
