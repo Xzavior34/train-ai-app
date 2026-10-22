@@ -5,6 +5,26 @@ import vm from 'node:vm';
 import {stripTypeScriptTypes} from 'node:module';
 import {validateDemoInput} from '../../supabase/functions/_shared/demoValidation.js';
 import {normalizeCreditBalance} from '../../src/learner/utils/creditBalance.js';
+import {checkWorkspaceAccess} from '../../src/lib/workspaceAccess.js';
+
+test('Workspace checks recover from temporary network failures without retrying access denials', async () => {
+  const waits = [];
+  let calls = 0;
+  const roles = await checkWorkspaceAccess(async () => {
+    if (++calls < 3) throw new TypeError('Failed to fetch');
+    return ['admin'];
+  }, { wait: async ms => waits.push(ms) });
+  assert.deepEqual(roles, ['admin']);
+  assert.deepEqual(waits, [400, 1200]);
+  for (const error of [{ message: 'Permission denied', status: 403 }, { message: 'JWT expired', status: 401 }]) {
+    calls = 0;
+    await assert.rejects(checkWorkspaceAccess(async () => { calls++; throw error; }, { wait: async () => {} }));
+    assert.equal(calls, 1);
+  }
+  calls = 0;
+  await assert.rejects(checkWorkspaceAccess(async () => { calls++; throw new TypeError('Failed to fetch'); }, { wait: async () => {} }), /Failed to fetch/);
+  assert.equal(calls, 3);
+});
 const valid={fullName:'  Fixture Prospect  ',workEmail:'  PERSON@example.invalid ',phoneNumber:'+234 800 123 4567',organizationName:'Fixture Academy',teamSize:'10-50',orgType:'Academy',scheduledDate:'2026-10-26',scheduledTime:'10:00 AM'};
 test('Post reactions validate identity and propagate database failures', async () => {
   const file = fs.readFileSync('src/lib/api/schemaHelper.js', 'utf8');

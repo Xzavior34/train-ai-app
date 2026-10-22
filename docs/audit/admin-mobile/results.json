@@ -1,0 +1,1046 @@
+[
+  {
+    "role": "admin",
+    "page": "Dashboard",
+    "width": 320,
+    "overflow": false,
+    "headingContained": true,
+    "subtitleFits": true,
+    "crash": false
+  },
+  {
+    "role": "admin",
+    "page": "Dashboard",
+    "width": 390,
+    "overflow": false,
+    "headingContained": true,
+    "subtitleFits": true,
+    "crash": false
+  },
+  {
+    "role": "admin",
+    "page": "Dashboard",
+    "width": 768,
+    "overflow": false,
+    "headingContained": true,
+    "subtitleFits": true,
+    "crash": false
+  },
+  {
+    "role": "admin",
+    "page": "Dashboard",
+    "width": 1440,
+    "overflow": false,
+    "headingContained": true,
+    "subtitleFits": true,
+    "crash": false
+  },
+  {
+    "role": "admin",
+    "page": "Demo Requests",
+    "width": 320,
+    "overflow": false,
+    "headingContained": true,
+    "subtitleFits": true,
+    "crash": false
+  },
+  {
+    "role": "admin",
+    "page": "Demo Requests",
+    "width": 390,
+    "overflow": false,
+    "headingContained": true,
+    "subtitleFits": true,
+    "crash": false
+  },
+  {
+    "role": "admin",
+    "page": "Demo Requests",
+    "width": 768,
+    "overflow": false,
+    "headingContained": true,
+    "subtitleFits": true,
+    "crash": false
+  },
+  {
+    "role": "admin",
+    "page": "Demo Requests",
+    "width": 1440,
+    "overflow": false,
+    "headingContained": true,
+    "subtitleFits": true,
+    "crash": false
+  },
+  {
+    "role": "admin",
+    "page": "Workforce Intelligence",
+    "width": 320,
+    "overflow": false,
+    "headingContained": true,
+    "subtitleFits": true,
+    "crash": false
+  },
+  {
+    "role": "admin",
+    "page": "Workforce Intelligence",
+    "width": 390,
+    "overflow": false,
+    "headingContained": true,
+    "subtitleFits": true,
+    "crash": false
+  },
+  {
+    "role": "admin",
+    "page": "Workforce Intelligence",
+    "width": 768,
+    "overflow": false,
+    "headingContained": true,
+    "subtitleFits": true,
+    "crash": false
+  },
+  {
+    "role": "admin",
+    "page": "Workforce Intelligence",
+    "width": 1440,
+    "overflow": false,
+    "headingContained": true,
+    "subtitleFits": true,
+    "crash": false
+  },
+  {
+    "role": "admin",
+    "page": "Courses",
+    "width": 320,
+    "overflow": false,
+    "headingContained": true,
+    "subtitleFits": true,
+    "crash": false
+  },
+  {
+    "role": "admin",
+    "page": "Courses",
+    "width": 390,
+    "overflow": false,
+    "headingContained": true,
+    "subtitleFits": true,
+    "crash": false
+  },
+  {
+    "role": "admin",
+    "page": "Courses",
+    "width": 768,
+    "overflow": false,
+    "headingContained": true,
+    "subtitleFits": true,
+    "crash": false
+  },
+  {
+    "role": "admin",
+    "page": "Courses",
+    "width": 1440,
+    "overflow": false,
+    "headingContained": true,
+    "subtitleFits": true,
+    "crash": false
+  },
+  {
+    "role": "admin",
+    "page": "Learning Paths",
+    "width": 320,
+    "overflow": false,
+    "headingContained": true,
+    "subtitleFits": true,
+    "crash": false
+  },
+  {
+    "role": "admin",
+    "page": "Learning Paths",
+    "width": 390,
+    "overflow": false,
+    "headingContained": true,
+    "subtitleFits": true,
+    "crash": false
+  },
+  {
+    "role": "admin",
+    "page": "Learning Paths",
+    "width": 768,
+    "overflow": false,
+    "headingContained": true,
+    "subtitleFits": true,
+    "crash": false
+  },
+  {
+    "role": "admin",
+    "page": "Learning Paths",
+    "width": 1440,
+    "overflow": false,
+    "headingContained": true,
+    "subtitleFits": true,
+    "crash": false
+  },
+  {
+    "role": "admin",
+    "page": "Cohorts",
+    "width": 320,
+    "overflow": false,
+    "headingContained": true,
+    "subtitleFits": true,
+    "crash": false
+  },
+  {
+    "role": "admin",
+    "page": "Cohorts",
+    "width": 390,
+    "overflow": false,
+    "headingContained": true,
+    "subtitleFits": true,
+    "crash": false
+  },
+  {
+    "role": "admin",
+    "page": "Cohorts",
+    "width": 768,
+    "overflow": false,
+    "headingContained": true,
+    "subtitleFits": true,
+    "crash": false
+  },
+  {
+    "role": "admin",
+    "page": "Cohorts",
+    "width": 1440,
+    "overflow": false,
+    "headingContained": true,
+    "subtitleFits": true,
+    "crash": false
+  },
+  {
+    "role": "admin",
+    "page": "Learner Progress",
+    "width": 320,
+    "overflow": false,
+    "headingContained": true,
+    "subtitleFits": true,
+    "crash": false
+  },
+  {
+    "role": "admin",
+    "page": "Learner Progress",
+    "width": 390,
+    "overflow": false,
+    "headingContained": true,
+    "subtitleFits": true,
+    "crash": false
+  },
+  {
+    "role": "admin",
+    "page": "Learner Progress",
+    "width": 768,
+    "overflow": false,
+    "headingContained": true,
+    "subtitleFits": true,
+    "crash": false
+  },
+  {
+    "role": "admin",
+    "page": "Learner Progress",
+    "width": 1440,
+    "overflow": false,
+    "headingContained": true,
+    "subtitleFits": true,
+    "crash": false
+  },
+  {
+    "role": "admin",
+    "page": "Study Groups",
+    "width": 320,
+    "overflow": false,
+    "headingContained": true,
+    "subtitleFits": true,
+    "crash": false
+  },
+  {
+    "role": "admin",
+    "page": "Study Groups",
+    "width": 390,
+    "overflow": false,
+    "headingContained": true,
+    "subtitleFits": true,
+    "crash": false
+  },
+  {
+    "role": "admin",
+    "page": "Study Groups",
+    "width": 768,
+    "overflow": false,
+    "headingContained": true,
+    "subtitleFits": true,
+    "crash": false
+  },
+  {
+    "role": "admin",
+    "page": "Study Groups",
+    "width": 1440,
+    "overflow": false,
+    "headingContained": true,
+    "subtitleFits": true,
+    "crash": false
+  },
+  {
+    "role": "admin",
+    "page": "Leaderboard & Ranks",
+    "width": 320,
+    "overflow": false,
+    "headingContained": true,
+    "subtitleFits": true,
+    "crash": false
+  },
+  {
+    "role": "admin",
+    "page": "Leaderboard & Ranks",
+    "width": 390,
+    "overflow": false,
+    "headingContained": true,
+    "subtitleFits": true,
+    "crash": false
+  },
+  {
+    "role": "admin",
+    "page": "Leaderboard & Ranks",
+    "width": 768,
+    "overflow": false,
+    "headingContained": true,
+    "subtitleFits": true,
+    "crash": false
+  },
+  {
+    "role": "admin",
+    "page": "Leaderboard & Ranks",
+    "width": 1440,
+    "overflow": false,
+    "headingContained": true,
+    "subtitleFits": true,
+    "crash": false
+  },
+  {
+    "role": "admin",
+    "page": "Assessments & Quizzes",
+    "width": 320,
+    "overflow": false,
+    "headingContained": true,
+    "subtitleFits": true,
+    "crash": false
+  },
+  {
+    "role": "admin",
+    "page": "Assessments & Quizzes",
+    "width": 390,
+    "overflow": false,
+    "headingContained": true,
+    "subtitleFits": true,
+    "crash": false
+  },
+  {
+    "role": "admin",
+    "page": "Assessments & Quizzes",
+    "width": 768,
+    "overflow": false,
+    "headingContained": true,
+    "subtitleFits": true,
+    "crash": false
+  },
+  {
+    "role": "admin",
+    "page": "Assessments & Quizzes",
+    "width": 1440,
+    "overflow": false,
+    "headingContained": true,
+    "subtitleFits": true,
+    "crash": false
+  },
+  {
+    "role": "admin",
+    "page": "Users & Access",
+    "width": 320,
+    "overflow": false,
+    "headingContained": true,
+    "subtitleFits": true,
+    "crash": false
+  },
+  {
+    "role": "admin",
+    "page": "Users & Access",
+    "width": 390,
+    "overflow": false,
+    "headingContained": true,
+    "subtitleFits": true,
+    "crash": false
+  },
+  {
+    "role": "admin",
+    "page": "Users & Access",
+    "width": 768,
+    "overflow": false,
+    "headingContained": true,
+    "subtitleFits": true,
+    "crash": false
+  },
+  {
+    "role": "admin",
+    "page": "Users & Access",
+    "width": 1440,
+    "overflow": false,
+    "headingContained": true,
+    "subtitleFits": true,
+    "crash": false
+  },
+  {
+    "role": "admin",
+    "page": "Role & Access Control",
+    "width": 320,
+    "overflow": false,
+    "headingContained": true,
+    "subtitleFits": true,
+    "crash": false
+  },
+  {
+    "role": "admin",
+    "page": "Role & Access Control",
+    "width": 390,
+    "overflow": false,
+    "headingContained": true,
+    "subtitleFits": true,
+    "crash": false
+  },
+  {
+    "role": "admin",
+    "page": "Role & Access Control",
+    "width": 768,
+    "overflow": false,
+    "headingContained": true,
+    "subtitleFits": true,
+    "crash": false
+  },
+  {
+    "role": "admin",
+    "page": "Role & Access Control",
+    "width": 1440,
+    "overflow": false,
+    "headingContained": true,
+    "subtitleFits": true,
+    "crash": false
+  },
+  {
+    "role": "admin",
+    "page": "Email Center",
+    "width": 320,
+    "overflow": false,
+    "headingContained": true,
+    "subtitleFits": true,
+    "crash": false
+  },
+  {
+    "role": "admin",
+    "page": "Email Center",
+    "width": 390,
+    "overflow": false,
+    "headingContained": true,
+    "subtitleFits": true,
+    "crash": false
+  },
+  {
+    "role": "admin",
+    "page": "Email Center",
+    "width": 768,
+    "overflow": false,
+    "headingContained": true,
+    "subtitleFits": true,
+    "crash": false
+  },
+  {
+    "role": "admin",
+    "page": "Email Center",
+    "width": 1440,
+    "overflow": false,
+    "headingContained": true,
+    "subtitleFits": true,
+    "crash": false
+  },
+  {
+    "role": "admin",
+    "page": "Seats & Licensing",
+    "width": 320,
+    "overflow": false,
+    "headingContained": true,
+    "subtitleFits": true,
+    "crash": false
+  },
+  {
+    "role": "admin",
+    "page": "Seats & Licensing",
+    "width": 390,
+    "overflow": false,
+    "headingContained": true,
+    "subtitleFits": true,
+    "crash": false
+  },
+  {
+    "role": "admin",
+    "page": "Seats & Licensing",
+    "width": 768,
+    "overflow": false,
+    "headingContained": true,
+    "subtitleFits": true,
+    "crash": false
+  },
+  {
+    "role": "admin",
+    "page": "Seats & Licensing",
+    "width": 1440,
+    "overflow": false,
+    "headingContained": true,
+    "subtitleFits": true,
+    "crash": false
+  },
+  {
+    "role": "admin",
+    "page": "Payouts",
+    "width": 320,
+    "overflow": false,
+    "headingContained": true,
+    "subtitleFits": true,
+    "crash": false
+  },
+  {
+    "role": "admin",
+    "page": "Payouts",
+    "width": 390,
+    "overflow": false,
+    "headingContained": true,
+    "subtitleFits": true,
+    "crash": false
+  },
+  {
+    "role": "admin",
+    "page": "Payouts",
+    "width": 768,
+    "overflow": false,
+    "headingContained": true,
+    "subtitleFits": true,
+    "crash": false
+  },
+  {
+    "role": "admin",
+    "page": "Payouts",
+    "width": 1440,
+    "overflow": false,
+    "headingContained": true,
+    "subtitleFits": true,
+    "crash": false
+  },
+  {
+    "role": "admin",
+    "page": "Integrations",
+    "width": 320,
+    "overflow": false,
+    "headingContained": true,
+    "subtitleFits": true,
+    "crash": false
+  },
+  {
+    "role": "admin",
+    "page": "Integrations",
+    "width": 390,
+    "overflow": false,
+    "headingContained": true,
+    "subtitleFits": true,
+    "crash": false
+  },
+  {
+    "role": "admin",
+    "page": "Integrations",
+    "width": 768,
+    "overflow": false,
+    "headingContained": true,
+    "subtitleFits": true,
+    "crash": false
+  },
+  {
+    "role": "admin",
+    "page": "Integrations",
+    "width": 1440,
+    "overflow": false,
+    "headingContained": true,
+    "subtitleFits": true,
+    "crash": false
+  },
+  {
+    "role": "admin",
+    "page": "Content Moderation",
+    "width": 320,
+    "overflow": false,
+    "headingContained": true,
+    "subtitleFits": true,
+    "crash": false
+  },
+  {
+    "role": "admin",
+    "page": "Content Moderation",
+    "width": 390,
+    "overflow": false,
+    "headingContained": true,
+    "subtitleFits": true,
+    "crash": false
+  },
+  {
+    "role": "admin",
+    "page": "Content Moderation",
+    "width": 768,
+    "overflow": false,
+    "headingContained": true,
+    "subtitleFits": true,
+    "crash": false
+  },
+  {
+    "role": "admin",
+    "page": "Content Moderation",
+    "width": 1440,
+    "overflow": false,
+    "headingContained": true,
+    "subtitleFits": true,
+    "crash": false
+  },
+  {
+    "role": "admin",
+    "page": "Analytics Hub",
+    "width": 320,
+    "overflow": false,
+    "headingContained": true,
+    "subtitleFits": true,
+    "crash": false
+  },
+  {
+    "role": "admin",
+    "page": "Analytics Hub",
+    "width": 390,
+    "overflow": false,
+    "headingContained": true,
+    "subtitleFits": true,
+    "crash": false
+  },
+  {
+    "role": "admin",
+    "page": "Analytics Hub",
+    "width": 768,
+    "overflow": false,
+    "headingContained": true,
+    "subtitleFits": true,
+    "crash": false
+  },
+  {
+    "role": "admin",
+    "page": "Analytics Hub",
+    "width": 1440,
+    "overflow": false,
+    "headingContained": true,
+    "subtitleFits": true,
+    "crash": false
+  },
+  {
+    "role": "admin",
+    "page": "Settings Hub",
+    "width": 320,
+    "overflow": false,
+    "headingContained": true,
+    "subtitleFits": true,
+    "crash": false
+  },
+  {
+    "role": "admin",
+    "page": "Settings Hub",
+    "width": 390,
+    "overflow": false,
+    "headingContained": true,
+    "subtitleFits": true,
+    "crash": false
+  },
+  {
+    "role": "admin",
+    "page": "Settings Hub",
+    "width": 768,
+    "overflow": false,
+    "headingContained": true,
+    "subtitleFits": true,
+    "crash": false
+  },
+  {
+    "role": "admin",
+    "page": "Settings Hub",
+    "width": 1440,
+    "overflow": false,
+    "headingContained": true,
+    "subtitleFits": true,
+    "crash": false
+  },
+  {
+    "role": "owner",
+    "page": "Overview",
+    "width": 320,
+    "overflow": false,
+    "headingContained": true,
+    "subtitleFits": true,
+    "crash": false
+  },
+  {
+    "role": "owner",
+    "page": "Overview",
+    "width": 390,
+    "overflow": false,
+    "headingContained": true,
+    "subtitleFits": true,
+    "crash": false
+  },
+  {
+    "role": "owner",
+    "page": "Overview",
+    "width": 768,
+    "overflow": false,
+    "headingContained": true,
+    "subtitleFits": true,
+    "crash": false
+  },
+  {
+    "role": "owner",
+    "page": "Overview",
+    "width": 1440,
+    "overflow": false,
+    "headingContained": true,
+    "subtitleFits": true,
+    "crash": false
+  },
+  {
+    "role": "owner",
+    "page": "Demo Requests",
+    "width": 320,
+    "overflow": false,
+    "headingContained": true,
+    "subtitleFits": true,
+    "crash": false
+  },
+  {
+    "role": "owner",
+    "page": "Demo Requests",
+    "width": 390,
+    "overflow": false,
+    "headingContained": true,
+    "subtitleFits": true,
+    "crash": false
+  },
+  {
+    "role": "owner",
+    "page": "Demo Requests",
+    "width": 768,
+    "overflow": false,
+    "headingContained": true,
+    "subtitleFits": true,
+    "crash": false
+  },
+  {
+    "role": "owner",
+    "page": "Demo Requests",
+    "width": 1440,
+    "overflow": false,
+    "headingContained": true,
+    "subtitleFits": true,
+    "crash": false
+  },
+  {
+    "role": "owner",
+    "page": "Organizations",
+    "width": 320,
+    "overflow": false,
+    "headingContained": true,
+    "subtitleFits": true,
+    "crash": false
+  },
+  {
+    "role": "owner",
+    "page": "Organizations",
+    "width": 390,
+    "overflow": false,
+    "headingContained": true,
+    "subtitleFits": true,
+    "crash": false
+  },
+  {
+    "role": "owner",
+    "page": "Organizations",
+    "width": 768,
+    "overflow": false,
+    "headingContained": true,
+    "subtitleFits": true,
+    "crash": false
+  },
+  {
+    "role": "owner",
+    "page": "Organizations",
+    "width": 1440,
+    "overflow": false,
+    "headingContained": true,
+    "subtitleFits": true,
+    "crash": false
+  },
+  {
+    "role": "owner",
+    "page": "Org Onboarding",
+    "width": 320,
+    "overflow": false,
+    "headingContained": true,
+    "subtitleFits": true,
+    "crash": false
+  },
+  {
+    "role": "owner",
+    "page": "Org Onboarding",
+    "width": 390,
+    "overflow": false,
+    "headingContained": true,
+    "subtitleFits": true,
+    "crash": false
+  },
+  {
+    "role": "owner",
+    "page": "Org Onboarding",
+    "width": 768,
+    "overflow": false,
+    "headingContained": true,
+    "subtitleFits": true,
+    "crash": false
+  },
+  {
+    "role": "owner",
+    "page": "Org Onboarding",
+    "width": 1440,
+    "overflow": false,
+    "headingContained": true,
+    "subtitleFits": true,
+    "crash": false
+  },
+  {
+    "role": "owner",
+    "page": "Branding",
+    "width": 320,
+    "overflow": false,
+    "headingContained": true,
+    "subtitleFits": true,
+    "crash": false
+  },
+  {
+    "role": "owner",
+    "page": "Branding",
+    "width": 390,
+    "overflow": false,
+    "headingContained": true,
+    "subtitleFits": true,
+    "crash": false
+  },
+  {
+    "role": "owner",
+    "page": "Branding",
+    "width": 768,
+    "overflow": false,
+    "headingContained": true,
+    "subtitleFits": true,
+    "crash": false
+  },
+  {
+    "role": "owner",
+    "page": "Branding",
+    "width": 1440,
+    "overflow": false,
+    "headingContained": true,
+    "subtitleFits": true,
+    "crash": false
+  },
+  {
+    "role": "owner",
+    "page": "Platform Settings",
+    "width": 320,
+    "overflow": false,
+    "headingContained": true,
+    "subtitleFits": true,
+    "crash": false
+  },
+  {
+    "role": "owner",
+    "page": "Platform Settings",
+    "width": 390,
+    "overflow": false,
+    "headingContained": true,
+    "subtitleFits": true,
+    "crash": false
+  },
+  {
+    "role": "owner",
+    "page": "Platform Settings",
+    "width": 768,
+    "overflow": false,
+    "headingContained": true,
+    "subtitleFits": true,
+    "crash": false
+  },
+  {
+    "role": "owner",
+    "page": "Platform Settings",
+    "width": 1440,
+    "overflow": false,
+    "headingContained": true,
+    "subtitleFits": true,
+    "crash": false
+  },
+  {
+    "role": "owner",
+    "page": "Learning Tracks",
+    "width": 320,
+    "overflow": false,
+    "headingContained": true,
+    "subtitleFits": true,
+    "crash": false
+  },
+  {
+    "role": "owner",
+    "page": "Learning Tracks",
+    "width": 390,
+    "overflow": false,
+    "headingContained": true,
+    "subtitleFits": true,
+    "crash": false
+  },
+  {
+    "role": "owner",
+    "page": "Learning Tracks",
+    "width": 768,
+    "overflow": false,
+    "headingContained": true,
+    "subtitleFits": true,
+    "crash": false
+  },
+  {
+    "role": "owner",
+    "page": "Learning Tracks",
+    "width": 1440,
+    "overflow": false,
+    "headingContained": true,
+    "subtitleFits": true,
+    "crash": false
+  },
+  {
+    "role": "owner",
+    "page": "Platform Emails",
+    "width": 320,
+    "overflow": false,
+    "headingContained": true,
+    "subtitleFits": true,
+    "crash": false
+  },
+  {
+    "role": "owner",
+    "page": "Platform Emails",
+    "width": 390,
+    "overflow": false,
+    "headingContained": true,
+    "subtitleFits": true,
+    "crash": false
+  },
+  {
+    "role": "owner",
+    "page": "Platform Emails",
+    "width": 768,
+    "overflow": false,
+    "headingContained": true,
+    "subtitleFits": true,
+    "crash": false
+  },
+  {
+    "role": "owner",
+    "page": "Platform Emails",
+    "width": 1440,
+    "overflow": false,
+    "headingContained": true,
+    "subtitleFits": true,
+    "crash": false
+  },
+  {
+    "role": "owner",
+    "page": "Support Queue",
+    "width": 320,
+    "overflow": false,
+    "headingContained": true,
+    "subtitleFits": true,
+    "crash": false
+  },
+  {
+    "role": "owner",
+    "page": "Support Queue",
+    "width": 390,
+    "overflow": false,
+    "headingContained": true,
+    "subtitleFits": true,
+    "crash": false
+  },
+  {
+    "role": "owner",
+    "page": "Support Queue",
+    "width": 768,
+    "overflow": false,
+    "headingContained": true,
+    "subtitleFits": true,
+    "crash": false
+  },
+  {
+    "role": "owner",
+    "page": "Support Queue",
+    "width": 1440,
+    "overflow": false,
+    "headingContained": true,
+    "subtitleFits": true,
+    "crash": false
+  },
+  {
+    "role": "owner",
+    "page": "Access Control",
+    "width": 320,
+    "overflow": false,
+    "headingContained": true,
+    "subtitleFits": true,
+    "crash": false
+  },
+  {
+    "role": "owner",
+    "page": "Access Control",
+    "width": 390,
+    "overflow": false,
+    "headingContained": true,
+    "subtitleFits": true,
+    "crash": false
+  },
+  {
+    "role": "owner",
+    "page": "Access Control",
+    "width": 768,
+    "overflow": false,
+    "headingContained": true,
+    "subtitleFits": true,
+    "crash": false
+  },
+  {
+    "role": "owner",
+    "page": "Access Control",
+    "width": 1440,
+    "overflow": false,
+    "headingContained": true,
+    "subtitleFits": true,
+    "crash": false
+  }
+]

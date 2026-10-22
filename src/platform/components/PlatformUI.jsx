@@ -19,6 +19,7 @@ export const NavigationContext = React.createContext(null);
 export const WorkspaceContext = React.createContext("admin");
 export const ActiveDashboardContext = React.createContext(true);
 export const SignOutContext = React.createContext(null);
+export const WorkspaceProfileContext = React.createContext(null);
 
 export function getStoredThemeDark() {
   try {
@@ -241,7 +242,7 @@ export const TOKENS = `
   .ta-main { flex: 1; min-width: 0; margin-left: var(--sidebar-w); transition: margin-left .2s ease; }
   .ta-sidebar.ta-sidebar-minimized + .ta-main { margin-left: 76px; }
   .ta-topbar {
-    height: 58px; min-height: 58px; max-height: 58px; border-bottom: 1px solid var(--border); background: var(--surface);
+    min-height: 58px; border-bottom: 1px solid var(--border); background: var(--surface);
     display: flex; align-items: center; justify-content: space-between; padding: 0 clamp(14px, 2vw, 28px); position: sticky; top: 0; z-index: 50;
     box-shadow: 0 1px 3px rgba(0,0,0,0.03); box-sizing: border-box; width: 100%;
   }
@@ -554,7 +555,7 @@ export const TOKENS = `
     }
   }
   @media (max-width: 640px) {
-    .ta-topbar { padding: 0 14px; height: 56px; min-height: 56px; }
+    .ta-topbar { padding: 0 14px; min-height: 56px; }
     .ta-content { padding: 14px 14px calc(86px + env(safe-area-inset-bottom)); width: 100%; box-sizing: border-box; }
     .ta-card:not(.ta-dropdown-card) { padding: 18px 16px; border-radius: 16px; width: 100%; box-sizing: border-box; }
     .ta-h1 { font-size: 15px; }
@@ -563,6 +564,26 @@ export const TOKENS = `
     .ta-grid, .ta-grid-5, .ta-grid-4, .ta-grid-3, .ta-grid-2 { grid-template-columns: 1fr !important; gap: 14px !important; width: 100% !important; }
   }
   .ta-btn { border: none; cursor: pointer; border-radius: 10px; font-weight: 700; font-size: 13px; padding: 8px 16px; min-height: 36px; white-space: nowrap; flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; gap: 8px; transition: all .18s cubic-bezier(0.16, 1, 0.3, 1); font-family: var(--font); }
+  /* Let page copy use the full row, independently of the mobile controls. */
+  @media (max-width: 899px) {
+    .ta-topbar {
+      display: grid; grid-template-columns: minmax(0, 1fr) auto;
+      height: auto; max-height: none; gap: 10px 8px;
+      padding-block: 10px !important;
+    }
+    .ta-topbar-left { display: contents; }
+    .ta-topbar-left > .ta-menu-btn { grid-column: 1; grid-row: 1; }
+    .ta-topbar-heading { grid-column: 1 / -1; grid-row: 2; }
+    .ta-topbar-right { grid-column: 2; grid-row: 1; min-width: 0; }
+    .ta-topbar .ta-h1 { font-size: 17px !important; overflow: visible; overflow-wrap: break-word !important; }
+    .ta-topbar .ta-sub { font-size: 12px !important; overflow: visible; overflow-wrap: break-word !important; }
+    .ta-topbar .ta-btn { white-space: normal !important; max-width: 100%; }
+    .ta-org-selector select { width: 100%; min-width: 0; }
+    .ta-hero-actions > * { max-width: 100%; white-space: normal !important; height: auto !important; }
+  }
+  @media (max-width: 480px) {
+    .ta-topbar .ta-profile-pill-text { display: none; }
+  }
   .ta-btn:active { transform: scale(.96); }
   .ta-btn-primary { background: var(--grad); color: #fff; box-shadow: 0 4px 14px rgba(37, 99, 235, 0.32); }
   .ta-btn-primary:hover { box-shadow: 0 8px 22px -2px rgba(37, 99, 235,0.48); transform: translateY(-2px); }
@@ -1338,7 +1359,9 @@ function SearchResultRow({ icon: Icon, name, detail, type, onClick }) {
   );
 }
 
-export function TopBar({ title, sub, right, orgSelector, profileQuery, onNavigate, onSignOut }) {
+export function TopBar({ title, sub, right, orgSelector, profileQuery: providedProfileQuery, onNavigate, onSignOut }) {
+  const workspaceProfileQuery = useContext(WorkspaceProfileContext);
+  const profileQuery = providedProfileQuery || workspaceProfileQuery;
   const openMenu = useContext(MobileMenuContext);
   const navFromContext = useContext(NavigationContext);
   const currentWorkspace = useContext(WorkspaceContext);
@@ -1482,7 +1505,7 @@ export function TopBar({ title, sub, right, orgSelector, profileQuery, onNavigat
           >
             <Menu size={22} color="var(--text)" strokeWidth={2.3} />
           </button>
-          <div style={{ minWidth: 0, flex: 1 }}>
+          <div className="ta-topbar-heading" style={{ minWidth: 0, flex: 1 }}>
             <div className="ta-h1">{title}</div>
             {sub && <div className="ta-sub">{sub}</div>}
           </div>

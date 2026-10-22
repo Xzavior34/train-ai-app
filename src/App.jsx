@@ -5,6 +5,8 @@ import { useAuth } from "./hooks/useAuth.js";
 import LoadingScreen from "./components/common/LoadingScreen.jsx";
 import ConsentBanner from "./components/common/ConsentBanner.jsx";
 import OfflineIndicator from "./components/common/OfflineIndicator.jsx";
+import AccessRecoveryScreen from "./components/common/AccessRecoveryScreen.jsx";
+import { checkWorkspaceAccess, isTemporaryAccessError } from "./lib/workspaceAccess.js";
 import { applyAccessibilityPrefs, getStoredAccessibilityPrefs } from "./components/common/AccessibilityPanel.jsx";
 import { fetchMyRoles, fetchMyPersonalization, saveMyPersonalization } from "./services/authService.js";
 import { resolveViewMode, getAvailableDashboards, DASHBOARDS, isPlatformOwnerEmail } from "./lib/roleRouting.js";
@@ -206,15 +208,17 @@ export default function App() {
 
   const [onboardingChecked, setOnboardingChecked] = useState(false);
   const [roleError, setRoleError] = useState(null);
+  const [roleConnectionWarning, setRoleConnectionWarning] = useState(false);
   const [roleRefresh, setRoleRefresh] = useState(0);
   const previousRoles = useRef(null);
   useEffect(() => {
     if (!session?.user?.id) return;
     const refresh = () => setRoleRefresh(value => value + 1);
     window.addEventListener("focus", refresh);
+    window.addEventListener("online", refresh);
     window.addEventListener("trainai-role-changed", refresh);
     const timer = window.setInterval(() => { if (!document.hidden) refresh(); }, 30000);
-    return () => { window.removeEventListener("focus", refresh); window.removeEventListener("trainai-role-changed", refresh); window.clearInterval(timer); };
+    return () => { window.removeEventListener("focus", refresh); window.removeEventListener("online", refresh); window.removeEventListener("trainai-role-changed", refresh); window.clearInterval(timer); };
   }, [session?.user?.id]);
   const [needsOnboarding, setNeedsOnboarding] = useState(false);
   const [viewMode, setViewMode] = useState("learner");
@@ -247,23 +251,25 @@ export default function App() {
       setHasPlatformRole(false);
       setViewMode("learner");
       setRoleError(null);
+      setRoleConnectionWarning(false);
       setOnboardingChecked(true);
       return;
     }
 
     let cancelled = false;
-    if (!previousRoles.current?.startsWith(session.user.id + ":")) setOnboardingChecked(false);
+    if (!previousRoles.current?.startsWith(session.user.id + ":") || roleError) setOnboardingChecked(false);
     setRoleError(null);
     (async () => {
       try {
         const [personalization, roles] = await Promise.all([
           fetchMyPersonalization().catch(() => null),
-          fetchMyRoles()
+          checkWorkspaceAccess(fetchMyRoles)
         ]);
         const rolesList = Array.isArray(roles) && roles.length > 0 ? roles : ["learner"];
         const userEmail = session.user?.email || "";
         const mode = resolveViewMode(rolesList, userEmail);
         if (!cancelled) {
+          setRoleConnectionWarning(false);
           setUserRoles(rolesList);
           setHasPlatformRole(mode === "platform");
           const rolesKey = session.user.id + ":" + [...rolesList].sort().join(",");
@@ -286,7 +292,16 @@ export default function App() {
           setOnboardingChecked(true);
         }
       } catch (error) {
-        if (!cancelled) { setRoleError(error.message || "Could not verify workspace access."); setOnboardingChecked(true); }
+        if (!cancelled) {
+          if (previousRoles.current?.startsWith(session.user.id + ":") && isTemporaryAccessError(error)) {
+            setRoleConnectionWarning(true);
+          } else {
+            previousRoles.current = null;
+            setRoleConnectionWarning(false);
+            setRoleError(error.message || "Could not verify workspace access.");
+          }
+          setOnboardingChecked(true);
+        }
       }
     })();
 
@@ -507,7 +522,7 @@ export default function App() {
     );
   }
 
-  if (mfaGate === "error") return <div role="alert" style={{ padding: 40 }}><p>{mfaError || "Could not verify account security."}</p><button onClick={() => setMfaRetry(value => value + 1)}>Retry security check</button> <button onClick={handleGlobalSignOut}>Sign out</button></div>;
+  if (mfaGate === "error") return <AccessRecoveryScreen security error={mfaError} onRetry={() => setMfaRetry(value => value + 1)} onSignOut={handleGlobalSignOut} />;
   if (mfaGate === "checking") {
     return (
       <>
@@ -526,7 +541,7 @@ export default function App() {
     );
   }
 
-  if (roleError) return <div role="alert" style={{ padding: 40 }}><p>Could not verify your workspace access. {roleError}</p><button onClick={() => setRoleRefresh(value => value + 1)}>Retry</button></div>;
+  if (roleError) return <AccessRecoveryScreen error={roleError} onRetry={() => setRoleRefresh(value => value + 1)} onSignOut={handleGlobalSignOut} />;
   if (!onboardingChecked) {
     return (
       <>
@@ -539,6 +554,7 @@ export default function App() {
     return (
       <>
         <OfflineIndicator mode={offlineMode} />
+        {roleConnectionWarning && <WorkspaceConnectionNotice onRetry={() => setRoleRefresh(value => value + 1)} />}
         <PlatformOwnerApp
           onSwitchDashboard={switchDashboard}
           userRoles={userRoles}
@@ -562,6 +578,7 @@ export default function App() {
   return (
     <>
       <OfflineIndicator mode={offlineMode} />
+      {roleConnectionWarning && <WorkspaceConnectionNotice onRetry={() => setRoleRefresh(value => value + 1)} />}
       <div style={{ display: viewMode === "learner" ? "block" : "none" }}>
         <TrainAILearnerApp
           isActive={viewMode === "learner"}
@@ -595,4 +612,11 @@ export default function App() {
       <ConsentBanner session={session} />
     </>
   );
+}
+
+function WorkspaceConnectionNotice({ onRetry }) {
+  return <div className="workspace-connection-notice" role="status">
+    <span>Connection interrupted. Your current page is still open. We’ll retry automatically.</span>
+    <button type="button" onClick={onRetry}>Try reconnecting</button>
+  </div>;
 }

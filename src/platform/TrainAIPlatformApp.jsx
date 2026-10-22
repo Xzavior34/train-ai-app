@@ -8,7 +8,7 @@ import { useSupabaseQuery } from "../lib/useSupabaseQuery.js";
 import { fetchMentorProfile, fetchCohortSessions, fetchMyManagedStudyGroups } from "../lib/api/schemaHelper.js";
 import { fetchMentorActiveCohorts } from "../lib/api/platform.js";
 import { fetchLeaderboard } from "../lib/api/learner.js";
-import { TOKENS, Sidebar, DashboardSwitcher, MobileMenuContext, ToastContext, NavigationContext, WorkspaceContext, ActiveDashboardContext, SignOutContext } from "./components/PlatformUI.jsx";
+import { TOKENS, Sidebar, DashboardSwitcher, MobileMenuContext, ToastContext, NavigationContext, WorkspaceContext, ActiveDashboardContext, SignOutContext, WorkspaceProfileContext } from "./components/PlatformUI.jsx";
 import { OrgPaymentCallbackScreen } from "./OrgPaymentCallbackScreen.jsx";
 import { AdminDashboardScreen } from "./admin/AdminDashboardScreen.jsx";
 import { PeopleScreen } from "./admin/PeopleScreen.jsx";
@@ -212,6 +212,7 @@ export default function TrainAIPlatformApp({ isActive = true, onSwitchToLearner,
     <ActiveDashboardContext.Provider value={isActive}>
     <WorkspaceContext.Provider value={workspace}>
     <SignOutContext.Provider value={onSignOut}>
+    <WorkspaceProfileContext.Provider value={profileQuery}>
       <NavigationContext.Provider value={navigateToScreen}>
         <MobileMenuContext.Provider value={() => setMobileOpen(true)}>
           <ToastContext.Provider value={showToast}>
@@ -363,7 +364,8 @@ export default function TrainAIPlatformApp({ isActive = true, onSwitchToLearner,
       </ToastContext.Provider>
     </MobileMenuContext.Provider>
   </NavigationContext.Provider>
-</SignOutContext.Provider>
+    </WorkspaceProfileContext.Provider>
+    </SignOutContext.Provider>
     </WorkspaceContext.Provider>
     </ActiveDashboardContext.Provider>
 );

@@ -4,7 +4,7 @@ import { CheckCircle2 } from "lucide-react";
 import { usePlatformData } from "./hooks/usePlatformData.js";
 import { useSupabaseQuery } from "../lib/useSupabaseQuery.js";
 import { SUPABASE_PROJECTS, activeProject, getSupabaseClientForProject, setActiveSupabaseProject } from "../services/supabaseClient.js";
-import { TOKENS, OwnerSidebar, DashboardSwitcher, MobileMenuContext, ToastContext, NavigationContext, WorkspaceContext, ActiveDashboardContext, SignOutContext } from "./components/PlatformUI.jsx";
+import { TOKENS, OwnerSidebar, DashboardSwitcher, MobileMenuContext, ToastContext, NavigationContext, WorkspaceContext, ActiveDashboardContext, SignOutContext, WorkspaceProfileContext } from "./components/PlatformUI.jsx";
 import { OverviewScreen } from "./superadmin/OverviewScreen.jsx";
 import { OrganizationsScreen } from "./superadmin/OrganizationsScreen.jsx";
 import { OrgOnboardingWizard } from "./superadmin/OrgOnboardingWizard.jsx";
@@ -140,6 +140,7 @@ export default function PlatformOwnerApp({
     <ActiveDashboardContext.Provider value={isActive}>
     <WorkspaceContext.Provider value={"owner"}>
     <SignOutContext.Provider value={onSignOut}>
+    <WorkspaceProfileContext.Provider value={profileQuery}>
       <NavigationContext.Provider value={(target) => setScreen(target)}>
         <MobileMenuContext.Provider value={() => setMobileOpen(true)}>
           <ToastContext.Provider value={showToast}>
@@ -211,6 +212,7 @@ export default function PlatformOwnerApp({
         </ToastContext.Provider>
       </MobileMenuContext.Provider>
     </NavigationContext.Provider>
+  </WorkspaceProfileContext.Provider>
   </SignOutContext.Provider>
     </WorkspaceContext.Provider>
     </ActiveDashboardContext.Provider>
