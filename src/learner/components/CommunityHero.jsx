@@ -9,7 +9,7 @@ import { Users, Plus } from 'lucide-react';
 export default function CommunityHero({ user, onCreatePost }) {
   return (
     <div
-      className="tai-card tai-community-hero-card anim-fluid-entrance"
+      className="tai-card tai-hero-card tai-community-hero-card anim-fluid-entrance"
       style={{
         borderRadius: 14,
         padding: '22px 24px',
@@ -31,7 +31,7 @@ export default function CommunityHero({ user, onCreatePost }) {
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0, flex: '1 1 240px' }}>
-          <div
+          <div className="tai-decoration-icon"
             style={{
               width: 48,
               height: 48,

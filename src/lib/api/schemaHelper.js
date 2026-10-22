@@ -758,7 +758,7 @@ export async function fetchAllMentors() {
     return {
       ...r,
       name: prof.display_name || r.name || "Instructor",
-      avatar: prof.avatar_url || r.avatar_url || r.avatar || null,
+      avatar: prof.avatar_url || null,
       user_profiles: prof,
     };
   });

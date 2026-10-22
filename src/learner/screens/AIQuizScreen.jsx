@@ -31,6 +31,7 @@ export function AIQuizScreen({
   generateAIQuiz, awardAIQuizCompletionPoints, credits, consumeCredit, onBuyCredits, onRequestCredits,
   coachMessages = [], coachMessagesLoading, coachInput, setCoachInput, coachSending, onSendCoachMessage,
   coachConversations = [], activeCoachConversationId, onSelectCoachConversation, onCreateCoachConversation,
+  coachUnavailableMessage = "",
   gamificationStatsQuery,
 }) {
   const DAILY_QUIZ_GOAL = 3;
@@ -80,10 +81,11 @@ export function AIQuizScreen({
   const chatBottomRef = useRef(null);
 
   useEffect(() => {
-    if (chatBottomRef.current) {
-      chatBottomRef.current.scrollIntoView({ behavior: "smooth" });
+    const container = chatBottomRef.current?.parentElement;
+    if (container && !showEarlierMessages) {
+      container.scrollTop = container.scrollHeight;
     }
-  }, [coachMessages, coachSending]);
+  }, [coachMessages, coachSending, showEarlierMessages]);
 
   function handleQuickPromptClick(promptText) {
     if (setCoachInput) {
@@ -271,6 +273,7 @@ export function AIQuizScreen({
           ========================================================================= */}
       {aiTab === "coach" && (
         <div style={{ display: "flex", flexDirection: "column", gap: 16, width: "100%", minWidth: 0, boxSizing: "border-box" }}>
+          {coachUnavailableMessage && <div className="tai-card" role="status" style={{ fontSize: 13, lineHeight: 1.5 }}>{coachUnavailableMessage}</div>}
 
           {/* Chat History Toolbar & New Thread CTA */}
           <div className="tai-row tai-between" style={{ flexWrap: "wrap", gap: 10 }}>
@@ -315,7 +318,7 @@ export function AIQuizScreen({
               }}
             >
               <MessageSquarePlus size={14} />
-              <span>Write a question</span>
+              <span>New chat</span>
             </button>
           </div>
 
@@ -325,6 +328,7 @@ export function AIQuizScreen({
               <div style={{ fontSize: 12, fontWeight: 800, color: "var(--text-3)", textTransform: "uppercase", letterSpacing: ".04em", marginBottom: 10 }}>
                 Recent AI Learning Sessions
               </div>
+              {chatThreads.length === 0 && <p className="tai-body-text">Your saved conversations will appear here after your first chat.</p>}
 
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 220px), 1fr))", gap: 10 }}>
                 {chatThreads.map(thread => {
@@ -429,7 +433,7 @@ export function AIQuizScreen({
 
             {!coachMessagesLoading && coachMessages.length === 0 && (
               <div style={{ textAlign: "center", margin: "auto", maxWidth: 460, padding: 30 }}>
-                <div style={{ width: 64, height: 64, borderRadius: 10, background: "var(--primary-tint)", display: "inline-flex", alignItems: "center", justifyContent: "center", marginBottom: 14 }}>
+                <div className="tai-decoration-icon" style={{ width: 64, height: 64, borderRadius: 10, background: "var(--primary-tint)", display: "inline-flex", alignItems: "center", justifyContent: "center", marginBottom: 14 }}>
                   <Brain size={28} color="var(--primary)" />
                 </div>
                 <h3 style={{ fontSize: 17, fontWeight: 800, color: "var(--text)", margin: "0 0 6px" }}>
@@ -466,7 +470,7 @@ export function AIQuizScreen({
                   {isUser ? (
                     <Avatar initials={initialsOf(session?.user?.user_metadata?.full_name || session?.user?.email)} size={32} />
                   ) : (
-                    <div style={{ width: 32, height: 32, borderRadius: 6, background: "#2563EB", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, color: "#fff" }}>
+                    <div className="tai-decoration-icon" style={{ width: 32, height: 32, borderRadius: 6, background: "#2563EB", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, color: "#fff" }}>
                       <Bot size={16} />
                     </div>
                   )}
@@ -516,7 +520,7 @@ export function AIQuizScreen({
 
             {coachSending && (
               <div className="tai-row tai-gap10" style={{ alignItems: "center" }}>
-                <div style={{ width: 32, height: 32, borderRadius: 6, background: "#2563EB", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff" }}>
+                <div className="tai-decoration-icon" style={{ width: 32, height: 32, borderRadius: 6, background: "#2563EB", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff" }}>
                   <Bot size={16} />
                 </div>
                 <div style={{ background: "var(--surface-3)", padding: "8px 14px", borderRadius: 8, fontSize: 12, color: "var(--text-2)", fontStyle: "italic", border: "1px solid var(--border)" }}>
@@ -556,7 +560,7 @@ export function AIQuizScreen({
                   onSendCoachMessage && onSendCoachMessage();
                 }
               }}
-              disabled={coachSending}
+              disabled={coachSending || Boolean(coachUnavailableMessage)}
               style={{
                 flex: 1, border: "none", outline: "none", background: "transparent",
                 fontSize: 13, color: "var(--text)", padding: "6px 10px", fontFamily: "inherit"
@@ -565,7 +569,7 @@ export function AIQuizScreen({
 
             <button
               className="tai-btn tai-btn-primary"
-              disabled={coachSending || !(coachInput || "").trim()}
+              disabled={coachSending || Boolean(coachUnavailableMessage) || !(coachInput || "").trim()}
               onClick={() => onSendCoachMessage && onSendCoachMessage()}
               style={{ padding: "8px 16px", borderRadius: 6, fontWeight: 700, display: "inline-flex", alignItems: "center", gap: 6, cursor: (coachSending || !(coachInput || "").trim()) ? "not-allowed" : "pointer" }}
             >

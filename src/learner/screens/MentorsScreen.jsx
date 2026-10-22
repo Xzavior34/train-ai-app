@@ -166,6 +166,7 @@ export function MentorsScreen({
               }}
             >
               <Avatar
+                placeholder="person"
                 initials={selectedProfileMentor.name ? selectedProfileMentor.name.split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase() : "IN"}
                 size={72}
                 src={selectedProfileMentor.avatar || selectedProfileMentor.avatarUrl || null}
@@ -195,7 +196,7 @@ export function MentorsScreen({
               <div style={{ background: "var(--surface-2)", borderRadius: 10, padding: "10px 14px", border: "1px solid var(--border)" }}>
                 <div style={{ fontSize: 11, color: "var(--text-3)", fontWeight: 600 }}>EXPERIENCE</div>
                 <div style={{ fontSize: 14, fontWeight: 800, color: "var(--text)", marginTop: 2 }}>
-                  {selectedProfileMentor.years || 3}+ Years
+                  {selectedProfileMentor.years != null ? `${selectedProfileMentor.years} years` : "Not provided"}
                 </div>
               </div>
               <div style={{ background: "var(--surface-2)", borderRadius: 10, padding: "10px 14px", border: "1px solid var(--border)" }}>
@@ -449,7 +450,7 @@ export function MentorsScreen({
                       }}
                       title="Click to view full instructor profile"
                     >
-                      <Avatar initials={initials} size={52} src={m.avatar || m.avatarUrl || null} />
+                      <Avatar placeholder="person" initials={initials} size={52} src={m.avatar || m.avatarUrl || null} />
                     </div>
                     <div style={{ minWidth: 0 }}>
                       <div className="tai-row tai-gap6" style={{ alignItems: "center" }}>

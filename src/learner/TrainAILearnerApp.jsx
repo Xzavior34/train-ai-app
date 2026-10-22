@@ -297,16 +297,13 @@ export default function TrainAILearnerApp({ isActive = true, onSwitchToPlatform,
   const aiConversationQuery = useSupabaseQuery(async () => {
     if (!session?.user?.id || screen !== "ai") return null;
     if (activeCoachConversationId) return { id: activeCoachConversationId };
-    return fetchOrCreateAIConversation(session.user.id);
+    return null;
   }, [session?.user?.id, screen === "ai", activeCoachConversationId]);
   const coachConversationId = activeCoachConversationId || aiConversationQuery.data?.id || null;
 
   useEffect(() => {
-    const conversations = coachConversationsQuery.data || [];
-    if (!activeCoachConversationId && conversations[0]?.id) {
-      setActiveCoachConversationId(conversations[0].id);
-    }
-  }, [coachConversationsQuery.data, activeCoachConversationId]);
+    setActiveCoachConversationId(null);
+  }, [session?.user?.id]);
   const coachMessagesQuery = useSupabaseQuery(async () => {
     if (!coachConversationId) return [];
     return fetchAIChatMessages(coachConversationId);
@@ -386,6 +383,10 @@ export default function TrainAILearnerApp({ isActive = true, onSwitchToPlatform,
   async function handleSendCoachMessage(customPrompt) {
     const content = (typeof customPrompt === "string" ? customPrompt : coachInput).trim();
     if (!content || coachSending) return;
+    if (orgAISettingsQuery.loading || orgAISettings?.enabled === false || orgAISettings?.manual_mode === true) {
+      showToast(orgAISettingsQuery.loading ? "Checking AI Coach availability..." : "Automatic AI Coach is unavailable for this workspace. Please contact your instructor.");
+      return;
+    }
     if (typeof credits === "number" && credits <= 0) {
       showToast("You have no AI credits remaining. Buy credits or request more from your organization.");
       push("creditsCheckout", { mode: "credits" });
@@ -399,8 +400,9 @@ export default function TrainAILearnerApp({ isActive = true, onSwitchToPlatform,
       const currentUserId = session?.user?.id || "learner";
 
       if (!convId) {
-        const conv = await fetchOrCreateAIConversation(currentUserId);
-        convId = conv?.id || `conv_${currentUserId}_coach`;
+        const conv = await createAIConversation(currentUserId, content.slice(0, 80));
+        if (!conv?.id) throw new Error("Could not start your conversation. Please retry.");
+        convId = conv.id;
         setActiveCoachConversationId(convId);
       }
 
@@ -932,6 +934,7 @@ export default function TrainAILearnerApp({ isActive = true, onSwitchToPlatform,
                   activeCoachConversationId={coachConversationId}
                   onSelectCoachConversation={setActiveCoachConversationId}
                   onCreateCoachConversation={handleCreateCoachConversation}
+                  coachUnavailableMessage={orgAISettingsQuery.loading ? "Checking AI Coach availability..." : orgAISettings?.enabled === false ? "AI Coach has been disabled by your organisation." : orgAISettings?.manual_mode === true ? (orgAISettings.manual_message || "Your organisation has enabled manual mode. Contact your instructor for learning support.") : ""}
                   gamificationStatsQuery={gamificationStatsQuery}
                 />
               )}

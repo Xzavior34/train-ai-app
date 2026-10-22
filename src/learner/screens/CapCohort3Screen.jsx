@@ -457,7 +457,7 @@ export default function CapCohort3Screen({ session, showToast, push, goTab, coho
             >
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <div
+                  <div className="tai-decoration-icon"
                     style={{
                       width: 28, height: 28, borderRadius: 6,
                       background: isSelected ? "#2563EB" : "rgba(100,116,139,0.1)",
@@ -916,7 +916,7 @@ export default function CapCohort3Screen({ session, showToast, push, goTab, coho
             }}
           >
             <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
-              <div style={{ width: 36, height: 36, borderRadius: 8, background: "rgba(37,99,235,0.1)", color: "#2563EB", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <div className="tai-decoration-icon" style={{ width: 36, height: 36, borderRadius: 8, background: "rgba(37,99,235,0.1)", color: "#2563EB", display: "flex", alignItems: "center", justifyContent: "center" }}>
                 <KeyRound size={18} />
               </div>
               <div>

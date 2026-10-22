@@ -571,7 +571,7 @@ export const CourseVideoPlayer = forwardRef(function CourseVideoPlayer({
               textAlign: "center"
             }}
           >
-            <div style={{ width: 52, height: 52, borderRadius: "50%", background: "rgba(59, 130, 246, 0.25)", border: "1px solid rgba(165, 180, 252, 0.3)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 12 }}>
+            <div className="tai-decoration-icon" style={{ width: 52, height: 52, borderRadius: "50%", background: "rgba(59, 130, 246, 0.25)", border: "1px solid rgba(165, 180, 252, 0.3)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 12 }}>
               <Video size={24} color="#93C5FD" />
             </div>
             <div style={{ fontWeight: 800, fontSize: 16, marginBottom: 4 }}>{lessonTitle}</div>

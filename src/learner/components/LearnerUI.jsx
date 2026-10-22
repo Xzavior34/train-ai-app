@@ -4,7 +4,7 @@ import {
   Home, BookOpen, Zap, Plus, Users, Settings, ArrowLeft, GraduationCap, Bookmark, Clock, CheckCircle2,
   Repeat, ChevronRight, ChevronDown, ChevronUp, Bell, Flame, MessageSquare, Calendar,
   Compass, ShieldCheck, LogOut, Search, Award, BarChart3, HelpCircle, Layers, Mail, Trophy, UserCheck, Star,
-  PanelLeftClose, PanelLeftOpen
+  PanelLeftClose, PanelLeftOpen, UserRound
 } from "lucide-react";
 import { performGlobalSignOut } from "../../services/authService.js";
 
@@ -15,6 +15,35 @@ export const NotificationBellContext = React.createContext({ unread: 0, onOpen: 
 
 export const TOKENS = `
   .tai * { box-sizing: border-box; }
+  .tai .tai-decoration-icon {
+    background:transparent !important; border:0 !important; border-radius:0 !important;
+    box-shadow:none !important; width:auto !important; height:auto !important;
+    padding:0 !important; min-width:24px; flex-shrink:0;
+  }
+  .tai .tai-card { box-shadow:0 1px 3px rgba(15,23,42,.04) !important; }
+  .tai .tai-card.tai-hero-card.tai-hero-card {
+    background:#142747 !important; color:#fff !important;
+    box-shadow:none !important; border:1px solid #243d61 !important;
+    backdrop-filter:none !important; -webkit-backdrop-filter:none !important;
+  }
+  .tai .tai-community-hero-card .tai-community-hero-title { color:#fff !important; }
+  .tai .tai-community-hero-card .tai-community-hero-desc { color:#d8e2f1 !important; }
+  .tai .tai-desktop-sidebar { font-family:inherit; }
+  .tai .tai-category-header { width:100%; font-family:inherit; text-align:left; background:transparent; }
+  .tai .tai-sub-item { min-height:36px; }
+  .tai .tai-category-group { margin-bottom:6px; }
+  .tai .tai-sidebar-minimized .tai-category-header { justify-content:center; padding:10px 0; }
+  .tai .tai-community-columns > * { min-width:0; max-width:100%; }
+  .tai .lucide-sparkles { display:none; }
+  @media (max-width:899px) {
+    .tai .tai-community-columns { flex-direction:column; }
+    .tai .tai-community-columns > * { flex:auto !important; width:100% !important; }
+    .tai .tai-btn { white-space:normal; min-height:40px; }
+    .tai input, .tai textarea, .tai select { min-width:0; max-width:100%; font-size:16px !important; }
+    .tai .tai-hero-card h1 { font-size:22px !important; }
+    .tai .tai-header-right { gap:8px; }
+    .tai .tai-header-full-text { display:none; }
+  }
   .tai {
     --bg: #F8FAFC;
     --surface: #FFFFFF;
@@ -672,9 +701,11 @@ export function optionValue(opt) {
   return opt?.value ?? opt?.text ?? JSON.stringify(opt);
 }
 
-export function Avatar({ initials, size = 40, style = {}, src }) {
+export function Avatar({ initials, size = 40, style = {}, src, placeholder = "initials" }) {
   const [errored, setErrored] = useState(false);
-  if (src && !errored) {
+  useEffect(() => setErrored(false), [src]);
+  const isStockPhoto = typeof src === "string" && /(?:unsplash\.com|pexels\.com|pravatar\.cc|randomuser\.me|i\.pravatar|picsum\.photos|ui-avatars\.com|dicebear\.com)/i.test(src);
+  if (src && !isStockPhoto && !errored) {
     return (
       <div className="tai-avatar" style={{ width: size, height: size, overflow: "hidden", ...style }}>
         <img
@@ -687,8 +718,8 @@ export function Avatar({ initials, size = 40, style = {}, src }) {
     );
   }
   return (
-    <div className="tai-avatar" style={{ width: size, height: size, fontSize: size * 0.36, ...style }}>
-      {initials}
+    <div className="tai-avatar" style={{ width: size, height: size, fontSize: size * 0.36, background: "var(--surface-2)", color: "var(--text-2)", ...style }}>
+      {placeholder === "person" ? <UserRound size={size * 0.5} aria-label="Profile photo not uploaded" /> : initials}
     </div>
   );
 }
@@ -939,7 +970,7 @@ export function DesktopSidebar({
     },
     {
       key: "ai",
-      label: "AI Coach",
+      label: "Learning tools",
       icon: Zap,
       defaultScreen: "ai",
       screens: ["ai", "aiQuiz"],
@@ -950,7 +981,7 @@ export function DesktopSidebar({
     },
     {
       key: "community",
-      label: "Community",
+      label: "Connect",
       icon: Users,
       defaultScreen: "community",
       screens: ["community", "communityFeed", "cohort", "mentors", "studyGroup", "messages", "leaderboard"],
@@ -999,11 +1030,12 @@ export function DesktopSidebar({
           return (
             <div key={category.key} className="tai-category-group">
               {/* Category Header */}
-              <div
+              <button
+                type="button"
                 className={`tai-category-header ${isCategoryActive ? "category-active" : ""}`}
                 onClick={() => {
-                  if (isMinimized) {
-                    toggleMinimized();
+                  if (isMinimized || category.subItems.length === 1) {
+                    go(category.defaultScreen);
                   } else {
                     toggleCategory(category.key);
                   }
@@ -1016,7 +1048,7 @@ export function DesktopSidebar({
                     <span className="tai-category-label">{category.label}</span>
                   )}
                 </div>
-                {!isMinimized && (
+                {!isMinimized && category.subItems.length > 1 && (
                   <ChevronDown
                     size={15}
                     color="var(--text-3)"
@@ -1024,10 +1056,10 @@ export function DesktopSidebar({
                     style={{ flexShrink: 0 }}
                   />
                 )}
-              </div>
+              </button>
 
               {/* Sub-items (collapsible) */}
-              {!isMinimized && !isCollapsed && (
+              {!isMinimized && !isCollapsed && category.subItems.length > 1 && (
                 <div className="tai-sub-items anim-fluid-entrance">
                   {category.subItems.map(item => {
                     const SubIcon = item.icon;
@@ -1094,7 +1126,7 @@ export function CourseThumb({ course, size = 56, rounded = 8 }) {
   const [errored, setErrored] = useState(false);
   if (errored) {
     return (
-      <div style={{
+      <div className="tai-decoration-icon" style={{
         width: size, height: size, borderRadius: rounded, flexShrink: 0,
         background: course.grad?.[0] || "#2563EB",
         display: "flex", alignItems: "center", justifyContent: "center",

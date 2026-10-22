@@ -361,7 +361,7 @@ export function CreditsCheckoutScreen({ session, params, back, showToast, orgId 
 
                     {/* Credits display with PLUS icon */}
                     <div style={{ background: "var(--surface-3)", padding: "10px 12px", borderRadius: 8, border: "1px solid var(--border)", marginBottom: 14, display: "flex", alignItems: "center", gap: 8 }}>
-                      <div style={{ width: 28, height: 28, borderRadius: 6, background: "rgba(37, 99, 235, 0.12)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                      <div className="tai-decoration-icon" style={{ width: 28, height: 28, borderRadius: 6, background: "rgba(37, 99, 235, 0.12)", display: "flex", alignItems: "center", justifyContent: "center" }}>
                         <Plus size={16} color="var(--primary)" />
                       </div>
                       <div>

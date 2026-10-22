@@ -14,35 +14,13 @@ import { getYouTubeEmbedId, isMockDataEnabled } from "../../lib/mockDataManager.
 import { CourseVideoPlayer } from "../components/CourseVideoPlayer.jsx";
 
 // Industry-Standard Interactive Chapters
-const DEFAULT_CHAPTERS = [
-  { time: "00:00", seconds: 0, title: "Introduction & Architecture Overview" },
-  { time: "03:45", seconds: 225, title: "Design Tokens & Variable Configuration" },
-  { time: "08:15", seconds: 495, title: "Building Production Multi-Agent Workflows" },
-  { time: "13:30", seconds: 810, title: "Vector Embeddings & RAG Optimization" },
-  { time: "17:20", seconds: 1040, title: "Edge Deployment & Performance Benchmark" },
-  { time: "21:05", seconds: 1265, title: "Summary, Capstone & Next Action Items" }
-];
+const DEFAULT_CHAPTERS = [];
 
 // Interactive Synchronized Video Transcript Lines
-const DEFAULT_TRANSCRIPT = [
-  { time: "00:00", seconds: 0, speaker: "Instructor", text: "Welcome back! In this course module, we are diving deep into production-grade multi-agent AI architecture." },
-  { time: "01:15", seconds: 75, speaker: "Instructor", text: "Before we write our first function call, let's examine why traditional single-prompt chains break down in enterprise applications." },
-  { time: "03:45", seconds: 225, speaker: "Instructor", text: "Here we have our design tokens and variable schema. Notice how structured JSON definitions allow seamless synchronization." },
-  { time: "06:20", seconds: 380, speaker: "Instructor", text: "Let's inspect the payload received from the API and observe how the latency drops under 180 milliseconds." },
-  { time: "08:15", seconds: 495, speaker: "Instructor", text: "Now we connect our vector embeddings store with Supabase pgvector for sub-second similarity ranking." },
-  { time: "11:40", seconds: 700, speaker: "Instructor", text: "Pay close attention to error recovery here. If an agent fails its validation schema, we execute a fallback retry hook." },
-  { time: "13:30", seconds: 810, speaker: "Instructor", text: "Look at the memory allocation graph: by caching token embeddings client-side, we reduce unnecessary network roundtrips by 65%." },
-  { time: "17:20", seconds: 1040, speaker: "Instructor", text: "Let's test this in our staging environment. As you can see, the build passes with zero lint or hydration warnings." },
-  { time: "21:05", seconds: 1265, speaker: "Instructor", text: "That wraps up this module! Complete the quick knowledge check and check out the starter kit in the resources tab." }
-];
+const DEFAULT_TRANSCRIPT = [];
 
 // Downloadable Lesson Assets & Resources
-const LESSON_RESOURCES = [
-  { id: "res-1", title: "Starter Code Repository (GitHub)", type: "GitHub Repo", size: "ZIP • 4.2 MB", icon: Code2, url: "https://github.com" },
-  { id: "res-2", title: "Complete Figma Design Tokens & Variables Kit", type: "Figma File", size: "FIG • 18.5 MB", icon: Layers, url: "https://figma.com" },
-  { id: "res-3", title: "Course Slide Deck & Architecture Diagrams", type: "PDF Document", size: "PDF • 8.1 MB", icon: FileText, url: "#" },
-  { id: "res-4", title: "AI Prompt Engineering & Function Schemas Cheat Sheet", type: "Quick Reference", size: "PDF • 2.4 MB", icon: BookOpen, url: "#" }
-];
+const LESSON_RESOURCES = [];
 
 // Lesson Q&A Discussions
 const INITIAL_QA_THREADS = [];
@@ -109,6 +87,7 @@ export function LessonScreen({
   const isCompleted = !!lesson && !!completedLessonIds?.has(`${course?.id}-${lesson.id}`);
   const lessonChapters = Array.isArray(lesson?.chapters) ? lesson.chapters : [];
   const lessonTranscript = Array.isArray(lesson?.transcript) ? lesson.transcript : [];
+  const lessonResources = Array.isArray(lesson?.resources) ? lesson.resources : [];
   if (!lesson) return <div className="tai-content"><button onClick={back} className="tai-btn">Back to course</button><div className="tai-empty">No lesson is available yet. Return to the course and retry.</div></div>;
 
   // Format MM:SS helper
@@ -482,7 +461,7 @@ export function LessonScreen({
               { id: "notes", label: `Notes (${lessonNotesQuery?.data?.length || 0})`, icon: FileText },
               { id: "qa", label: `Q&A (${(lessonDiscussionQuery?.data?.messages || []).length})`, icon: MessageSquare },
               { id: "transcript", label: "Transcript", icon: Terminal },
-              { id: "resources", label: `Resources (${LESSON_RESOURCES.length})`, icon: Paperclip },
+              { id: "resources", label: `Resources (${lessonResources.length})`, icon: Paperclip },
               { id: "reviews", label: "Feedback", icon: Award }
             ].map(tabItem => {
               const Icon = tabItem.icon;
@@ -568,7 +547,7 @@ export function LessonScreen({
             <div className="tai-card anim-slide-down" style={{ padding: "18px 16px", display: "flex", flexDirection: "column", gap: 14 }}>
               <div className="tai-row tai-between" style={{ paddingBottom: 10, borderBottom: "1px solid var(--border)" }}>
                 <div className="tai-row tai-gap8">
-                  <div style={{ width: 32, height: 32, borderRadius: 8, background: "var(--primary-tint)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <div className="tai-decoration-icon" style={{ width: 32, height: 32, borderRadius: 8, background: "var(--primary-tint)", display: "flex", alignItems: "center", justifyContent: "center" }}>
                     <Bot size={16} color="var(--primary)" />
                   </div>
                   <div>
@@ -876,13 +855,14 @@ export function LessonScreen({
               </div>
 
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 10 }}>
-                {LESSON_RESOURCES.map((res) => {
-                  const Icon = res.icon;
+                {lessonResources.length === 0 && <div className="tai-empty">No resources have been uploaded for this lesson.</div>}
+                {lessonResources.map((res) => {
+                  const Icon = FileText;
                   return (
                     <div key={res.id} className="tai-card tai-card-hover" style={{ background: "var(--surface-2)", padding: 14, borderRadius: 8, display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
                       <div>
                         <div className="tai-row tai-gap8" style={{ marginBottom: 6 }}>
-                          <div style={{ width: 30, height: 30, borderRadius: 8, background: "var(--primary-tint)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                          <div className="tai-decoration-icon" style={{ width: 30, height: 30, borderRadius: 8, background: "var(--primary-tint)", display: "flex", alignItems: "center", justifyContent: "center" }}>
                             <Icon size={16} color="var(--primary)" />
                           </div>
                           <div>
@@ -895,13 +875,15 @@ export function LessonScreen({
                         </div>
                       </div>
 
-                      <button
+                      <a
+                        href={/^https?:\/\//i.test(res.url || "") ? res.url : undefined}
+                        target="_blank"
+                        rel="noopener noreferrer"
                         className="tai-btn tai-btn-outline tai-btn-sm"
                         style={{ marginTop: 10, width: "100%", borderRadius: 8, padding: "6px 10px", fontSize: 11.5 }}
-                        onClick={() => showToast?.(`Downloading ${res.title}...`)}
                       >
                         <Download size={13} /> Download Asset
-                      </button>
+                      </a>
                     </div>
                   );
                 })}

@@ -60,7 +60,7 @@ export function ComebackBanner({ userId, daysAway, course, onContinue, onBrowse 
         <X size={13} />
       </button>
       <div className="tai-row tai-gap12">
-        <div style={{ width: 40, height: 40, borderRadius: 10, background: "var(--primary-tint)", border: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+        <div className="tai-decoration-icon" style={{ width: 40, height: 40, borderRadius: 10, background: "var(--primary-tint)", border: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
           <Clock size={18} color="var(--primary)" />
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>

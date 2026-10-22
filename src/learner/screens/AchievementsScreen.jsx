@@ -202,7 +202,7 @@ export function AchievementsScreen({ user = {}, courses = [], achievements = [],
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))", gap: 12 }}>
         <div className="tai-card" style={{ padding: 18, borderRadius: 10 }}>
           <div className="tai-row tai-gap10">
-            <div style={{ width: 38, height: 38, borderRadius: 8, background: "var(--primary-tint)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <div className="tai-decoration-icon" style={{ width: 38, height: 38, borderRadius: 8, background: "var(--primary-tint)", display: "flex", alignItems: "center", justifyContent: "center" }}>
               <BookOpen size={18} color="var(--primary)" />
             </div>
             <div>
@@ -214,7 +214,7 @@ export function AchievementsScreen({ user = {}, courses = [], achievements = [],
 
         <div className="tai-card" style={{ padding: 18, borderRadius: 10 }}>
           <div className="tai-row tai-gap10">
-            <div style={{ width: 38, height: 38, borderRadius: 8, background: "rgba(16, 185, 129, 0.12)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <div className="tai-decoration-icon" style={{ width: 38, height: 38, borderRadius: 8, background: "rgba(16, 185, 129, 0.12)", display: "flex", alignItems: "center", justifyContent: "center" }}>
               <GraduationCap size={18} color="#10B981" />
             </div>
             <div>
@@ -226,7 +226,7 @@ export function AchievementsScreen({ user = {}, courses = [], achievements = [],
 
         <div className="tai-card" style={{ padding: 18, borderRadius: 10 }}>
           <div className="tai-row tai-gap10">
-            <div style={{ width: 38, height: 38, borderRadius: 8, background: "rgba(245, 158, 11, 0.12)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <div className="tai-decoration-icon" style={{ width: 38, height: 38, borderRadius: 8, background: "rgba(245, 158, 11, 0.12)", display: "flex", alignItems: "center", justifyContent: "center" }}>
               <Flame size={18} color="#F59E0B" />
             </div>
             <div>
@@ -238,7 +238,7 @@ export function AchievementsScreen({ user = {}, courses = [], achievements = [],
 
         <div className="tai-card" style={{ padding: 18, borderRadius: 10 }}>
           <div className="tai-row tai-gap10">
-            <div style={{ width: 38, height: 38, borderRadius: 8, background: "rgba(139, 92, 246, 0.12)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <div className="tai-decoration-icon" style={{ width: 38, height: 38, borderRadius: 8, background: "rgba(139, 92, 246, 0.12)", display: "flex", alignItems: "center", justifyContent: "center" }}>
               <Clock size={18} color="#3B82F6" />
             </div>
             <div>
@@ -250,7 +250,7 @@ export function AchievementsScreen({ user = {}, courses = [], achievements = [],
 
         <div className="tai-card" style={{ padding: 18, borderRadius: 10 }}>
           <div className="tai-row tai-gap10">
-            <div style={{ width: 38, height: 38, borderRadius: 8, background: "rgba(37, 99, 235, 0.12)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <div className="tai-decoration-icon" style={{ width: 38, height: 38, borderRadius: 8, background: "rgba(37, 99, 235, 0.12)", display: "flex", alignItems: "center", justifyContent: "center" }}>
               <Trophy size={18} color="var(--primary)" />
             </div>
             <div>
@@ -375,7 +375,7 @@ export function AchievementsScreen({ user = {}, courses = [], achievements = [],
             <div className="tai-card" style={{ borderColor: "var(--warning)", background: "rgba(245,158,11,0.06)", padding: 18, borderRadius: 10 }}>
               <div className="tai-row tai-between" style={{ flexWrap: "wrap", gap: 12 }}>
                 <div className="tai-row tai-gap14">
-                  <div style={{ width: 40, height: 40, borderRadius: 8, background: "rgba(245, 158, 11, 0.2)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <div className="tai-decoration-icon" style={{ width: 40, height: 40, borderRadius: 8, background: "rgba(245, 158, 11, 0.2)", display: "flex", alignItems: "center", justifyContent: "center" }}>
                     <Gift size={22} color="#F59E0B" />
                   </div>
                   <div>
@@ -567,7 +567,7 @@ export function AchievementsScreen({ user = {}, courses = [], achievements = [],
                   const Icon = iconForCategory(def?.category);
                   return (
                     <div key={a.id} className="tai-card tai-card-hover" style={{ padding: 16, borderRadius: 10, display: "flex", gap: 12, alignItems: "center" }}>
-                      <div style={{ width: 44, height: 44, borderRadius: 8, background: "rgba(16, 185, 129, 0.12)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--success)", flexShrink: 0 }}>
+                      <div className="tai-decoration-icon" style={{ width: 44, height: 44, borderRadius: 8, background: "rgba(16, 185, 129, 0.12)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--success)", flexShrink: 0 }}>
                         <Icon size={20} />
                       </div>
                       <div style={{ flex: 1, minWidth: 0 }}>
@@ -601,7 +601,7 @@ export function AchievementsScreen({ user = {}, courses = [], achievements = [],
                 const { current, threshold, percent: p } = getAchievementProgress(def, user);
                 return (
                   <div key={def.id} className="tai-card" style={{ opacity: 0.75, padding: 16, borderRadius: 10, display: "flex", gap: 12, alignItems: "center" }}>
-                    <div style={{ width: 44, height: 44, borderRadius: 8, background: "var(--surface-3)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--text-3)", flexShrink: 0 }}>
+                    <div className="tai-decoration-icon" style={{ width: 44, height: 44, borderRadius: 8, background: "var(--surface-3)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--text-3)", flexShrink: 0 }}>
                       <Icon size={20} />
                     </div>
                     <div style={{ flex: 1, minWidth: 0 }}>

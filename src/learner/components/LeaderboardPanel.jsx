@@ -116,7 +116,7 @@ export function LeaderboardPanel({
         <div style={{ position: "relative", zIndex: 1, display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 14 }}>
           <div style={{ minWidth: 0, flex: "1 1 260px" }}>
             <div className="tai-row tai-gap8" style={{ alignItems: "center", marginBottom: 4 }}>
-              <div
+              <div className="tai-decoration-icon"
                 style={{
                   width: 34,
                   height: 34,
@@ -232,7 +232,7 @@ export function LeaderboardPanel({
                   initials={second?.initials}
                   style={{ border: "2.5px solid #94A3B8" }}
                 />
-                <div
+                <div className="tai-decoration-icon"
                   style={{
                     position: "absolute",
                     top: -4,

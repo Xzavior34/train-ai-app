@@ -208,7 +208,7 @@ export function HomeScreen({
           }}
         >
           <div className="tai-row tai-gap12" style={{ minWidth: 240, flex: 1, alignItems: "center" }}>
-            <div style={{ width: 40, height: 40, borderRadius: 10, background: "rgba(239, 68, 68, 0.14)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+            <div className="tai-decoration-icon" style={{ width: 40, height: 40, borderRadius: 10, background: "rgba(239, 68, 68, 0.14)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
               <ShieldCheck size={20} color="#DC2626" />
             </div>
             <div>
@@ -253,7 +253,7 @@ export function HomeScreen({
           ) : !cohort ? (
             <div className="tai-card" style={{ padding: 16, borderRadius: 12, border: "1px solid var(--border)" }}>
               <div className="tai-row tai-gap10">
-                <div style={{ width: 36, height: 36, borderRadius: 8, background: "var(--surface-2)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                <div className="tai-decoration-icon" style={{ width: 36, height: 36, borderRadius: 8, background: "var(--surface-2)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                   <Users size={17} color="var(--primary)" />
                 </div>
                 <div>
@@ -298,7 +298,7 @@ export function HomeScreen({
                   <>
                     <div className="tai-row tai-between" style={{ alignItems: "center", marginBottom: 12 }}>
                       <div className="tai-row tai-gap10" style={{ minWidth: 0, flex: 1 }}>
-                        <div style={{ width: 36, height: 36, borderRadius: 10, background: "rgba(59, 130, 246, 0.15)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                        <div className="tai-decoration-icon" style={{ width: 36, height: 36, borderRadius: 10, background: "rgba(59, 130, 246, 0.15)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                           <Users size={17} color="var(--primary)" />
                         </div>
                         <div style={{ minWidth: 0, flex: 1 }}>
@@ -315,7 +315,7 @@ export function HomeScreen({
 
                     <div style={{ background: "var(--surface)", padding: "10px 12px", borderRadius: 8, border: "1px solid var(--border)", marginBottom: 12 }}>
                       <div className="tai-row tai-between" style={{ fontSize: 11, fontWeight: 700, marginBottom: 5 }}>
-                        <span style={{ color: "var(--text)" }}>⏱️ 6-Week Accelerator Timeline: Week {progressInfo.currentWeek} of {progressInfo.totalWeeks}</span>
+                        <span style={{ color: "var(--text)" }}>Cohort timeline: Week {progressInfo.currentWeek} of {progressInfo.totalWeeks}</span>
                         <span style={{ color: "#10B981", fontWeight: 800 }}>{progressInfo.daysRemaining} Days Left ({progressInfo.percent}% Elapsed)</span>
                       </div>
                       <div style={{ height: 6, background: "var(--surface-3)", borderRadius: 3, overflow: "hidden" }}>
@@ -350,7 +350,7 @@ export function HomeScreen({
           <div className="tai-card" style={{ padding: 18, borderRadius: 12, background: "var(--surface)", border: "1px solid var(--border)", width: "100%", boxSizing: "border-box" }}>
             <div className="tai-row tai-between" style={{ marginBottom: 12, alignItems: "center" }}>
               <div className="tai-row tai-gap8" style={{ alignItems: "center" }}>
-                <div style={{ width: 34, height: 34, borderRadius: 9, background: "rgba(37, 99, 235, 0.12)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                <div className="tai-decoration-icon" style={{ width: 34, height: 34, borderRadius: 9, background: "rgba(37, 99, 235, 0.12)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                   <BarChart3 size={17} color="var(--primary)" />
                 </div>
                 <div>
@@ -410,7 +410,7 @@ export function HomeScreen({
           <div className="tai-card" style={{ padding: 18, borderRadius: 12, background: "var(--surface)", border: "1px solid var(--border)", width: "100%", boxSizing: "border-box" }}>
             <div className="tai-row tai-between" style={{ marginBottom: 12, alignItems: "center" }}>
               <div className="tai-row tai-gap8" style={{ alignItems: "center" }}>
-                <div style={{ width: 34, height: 34, borderRadius: 9, background: "rgba(37, 99, 235, 0.12)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                <div className="tai-decoration-icon" style={{ width: 34, height: 34, borderRadius: 9, background: "rgba(37, 99, 235, 0.12)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                   <Bookmark size={17} color="var(--primary)" />
                 </div>
                 <div>

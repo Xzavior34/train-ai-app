@@ -178,208 +178,11 @@ function getSafeCoverImage(course, idx = 0) {
   return TOPIC_STOCK_PHOTOS[keys[hash % keys.length]];
 }
 
-const SPOTLIGHT_SLIDES = [
-  {
-    id: "course-figma-ai",
-    badge: "ENROLLED • SPRINT 5",
-    badgeGradient: "#059669",
-    cohortTag: "UI/UX Design Track",
-    pathwayName: "UI/UX & Design Systems",
-    trackKeyword: "design",
-    title: "Master Design Systems in Figma with Generative AI",
-    description: "Building production design systems, auto-layout 5.0, design tokens, and AI acceleration for enterprise design teams.",
-    rating: 4.9,
-    reviews: "1,840 reviews",
-    enrolled: "12,400+ Enrolled",
-    status: "In Progress",
-    progress: 72,
-    lessonsRemaining: "4 lessons left",
-    instructor: "Course Instructor",
-    instructorRole: "Lead Design Systems Architect",
-    instructorAvatar: null,
-    coverImage: "https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?w=800&auto=format&fit=crop&q=80",
-    cta: "Resume Lesson 14",
-    action: "continue",
-    lessonsText: "24 Lessons • 18 hrs",
-    requiredCourses: [
-      { id: "course-figma-ai", title: "Figma Design Systems & AI Tokens", progress: 72 },
-      { id: "course-spatial-ui", title: "Spatial UI & Glass Ergonomics", progress: 0 },
-      { id: "spec-1", title: "Interactive Micro-Interactions Lab", progress: 0 }
-    ]
-  },
-  {
-    id: "course-fullstack-ai",
-    badge: "ACTIVE MULTI-COURSE LEARNING",
-    badgeGradient: "#2563EB",
-    cohortTag: "Full-Stack AI Track",
-    pathwayName: "Full-Stack & Web Dev",
-    trackKeyword: "engineering",
-    title: "Full-Stack AI Application Engineering with React 19",
-    description: "Architecting end-to-end LLM applications with vector embeddings, Supabase pgvector, FastAPI, and autonomous agents.",
-    rating: 4.9,
-    reviews: "2,150 reviews",
-    enrolled: "8,900+ Enrolled",
-    status: "In Progress",
-    progress: 19,
-    lessonsRemaining: "Module 2: Function Calling",
-    instructor: "Course Instructor",
-    instructorRole: "Principal AI Engineer",
-    instructorAvatar: null,
-    coverImage: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800&auto=format&fit=crop&q=80",
-    cta: "Continue Module 2",
-    action: "continue",
-    lessonsText: "32 Lessons • 24 hrs",
-    requiredCourses: [
-      { id: "course-fullstack-ai", title: "Full-Stack AI with React 19", progress: 19 },
-      { id: "course-figma-ai", title: "Vector Embeddings & API Services", progress: 0 },
-      { id: "course-cloud-devops", title: "CI/CD & Cloud Deployment", progress: 0 }
-    ]
-  },
-  {
-    id: "course-spatial-ui",
-    badge: "FEATURED COURSE SPOTLIGHT",
-    badgeGradient: "#2563EB",
-    cohortTag: "AI & Machine Learning Track",
-    pathwayName: "Data & AI Systems",
-    trackKeyword: "ai",
-    title: "Spatial Computing & VisionOS Design Foundations",
-    description: "Immersive 3D spatial user experiences, depth layering, glassmorphism tokens, and spatial ergonomics for next-gen apps.",
-    rating: 5.0,
-    reviews: "640 reviews",
-    enrolled: "4,100+ Enrolled",
-    status: "Featured Course",
-    progress: 0,
-    lessonsRemaining: "Includes 3D Asset Kit",
-    instructor: "Course Instructor",
-    instructorRole: "Spatial Experience Designer",
-    instructorAvatar: null,
-    coverImage: "https://images.unsplash.com/photo-1592478411213-6153e4ebc07d?w=800&auto=format&fit=crop&q=80",
-    cta: "Explore Course",
-    action: "explore",
-    lessonsText: "18 Lessons • 14 hrs",
-    requiredCourses: [
-      { id: "course-spatial-ui", title: "Spatial UI & VisionOS Foundations", progress: 0 },
-      { id: "course-figma-ai", title: "AI Prototyping & Generative Assets", progress: 0 },
-      { id: "course-fullstack-ai", title: "Multi-Agent Neural Workflows", progress: 0 }
-    ]
-  },
-  {
-    id: "course-cloud-devops",
-    badge: "TRENDING IN YOUR COHORT",
-    badgeGradient: "#D97706",
-    cohortTag: "Cloud & Infrastructure Track",
-    pathwayName: "Cloud & DevOps",
-    trackKeyword: "cloud",
-    title: "Cloud Infrastructure, Kubernetes & AI Microservices",
-    description: "Production CI/CD pipelines, container orchestration, edge deployment, and GPU scaling for high-throughput AI workloads.",
-    rating: 4.9,
-    reviews: "1,420 reviews",
-    enrolled: "9,300+ Enrolled",
-    status: "Recommended",
-    progress: 0,
-    lessonsRemaining: "Hands-on Cloud Lab",
-    instructor: "Course Instructor",
-    instructorRole: "DevOps Infrastructure Lead",
-    instructorAvatar: null,
-    coverImage: "https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=800&auto=format&fit=crop&q=80",
-    cta: "Start Learning Path",
-    action: "explore",
-    lessonsText: "28 Lessons • 22 hrs",
-    requiredCourses: [
-      { id: "course-cloud-devops", title: "Kubernetes & AI Microservices", progress: 0 },
-      { id: "course-fullstack-ai", title: "Vector DB Scaling & Cloud Ops", progress: 0 },
-      { id: "course-spatial-ui", title: "GPU Optimization & Edge Labs", progress: 0 }
-    ]
-  }
-];
+const SPOTLIGHT_SLIDES = [];
 
-const SPECIALIZATIONS = [
-  {
-    id: "spec-1",
-    title: "AI Product Design & Spatial Systems Professional Certificate",
-    provider: "Train AI Academy • Figma Partner",
-    coursesCount: 4,
-    months: "3 Months (6 hrs/week)",
-    rating: 4.9,
-    reviews: "3,420",
-    level: "Intermediate",
-    badge: "PROFESSIONAL CERTIFICATE",
-    badgeBg: "#2563EB",
-    description: "Master modern AI design workflows, generative prototyping, vector tokens, and spatial interfaces with direct industry credentialing.",
-    skills: ["Figma AI", "Design Systems", "Spatial UI", "Token Architecture", "UX Research"],
-    image: "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=800&auto=format&fit=crop&q=80"
-  },
-  {
-    id: "spec-2",
-    title: "Full-Stack Generative AI Application Engineering",
-    provider: "Train AI Engineering Labs • Anthropic Partner",
-    coursesCount: 4,
-    months: "4 Months (8 hrs/week)",
-    rating: 4.95,
-    reviews: "2,890",
-    level: "Advanced",
-    badge: "ENGINEERING TRACK",
-    badgeBg: "#059669",
-    description: "Build production-ready multi-modal AI agents, vector database backends, RAG pipelines, and reactive enterprise apps.",
-    skills: ["LangChain", "Vector DBs", "FastAPI", "React 19", "OpenAI / Gemini APIs"],
-    image: "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=800&auto=format&fit=crop&q=80"
-  }
-];
+const SPECIALIZATIONS = [];
 
-const RECENT_RECORDINGS = [
-  {
-    id: "rec-1",
-    title: "UI/UX Principles & Spatial Component Hierarchies",
-    date: "18 Nov 2024",
-    duration: "45 mins",
-    views: "1.4k views",
-    instructor: "Course Instructor",
-    role: "Staff Product Designer",
-    thumbnail: "https://images.unsplash.com/photo-1581291518857-4e27b48ff24e?w=600&auto=format&fit=crop&q=80",
-    videoUrl: "https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ",
-    badge: "UI/UX DESIGN COURSE",
-    badgeColor: "#2563EB"
-  },
-  {
-    id: "rec-2",
-    title: "Accelerating Design Systems With AI & Figma Variables",
-    date: "14 Nov 2024",
-    duration: "1 hr 10m",
-    views: "2.8k views",
-    instructor: "Course Instructor",
-    role: "Lead AI Design Engineer",
-    thumbnail: "https://images.unsplash.com/photo-1531403009284-440f080d1e12?w=600&auto=format&fit=crop&q=80",
-    videoUrl: "https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ",
-    badge: "UX + AI TOKENS",
-    badgeColor: "#2563EB"
-  },
-  {
-    id: "rec-3",
-    title: "Building Production Multi-Agent Systems in Python",
-    date: "10 Nov 2024",
-    duration: "52 mins",
-    views: "3.2k views",
-    instructor: "Course Instructor",
-    role: "Principal AI Scientist",
-    thumbnail: "https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?w=600&auto=format&fit=crop&q=80",
-    videoUrl: "https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ",
-    badge: "ENGINEERING",
-    badgeColor: "#2563EB"
-  },
-  {
-    id: "rec-4",
-    title: "Interactive Micro-Interactions & Prototyping Workshop",
-    date: "4 Nov 2024",
-    duration: "38 mins",
-    views: "1.9k views",
-    instructor: "Course Instructor",
-    role: "Lead Motion Designer",
-    thumbnail: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=600&auto=format&fit=crop&q=80",
-    videoUrl: "https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ",
-    badge: "PROTOTYPING",
-    badgeColor: "#059669"
-  }
-];
+const RECENT_RECORDINGS = [];
 
 export function CoursesScreen({
   user = {},
@@ -420,10 +223,10 @@ export function CoursesScreen({
     return {
       ...c,
       coverImageUrl: c.coverImageUrl || c.image || fallbackImage,
-      rating: c.rating || (4.8 + ((idx % 3) * 0.1)).toFixed(1),
+      rating: c.rating ?? null,
       reviewsCount: c.reviewsCount ?? 0,
       studentsCount: c.studentsCount ?? 0,
-      hours: c.hours || 4,
+      hours: c.hours ?? null,
       lessonsCount: c.lessonsCount || c.lessons || 0,
       // Real per-course instructor comes from courses.instructor_id via
       // useLearnerData's fetchCourseInstructorNames(). Courses without one set
@@ -528,7 +331,7 @@ export function CoursesScreen({
           pathwayName: trackDisplayName,
           title: `All ${trackDisplayName} Courses Completed!`,
           description: `Outstanding achievement! You have completed every required course in your ${trackDisplayName}. Review lessons, practice with the AI Coach, or request your official Certificate.`,
-          rating: 5.0,
+          rating: null,
           reviews: "Track Mastered",
           enrolled: "Completed",
           status: "Completed",
@@ -551,19 +354,19 @@ export function CoursesScreen({
         pathwayName: trackDisplayName,
         title: c.title,
         description: c.tagline || c.description || `Essential course for your ${trackDisplayName}. Master production workflows and hands-on competencies.`,
-        rating: c.rating || 4.9,
+        rating: c.rating ?? null,
         reviews: `${c.reviewsCount ?? 0} reviews`,
         enrolled: `${c.studentsCount ?? 0} Enrolled`,
         status: c.enrolled ? "In Progress" : "Required",
         progress: c.progress || 0,
-        lessonsRemaining: `${c.lessons || c.lessonsCount || 12} lessons`,
+        lessonsRemaining: `${c.lessons ?? c.lessonsCount ?? 0} lessons`,
         instructor: c.instructor || "Course team",
         instructorRole: c.instructorRole || "Course delivery",
         instructorAvatar: c.instructorAvatar || null,
         coverImage: c.coverImageUrl || c.image || getSafeCoverImage(c, idx),
         cta: c.enrolled ? (c.progress > 0 ? "Resume Lesson" : "Start Course") : "Enroll & Start Course",
         action: c.enrolled ? "continue" : "explore",
-        lessonsText: `${c.lessons || c.lessonsCount || 12} Lessons • ${c.hours || 8} hrs`
+        lessonsText: `${c.lessons ?? c.lessonsCount ?? 0} lessons${c.hours ? ` • ${c.hours} hrs` : ""}`
       }));
 
   const currentSpotlight = dynamicSpotlightSlides[activeSlide % dynamicSpotlightSlides.length] || dynamicSpotlightSlides[0];
@@ -671,8 +474,7 @@ export function CoursesScreen({
 
               <div className="tai-row tai-gap12" style={{ flexWrap: "wrap", marginBottom: 14, fontSize: 12, color: "#94A3B8" }}>
                 <div className="tai-row tai-gap4">
-                  <Star size={13} fill="#F59E0B" color="#F59E0B" />
-                  <span style={{ fontWeight: 800, color: "#fff" }}>{currentSpotlight.rating}</span>
+                  <span style={{ fontWeight: 800, color: "#fff" }}>{currentSpotlight.rating ?? "Unrated"}</span>
                   <span style={{ opacity: 0.75 }}>({currentSpotlight.reviews})</span>
                 </div>
                 <span>•</span>
@@ -895,7 +697,7 @@ export function CoursesScreen({
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 20 }}>
         {filteredCatalog.length === 0 ? (
           <div className="tai-card" style={{ gridColumn: "1 / -1", textAlign: "center", padding: "clamp(32px, 5vw, 48px) 20px", borderRadius: 10 }}>
-            <div style={{ width: 60, height: 60, borderRadius: 10, background: "var(--primary-tint)", display: "inline-flex", alignItems: "center", justifyContent: "center", marginBottom: 14 }}>
+            <div className="tai-decoration-icon" style={{ width: 60, height: 60, borderRadius: 10, background: "var(--primary-tint)", display: "inline-flex", alignItems: "center", justifyContent: "center", marginBottom: 14 }}>
               <BookOpen size={26} color="var(--primary)" />
             </div>
             <h3 style={{ fontSize: 18, fontWeight: 800, color: "var(--text)", margin: "0 0 6px" }}>
@@ -1028,8 +830,7 @@ export function CoursesScreen({
 
                     <div className="tai-row tai-gap8" style={{ fontSize: 12, marginBottom: 16 }}>
                       <div className="tai-row tai-gap4" style={{ fontWeight: 800, color: "var(--text)" }}>
-                        <Star size={14} fill="#F59E0B" color="#F59E0B" />
-                        <span>{course.rating || "4.9"}</span>
+                        <span>{course.rating ?? "Unrated"}</span>
                       </div>
                       <span style={{ color: "var(--text-3)" }}>({course.reviewsCount ?? 0})</span>
                       <span style={{ color: "var(--text-3)" }}>•</span>
@@ -1110,7 +911,7 @@ export function CoursesScreen({
               <div style={{ position: "relative", height: 140, width: "100%", overflow: "hidden" }}>
                 <CourseImage src={rec.thumbnail} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                 <div style={{ position: "absolute", inset: 0, background: "rgba(15,23,42,0.35)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  <div style={{ width: 38, height: 38, borderRadius: "50%", background: "#fff", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 4px 12px rgba(0,0,0,0.3)" }}>
+                  <div className="tai-decoration-icon" style={{ width: 38, height: 38, borderRadius: "50%", background: "#fff", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 4px 12px rgba(0,0,0,0.3)" }}>
                     <Play size={15} color="var(--primary)" fill="var(--primary)" style={{ marginLeft: 2 }} />
                   </div>
                 </div>

@@ -33,7 +33,7 @@ const TIER_CONFIG = {
   contributor: {
     label: "Contributor",
     nextLabel: "Active Engager",
-    Icon: Star,
+    Icon: MessageSquare,
     color: "var(--primary)",
     bg: "var(--primary-tint)",
     border: "rgba(37, 99, 235, 0.25)",
@@ -120,12 +120,11 @@ function StatusCard({ stats }) {
       }}
     >
       <div className="tai-row tai-gap8" style={{ alignItems: "center", marginBottom: 14 }}>
-        <Star size={16} color="var(--primary)" />
         <span style={{ fontWeight: 800, fontSize: 13.5, color: "var(--text)" }}>Your Community Status</span>
       </div>
 
       <div style={{ textAlign: "center", padding: "6px 0 16px" }}>
-        <div
+        <div className="tai-decoration-icon"
           style={{
             width: 48,
             height: 48,
@@ -229,7 +228,7 @@ function DailyMotivationWidget() {
       }}
     >
       <div className="tai-row tai-gap10" style={{ alignItems: "flex-start" }}>
-        <div
+        <div className="tai-decoration-icon"
           style={{
             width: 36,
             height: 36,
@@ -1308,7 +1307,7 @@ export function CommunityScreen({
       <CommunityHero user={user} onCreatePost={() => setComposerOpen(true)} />
 
       {/* Unified Dashboard Grid Layout */}
-      <div style={{ display: "flex", gap: 20, flexWrap: "wrap", alignItems: "flex-start" }}>
+      <div className="tai-community-columns" style={{ display: "flex", gap: 20, flexWrap: "wrap", alignItems: "flex-start" }}>
         
         {/* =================================================================== */}
         {/* MAIN COLUMN (2/3 Width): Feed, Study Lounges, Cohort Channels, Instructors */}
@@ -1840,7 +1839,7 @@ export function CommunityScreen({
                   alignItems: "center",
                 }}
               >
-                <div style={{ width: 42, height: 42, borderRadius: 12, background: "var(--primary-tint)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <div className="tai-decoration-icon" style={{ width: 42, height: 42, borderRadius: 12, background: "var(--primary-tint)", display: "flex", alignItems: "center", justifyContent: "center" }}>
                   <BookOpen size={22} color="var(--primary)" />
                 </div>
                 <div>
@@ -1912,7 +1911,7 @@ export function CommunityScreen({
                   onClick={() => push?.("mentors", { mentorId: m.id })}
                 >
                   <div title={`View ${m.name}'s Profile`}>
-                    <Avatar size={48} src={m.avatarUrl} initials={initialsOf(m.name)} />
+                    <Avatar placeholder="person" size={48} src={m.avatar || m.avatarUrl} initials={initialsOf(m.name)} />
                   </div>
                   <div>
                     <div style={{ fontWeight: 800, fontSize: 13.5, color: "var(--text)" }}>{m.name}</div>

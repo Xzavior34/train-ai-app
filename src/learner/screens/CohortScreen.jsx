@@ -327,7 +327,7 @@ export function CohortScreen({
             <div className="tai-row tai-gap8" style={{ alignItems: "center" }}>
               <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#34D399", boxShadow: "0 0 8px #34D399" }} />
               <span>
-                ⏱️ 6-Week Accelerator Timeline: Week {progressInfo.currentWeek} of {progressInfo.totalWeeks} &bull; <strong style={{ color: "#34D399" }}>{progressInfo.daysRemaining} Days Left</strong> before cohort ends
+                Cohort timeline: Week {progressInfo.currentWeek} of {progressInfo.totalWeeks} &bull; <strong style={{ color: "#34D399" }}>{progressInfo.daysRemaining} Days Left</strong> before cohort ends
               </span>
             </div>
             <div className="tai-row tai-gap10" style={{ alignItems: "center" }}>
@@ -853,7 +853,7 @@ export function CohortScreen({
           >
             <div className="tai-row tai-between" style={{ marginBottom: 12, alignItems: "flex-start" }}>
               <div className="tai-row tai-gap10" style={{ alignItems: "center" }}>
-                <div style={{ width: 38, height: 38, borderRadius: 10, background: "rgba(59, 130, 246, 0.15)", color: "#60A5FA", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <div className="tai-decoration-icon" style={{ width: 38, height: 38, borderRadius: 10, background: "rgba(59, 130, 246, 0.15)", color: "#60A5FA", display: "flex", alignItems: "center", justifyContent: "center" }}>
                   <Clock size={20} />
                 </div>
                 <div>

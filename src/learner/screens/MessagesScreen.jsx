@@ -187,7 +187,7 @@ export function MessagesScreen({
         <div style={{ display: "flex", flexDirection: "column", background: "var(--surface)", height: "100%" }}>
           {!currentThread ? (
             <div className="tai-empty" style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: 32 }}>
-              <div style={{ width: 48, height: 48, borderRadius: "50%", background: "var(--surface-2)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 12 }}>
+              <div className="tai-decoration-icon" style={{ width: 48, height: 48, borderRadius: "50%", background: "var(--surface-2)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 12 }}>
                 <MessageSquare size={22} color="var(--text-3)" />
               </div>
               <div style={{ fontWeight: 700, fontSize: 15, color: "var(--text)" }}>Select an Instructor Conversation</div>

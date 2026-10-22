@@ -585,41 +585,7 @@ function AssessmentTab({ assessment, questionsQuery, myAttemptQuery, onSubmit })
     return <div className="tai-mt16 tai-empty">Loading assessment...</div>;
   }
 
-  const DEFAULT_QUESTIONS = [
-    {
-      id: "q-1",
-      question: "What is the primary advantage of design token architectures in production design systems?",
-      options: [
-        "Enables centralized updates of colors, typography, and spacing across web and mobile platforms",
-        "Reduces the size of Figma export files by 90%",
-        "Eliminates the need for CSS or Tailwind styling entirely",
-        "Automatically converts bitmap images into vectors"
-      ],
-      correct: "Enables centralized updates of colors, typography, and spacing across web and mobile platforms"
-    },
-    {
-      id: "q-2",
-      question: "How do vector embeddings facilitate fast semantic search in GenAI applications?",
-      options: [
-        "By converting text into high-dimensional vectors and querying nearest neighbors via cosine similarity",
-        "By performing exact character regex matching on Postgres string fields",
-        "By translating SQL queries into binary JSON trees",
-        "By caching static HTML responses in a global CDN"
-      ],
-      correct: "By converting text into high-dimensional vectors and querying nearest neighbors via cosine similarity"
-    },
-    {
-      id: "q-3",
-      question: "What is the recommended practice for state management in high-concurrency learner apps?",
-      options: [
-        "Optimistic UI updates paired with immutable state transitions and server-side reconciliation",
-        "Storing all user session tokens in global window variables",
-        "Reloading the full browser window after every API request",
-        "Using synchronous blocking AJAX requests"
-      ],
-      correct: "Optimistic UI updates paired with immutable state transitions and server-side reconciliation"
-    }
-  ];
+  const DEFAULT_QUESTIONS = [];
 
   const effectiveQuestions = (questions && questions.length > 0) ? questions : (isMockDataEnabled() ? DEFAULT_QUESTIONS : []);
 

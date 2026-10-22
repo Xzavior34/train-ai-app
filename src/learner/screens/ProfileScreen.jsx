@@ -264,7 +264,7 @@ export function ProfileScreen({
 
 
               {session?.user?.id && (
-                <div
+                <div className="tai-decoration-icon"
                   style={{
                     position: "absolute",
                     bottom: 0,
@@ -498,7 +498,7 @@ export function ProfileScreen({
                     }}
                   >
                     <div className="tai-row tai-gap12" style={{ minWidth: 200, flex: 1 }}>
-                      <div style={{ width: 36, height: 36, borderRadius: 8, background: "rgba(16, 185, 129, 0.12)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                      <div className="tai-decoration-icon" style={{ width: 36, height: 36, borderRadius: 8, background: "rgba(16, 185, 129, 0.12)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                         <Award size={18} color="#10B981" />
                       </div>
                       <div>
@@ -557,7 +557,7 @@ export function ProfileScreen({
             >
               <div className="tai-row tai-between" style={{ flexWrap: "wrap", gap: 12 }}>
                 <div className="tai-row tai-gap14">
-                  <div style={{ width: 44, height: 44, borderRadius: 8, background: "var(--primary-tint)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <div className="tai-decoration-icon" style={{ width: 44, height: 44, borderRadius: 8, background: "var(--primary-tint)", display: "flex", alignItems: "center", justifyContent: "center" }}>
                     <Trophy size={20} color="var(--primary)" />
                   </div>
                   <div>
@@ -578,7 +578,7 @@ export function ProfileScreen({
             >
               <div className="tai-row tai-between" style={{ flexWrap: "wrap", gap: 12 }}>
                 <div className="tai-row tai-gap14">
-                  <div style={{ width: 44, height: 44, borderRadius: 8, background: "rgba(16, 185, 129, 0.12)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <div className="tai-decoration-icon" style={{ width: 44, height: 44, borderRadius: 8, background: "rgba(16, 185, 129, 0.12)", display: "flex", alignItems: "center", justifyContent: "center" }}>
                     <ShieldCheck size={20} color="#10B981" />
                   </div>
                   <div>
@@ -602,7 +602,7 @@ export function ProfileScreen({
             <h2 className="tai-title-sm" style={{ margin: "0 0 14px" }}>Display & Theme</h2>
             <div className="tai-row tai-between" style={{ flexWrap: "wrap", gap: 12 }}>
               <div className="tai-row tai-gap12">
-                <div style={{ width: 38, height: 38, borderRadius: 10, background: "var(--primary-tint)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <div className="tai-decoration-icon" style={{ width: 38, height: 38, borderRadius: 10, background: "var(--primary-tint)", display: "flex", alignItems: "center", justifyContent: "center" }}>
                   <Moon size={18} color="var(--primary)" />
                 </div>
                 <div>
@@ -639,7 +639,7 @@ export function ProfileScreen({
             <div className="tai-card" style={{ borderRadius: 12, padding: "clamp(16px, 3vw, 24px)" }}>
               <div className="tai-row tai-between" style={{ flexWrap: "wrap", gap: 12 }}>
                 <div className="tai-row tai-gap12">
-                  <div style={{ width: 38, height: 38, borderRadius: 10, background: "rgba(59, 130, 246, 0.12)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <div className="tai-decoration-icon" style={{ width: 38, height: 38, borderRadius: 10, background: "rgba(59, 130, 246, 0.12)", display: "flex", alignItems: "center", justifyContent: "center" }}>
                     <Brain size={18} color="var(--primary)" />
                   </div>
                   <div>
@@ -666,7 +666,7 @@ export function ProfileScreen({
               <h2 className="tai-title-sm" style={{ margin: "0 0 14px" }}>Push Notifications</h2>
               <div className="tai-row tai-between" style={{ flexWrap: "wrap", gap: 12 }}>
                 <div className="tai-row tai-gap12">
-                  <div style={{ width: 38, height: 38, borderRadius: 10, background: "rgba(245, 158, 11, 0.12)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <div className="tai-decoration-icon" style={{ width: 38, height: 38, borderRadius: 10, background: "rgba(245, 158, 11, 0.12)", display: "flex", alignItems: "center", justifyContent: "center" }}>
                     <Bell size={18} color="#F59E0B" />
                   </div>
                   <div>
@@ -761,7 +761,7 @@ export function ProfileScreen({
           >
             <div className="tai-row tai-between">
               <div className="tai-row tai-gap14">
-                <div style={{ width: 44, height: 44, borderRadius: 8, background: "rgba(59, 130, 246, 0.12)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <div className="tai-decoration-icon" style={{ width: 44, height: 44, borderRadius: 8, background: "rgba(59, 130, 246, 0.12)", display: "flex", alignItems: "center", justifyContent: "center" }}>
                   <Accessibility size={20} color="var(--primary)" />
                 </div>
                 <div>
@@ -781,7 +781,7 @@ export function ProfileScreen({
             >
               <div className="tai-row tai-between" style={{ flexWrap: "wrap", gap: 12 }}>
                 <div className="tai-row tai-gap14">
-                  <div style={{ width: 44, height: 44, borderRadius: 8, background: "rgba(16, 185, 129, 0.12)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <div className="tai-decoration-icon" style={{ width: 44, height: 44, borderRadius: 8, background: "rgba(16, 185, 129, 0.12)", display: "flex", alignItems: "center", justifyContent: "center" }}>
                     <Smartphone size={20} color="#10B981" />
                   </div>
                   <div>
@@ -797,7 +797,7 @@ export function ProfileScreen({
           {/* Password & Security Card */}
           <div className="tai-card" style={{ borderRadius: 12, padding: "clamp(16px, 3vw, 24px)" }}>
             <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
-              <div style={{ width: 40, height: 40, borderRadius: 8, background: "rgba(37, 99, 235, 0.1)", display: "flex", alignItems: "center", justifyContent: "center", color: "#2563EB" }}>
+              <div className="tai-decoration-icon" style={{ width: 40, height: 40, borderRadius: 8, background: "rgba(37, 99, 235, 0.1)", display: "flex", alignItems: "center", justifyContent: "center", color: "#2563EB" }}>
                 <KeyRound size={20} />
               </div>
               <div>
