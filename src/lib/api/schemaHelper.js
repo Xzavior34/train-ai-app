@@ -1205,14 +1205,27 @@ export async function voteForumPost(postId, direction = "up") {
 // IS a real declared FK to cohorts (unlike the auth.users-pointing id
 // columns elsewhere in this schema that need the manual
 // fetchProfilesByUserIds workaround), so the embed below works.
+export async function fetchCohortSummary(cohortId) {
+  if (!supabase || !cohortId) return null;
+  const { data, error } = await supabase.from("cohorts").select("*").eq("id", cohortId).maybeSingle();
+  if (error) throw new Error("Could not open this cohort. Please retry.", { cause: error });
+  return data ? { cohort: data } : null;
+}
+
 export async function fetchMyCohortMembership(userId) {
   if (!supabase || !userId) return null;
-  const { data, error } = await supabase
-    .from("cohort_members")
-    .select("*, cohorts(*)")
-    .eq("user_id", userId)
-    .order("added_at", { ascending: false });
-  if (error) { console.warn("Cohort membership fetch warning:", error); return null; }
+  // The server identifies the caller; a browser cannot request another roster.
+  const result = await supabase.rpc("get_my_cohort_memberships");
+  let data;
+  if (!result.error && Array.isArray(result.data)) data = result.data;
+  else {
+    const missingFunction = !result.error || ["PGRST202", "42883"].includes(result.error.code);
+    if (!missingFunction) throw new Error("Could not load your cohort assignments. Please retry.", { cause: result.error });
+    const response = await supabase.from("cohort_members").select("*, cohorts(*)").eq("user_id", userId).order("added_at", { ascending: false });
+    if (response.error) throw new Error("Could not load your cohort assignments. Please retry.", { cause: response.error });
+    data = response.data;
+  }
+  if ((data || []).some(d => !d.cohorts)) throw new Error("Your cohort assignment could not be opened. Ask your organization administrator to check your membership.");
   const valid = (data || []).filter((d) => !!d.cohorts);
   if (!valid.length) return null;
   return {
@@ -1224,14 +1237,8 @@ export async function fetchMyCohortMembership(userId) {
 }
 
 export async function fetchMyCohortMemberships(userId) {
-  if (!supabase || !userId) return [];
-  const { data, error } = await supabase
-    .from("cohort_members")
-    .select("*, cohorts(*)")
-    .eq("user_id", userId)
-    .order("added_at", { ascending: false });
-  if (error) { console.warn("Cohort memberships fetch warning:", error); return []; }
-  return (data || []).filter((d) => !!d.cohorts).map((d) => ({ membership: d, cohort: d.cohorts }));
+  const result = await fetchMyCohortMembership(userId);
+  return (result?.allMemberships || []).map(membership => ({ membership, cohort: membership.cohorts }));
 }
 
 // Cohort posts/announcements feed for one cohort - pinned posts first, then
@@ -1258,7 +1265,7 @@ export async function fetchCohortPostsFeed(cohortId) {
     .eq("cohort_id", cohortId)
     .order("is_pinned", { ascending: false })
     .order("created_at", { ascending: false });
-  if (error) { console.warn("Cohort posts fetch warning:", error); return []; }
+  if (error) throw new Error("Could not load cohort discussion. Please retry.", { cause: error });
   const rows = data || [];
   const replyAuthorIds = rows.flatMap((r) => (r.cohort_post_replies || []).map((rep) => rep.author_id));
   const profiles = await fetchProfilesByUserIds([...rows.map((r) => r.author_id), ...replyAuthorIds]);
@@ -1338,7 +1345,7 @@ export async function fetchCohortResources(cohortId) {
     .select("*")
     .eq("cohort_id", cohortId)
     .order("created_at", { ascending: false });
-  if (error) { console.warn("Cohort resources fetch warning:", error); return []; }
+  if (error) throw new Error("Could not load cohort resources. Please retry.", { cause: error });
   return data || [];
 }
 
@@ -1355,7 +1362,7 @@ export async function fetchCohortSessions(cohortId) {
     .select("*")
     .eq("cohort_id", cohortId)
     .order("starts_at", { ascending: true });
-  if (error) { console.warn("Cohort sessions fetch warning:", error); return []; }
+  if (error) throw new Error("Could not load cohort sessions. Please retry.", { cause: error });
   return data || [];
 }
 
@@ -1619,15 +1626,17 @@ export async function fetchMyMysteryBoxes(userId) {
 // tabs.
 export async function fetchCohortAssignedCourses(cohortId, userId = null) {
   if (!supabase || !cohortId) return [];
-  const { data, error } = await supabase
-    .from("cohort_courses")
-    .select("id, course_id, due_at, courses(id, title, description)")
-    .eq("cohort_id", cohortId);
-  if (error) { console.warn("Cohort courses fetch warning:", error); return []; }
-  const { data: learnerCourseRows } = await supabase
-    .from("cohort_learner_courses")
-    .select("id, course_id, user_id, courses(id, title, description)")
-    .eq("cohort_id", cohortId);
+  let learnerQuery = supabase.from("cohort_learner_courses")
+    .select("id, course_id, user_id, courses(id, title, description)").eq("cohort_id", cohortId);
+  if (userId) learnerQuery = learnerQuery.eq("user_id", userId);
+  const [cohortResult, learnerResult] = await Promise.all([
+    supabase.from("cohort_courses").select("id, course_id, due_at, courses(id, title, description)").eq("cohort_id", cohortId),
+    learnerQuery,
+  ]);
+  const error = cohortResult.error || learnerResult.error;
+  if (error) throw new Error("Could not load cohort courses. Please retry.", { cause: error });
+  const data = cohortResult.data;
+  const learnerCourseRows = learnerResult.data;
   const mergedByCourseId = new Map();
   for (const row of data || []) {
     const cid = row.course_id || row.courses?.id;
@@ -1652,11 +1661,12 @@ export async function fetchCohortAssignedCourses(cohortId, userId = null) {
   }
   const courseIds = Array.from(mergedByCourseId.keys());
   if (userId && courseIds.length > 0) {
-    const { data: enrollments } = await supabase
+    const { data: enrollments, error: progressError } = await supabase
       .from("course_enrollments")
       .select("course_id, progress_percentage")
       .eq("user_id", userId)
       .in("course_id", courseIds);
+    if (progressError) throw new Error("Could not load cohort course progress. Please retry.", { cause: progressError });
     for (const enr of enrollments || []) {
       const existing = mergedByCourseId.get(enr.course_id);
       if (existing && existing.courses) {
@@ -1685,9 +1695,9 @@ export async function fetchCohortMembers(cohortId) {
   // the returned shape is unchanged so existing callers keep working.
   const { data, error } = await supabase
     .from("cohort_members")
-    .select("id, added_at, user_id")
+    .select("id, added_at, user_id, cohort_role")
     .eq("cohort_id", cohortId);
-  if (error) { console.warn("Cohort members fetch warning:", error); return []; }
+  if (error) throw new Error("Could not load cohort members. Please retry.", { cause: error });
   const rows = data || [];
   const profiles = await fetchProfilesByUserIds(rows.map((r) => r.user_id), "id, display_name, avatar_url, role");
   return rows.map((r) => ({ ...r, user_profiles: profiles[r.user_id] || null }));

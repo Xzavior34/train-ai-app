@@ -1755,7 +1755,7 @@ export function CommunityScreen({
               )}
             </div>
 
-            {cohort ? (
+            {cohortMembershipQuery.error ? (<div role="alert"><p>{cohortMembershipQuery.error}</p><button className="tai-btn tai-btn-outline" onClick={cohortMembershipQuery.refetch}>Retry cohorts</button></div>) : cohortMembershipQuery.loading ? (<p>Loading your cohorts…</p>) : cohort ? (
               <div
                 style={{
                   padding: "16px 18px",

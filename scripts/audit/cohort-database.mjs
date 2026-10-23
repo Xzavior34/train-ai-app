@@ -1,0 +1,54 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import path from 'node:path';
+import { pathToFileURL } from 'node:url';
+const modulePath = process.env.PGLITE_MODULE || path.join(process.env.TEMP, 'trainai-cohort-db-fixture/node_modules/@electric-sql/pglite/dist/index.js');
+const { PGlite } = await import(pathToFileURL(modulePath).href);
+const db = new PGlite();
+const org = '10000000-0000-4000-8000-000000000001';
+const cohort = '20000000-0000-4000-8000-000000000001';
+const second = '20000000-0000-4000-8000-000000000002';
+const learner = '30000000-0000-4000-8000-000000000001';
+const unassigned = '30000000-0000-4000-8000-000000000002';
+const suspended = '30000000-0000-4000-8000-000000000003';
+const admin = '30000000-0000-4000-8000-000000000004';
+try {
+  await db.exec(`create role anon; create role authenticated; create role service_role;
+    create schema auth; create function auth.uid() returns uuid language sql stable as $$select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid$$;
+    grant usage on schema public,auth to authenticated,anon;
+    grant execute on function auth.uid() to authenticated,anon;
+    create table cohorts(id uuid primary key, organization_id uuid,name text);
+    create table cohort_members(id uuid default gen_random_uuid(),cohort_id uuid,user_id uuid,cohort_role text,added_at timestamptz default now());
+    create table organization_members(organization_id uuid,user_id uuid,status text,role text);
+    create table user_roles(user_id uuid,role text);
+    create table user_profiles(id uuid, display_name text,avatar_url text,role text,email text);
+    insert into cohorts values('${cohort}','${org}','CAP Cohort 3'),('${second}','${org}','FLIP');
+    insert into organization_members values('${org}','${learner}','active','member'),('${org}','${unassigned}','active','member'),('${org}','${suspended}','suspended','member'),('${org}','${admin}','active','admin');
+    insert into cohort_members(cohort_id,user_id,cohort_role) values('${cohort}','${learner}','learner'),('${second}','${learner}','instructor'),('${cohort}','${suspended}','learner');
+    insert into user_profiles values('${learner}','Assigned Learner',null,'mentor','private@example.invalid');`);
+  const helpers = fs.readFileSync('supabase/migrations/202610200006_instructor_assignment_and_member_tracking.sql','utf8');
+  for (const name of ['can_administer_organization','can_read_cohort_workspace']) {
+    const fn = helpers.match(new RegExp('create or replace function public\\.' + name + '\\([\\s\\S]*?\\$\\$;','i'))?.[0];
+    assert.ok(fn, name); await db.exec(fn);
+  }
+  await db.exec(fs.readFileSync('supabase/migrations/202610230001_cohort_assignment_read_models.sql','utf8'));
+  const actor = async id => { await db.exec('reset role'); await db.query("select set_config('request.jwt.claim.sub',$1,false)",[id]); await db.exec('set role authenticated'); };
+  await actor(learner);
+  const memberships = (await db.query('select get_my_cohort_memberships() as data')).rows[0].data;
+  assert.equal(memberships.length,2);
+  assert.deepEqual(new Set(memberships.map(m=>m.cohorts.name)),new Set(['CAP Cohort 3','FLIP']));
+  const directory = (await db.query('select get_cohort_member_directory($1) as data',[second])).rows[0].data;
+  assert.equal(directory[0].cohort_role,'instructor');
+  assert.ok(!JSON.stringify(directory).includes('private@example.invalid'));
+  await actor(unassigned);
+  assert.equal((await db.query('select get_my_cohort_memberships() as data')).rows[0].data.length,0);
+  await assert.rejects(db.query('select get_cohort_member_directory($1)',[cohort]),/Not authorized/);
+  await actor(suspended);
+  await assert.rejects(db.query('select get_my_cohort_memberships()'),/active organization membership/);
+  await assert.rejects(db.query('select get_cohort_member_directory($1)',[cohort]),/Not authorized/);
+  await actor(admin);
+  assert.equal((await db.query('select get_cohort_member_directory($1) as data',[second])).rows[0].data.length,1);
+  await db.exec('reset role; set role anon');
+  await assert.rejects(db.query('select get_my_cohort_memberships()'),/permission denied/);
+  console.log('PASS: PostgreSQL cohort read models retain all assignments, expose cohort roles, and deny anonymous, suspended and unassigned access');
+} finally { await db.close(); }

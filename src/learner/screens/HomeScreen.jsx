@@ -12,7 +12,7 @@ import { calculateCohortProgress } from "../../lib/api/cohorts.js";
 
 export function HomeScreen({
   user = {}, courses = [], coursesLoading, unreadNotifs = 0, weeklyGoal = 5,
-  session, push, goTab, goToMyCourses, cohort = null, cohortLoading = false,
+  session, push, goTab, goToMyCourses, cohort = null, cohortLoading = false, cohortError = null, retryCohort,
   achievements = [], showToast,
   learningPathsQuery, pathEnrollmentsQuery,
   complianceAssignmentsQuery, bookmarksQuery, myCertificatesQuery,
@@ -250,6 +250,8 @@ export function HomeScreen({
           {/* Cohort Sprint & Milestone Card */}
           {cohortLoading ? (
             <SkeletonCard height={80} padding={16} />
+          ) : cohortError ? (
+            <div className="tai-card" role="alert" style={{ padding: 16 }}><p>{cohortError}</p><button className="tai-btn tai-btn-outline" onClick={retryCohort}>Retry cohorts</button></div>
           ) : !cohort ? (
             <div className="tai-card" style={{ padding: 16, borderRadius: 12, border: "1px solid var(--border)" }}>
               <div className="tai-row tai-gap10">

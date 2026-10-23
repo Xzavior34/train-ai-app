@@ -7,8 +7,7 @@ import {
 } from "lucide-react";
 import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
 import { fetchCohortActivityToday } from "../../lib/api/learner.js";
-import { createCohortPost, addCohortPostReply, toggleCohortPostReaction } from "../../lib/api/schemaHelper.js";
-import { fetchCohortDetail } from "../../lib/api/platform.js";
+import { fetchCohortSummary, createCohortPost, addCohortPostReply, toggleCohortPostReaction } from "../../lib/api/schemaHelper.js";
 import { calculateCohortProgress, extendCohortTimeline, createCohortSession, assignCourseToCohortOrLearners } from "../../lib/api/cohorts.js";
 import CapCohort3Screen from "./CapCohort3Screen.jsx";
 
@@ -44,12 +43,14 @@ export function CohortScreen({
 
   const targetCohortId = params?.id || params?.cohortId || propCohort?.id || cohortMembershipQuery?.data?.cohort?.id;
 
+  const knownCohort = [propCohort, ...(cohortMembershipQuery?.data?.allCohorts || [])].find(c => c?.id === targetCohortId);
   const fallbackCohortQuery = useSupabaseQuery(async () => {
     if (!targetCohortId) return null;
-    return fetchCohortDetail(targetCohortId);
-  }, [targetCohortId]);
+    return fetchCohortSummary(targetCohortId);
+  }, [targetCohortId], { enabled: !!targetCohortId && !knownCohort && !cohortMembershipQuery?.loading, blocksPage: false });
 
-  const resolvedCohort = propCohort || fallbackCohortQuery.data?.cohort || cohortMembershipQuery?.data?.cohort || null;
+  const resolvedCohort = [propCohort, ...(cohortMembershipQuery?.data?.allCohorts || []), fallbackCohortQuery.data?.cohort, cohortMembershipQuery?.data?.cohort]
+    .find(c => c?.id === targetCohortId) || null;
 
   const activityTodayQuery = useSupabaseQuery(async () => {
     if (!resolvedCohort?.id) return 0;
@@ -57,7 +58,7 @@ export function CohortScreen({
   }, [resolvedCohort?.id]);
   const activityToday = activityTodayQuery?.data || 0;
 
-  if (cohortMembershipQuery?.loading && fallbackCohortQuery?.loading && !resolvedCohort) {
+  if ((cohortMembershipQuery?.loading || fallbackCohortQuery?.loading) && !resolvedCohort) {
     return (
       <div>
         <TopBar title="Cohort" onBack={back} />
@@ -70,17 +71,20 @@ export function CohortScreen({
     return (
       <div>
         <TopBar title="Cohort" onBack={back} />
-        <div className="tai-empty">You're not part of a cohort yet. Once an admin adds you to one, its resources, sessions, and chat will show up here.</div>
+        <div className="tai-empty" role={cohortMembershipQuery?.error || fallbackCohortQuery?.error ? "alert" : undefined}>
+          {cohortMembershipQuery?.error || fallbackCohortQuery?.error || (targetCohortId ? "This cohort is unavailable. Ask your administrator to check your assignment." : "You have no cohort assignments yet. Your administrator can add you to a cohort.")}
+          <button className="tai-btn tai-btn-primary" style={{ marginTop: 12 }} onClick={() => { cohortMembershipQuery?.refetch?.(); fallbackCohortQuery.refetch(); }}>Retry</button>
+        </div>
       </div>
     );
   }
 
   const cohort = resolvedCohort;
 
-  const posts = (cohortPostsQuery?.data?.length ? cohortPostsQuery.data : fallbackCohortQuery.data?.posts) || [];
-  const resources = (cohortResourcesQuery?.data?.length ? cohortResourcesQuery.data : fallbackCohortQuery.data?.resources) || [];
-  const sessions = (cohortSessionsQuery?.data?.length ? cohortSessionsQuery.data : fallbackCohortQuery.data?.sessions) || [];
-  const rawAssignedCourses = (cohortCoursesQuery?.data?.length ? cohortCoursesQuery.data : fallbackCohortQuery.data?.learnerCourses) || [];
+  const posts = (cohortPostsQuery?.data ?? fallbackCohortQuery.data?.posts) || [];
+  const resources = (cohortResourcesQuery?.data ?? fallbackCohortQuery.data?.resources) || [];
+  const sessions = (cohortSessionsQuery?.data ?? fallbackCohortQuery.data?.sessions) || [];
+  const rawAssignedCourses = (cohortCoursesQuery?.data ?? fallbackCohortQuery.data?.learnerCourses) || [];
   const courseMap = new Map((courses || []).map(c => [c.id, c]));
   const assignedCourses = (() => {
     if (rawAssignedCourses.length > 0) {
@@ -111,31 +115,19 @@ export function CohortScreen({
           };
         });
     }
-    return (courses || [])
-      .filter(c => c.enrolled || c.assigned)
-      .map(c => ({
-        id: c.id,
-        course_id: c.id,
-        due_at: c.complianceDueAt || null,
-        courses: {
-          id: c.id,
-          title: c.title,
-          description: c.tagline || c.description || "",
-          progress: Math.round(Number(c.progress) || 0),
-        },
-      }));
+    return [];
   })();
-  const members = (cohortMembersQuery?.data?.length ? cohortMembersQuery.data : fallbackCohortQuery.data?.members) || [];
+  const members = (cohortMembersQuery?.data ?? fallbackCohortQuery.data?.members) || [];
 
   const now = Date.now();
   const upcomingSessions = sessions.filter(s => new Date(s.starts_at).getTime() >= now);
   const pastSessions = sessions.filter(s => new Date(s.starts_at).getTime() < now);
 
   const instructorMembers = members.filter(
-    m => m.user_profiles?.role === "mentor" || m.user_profiles?.role === "admin"
+    m => m.cohort_role === "instructor" || m.isInstructor
   );
   const peerMembers = members.filter(
-    m => m.user_profiles?.role !== "mentor" && m.user_profiles?.role !== "admin"
+    m => m.cohort_role !== "instructor" && !m.isInstructor
   );
 
   const completedAssignedCount = assignedCourses.filter(cc => (cc.courses?.progress || 0) >= 100).length;
@@ -143,15 +135,10 @@ export function CohortScreen({
     ? Math.round(assignedCourses.reduce((sum, cc) => sum + (Number(cc.courses?.progress) || 0), 0) / assignedCourses.length)
     : 0;
 
-  const isAdminOrMentor =
-    user?.role === "admin" ||
-    user?.role === "mentor" ||
-    user?.role === "instructor" ||
-    session?.user?.user_metadata?.role === "admin" ||
-    session?.user?.user_metadata?.role === "mentor" ||
-    String(session?.user?.email || "").toLowerCase().includes("admin") ||
-    instructorMembers.some(m => m.user_id === session?.user?.id || m.id === session?.user?.id);
+  const isAdminOrMentor = ["admin", "owner", "super_admin"].includes(user?.role) ||
+    (cohortMembershipQuery?.data?.allMemberships || []).some(m => m.cohort_id === cohort.id && m.cohort_role === "instructor");
 
+  const activeQuery = { chat: cohortPostsQuery, courses: cohortCoursesQuery, sessions: cohortSessionsQuery, resources: cohortResourcesQuery, members: cohortMembersQuery }[tab];
   const progressInfo = calculateCohortProgress(cohort?.starts_at, cohort?.ends_at);
 
   async function handleExtendTimeline(daysToAdd, explicitEnd) {
@@ -165,6 +152,7 @@ export function CohortScreen({
       });
       showToast(res.message || `Cohort extended by ${daysToAdd || extendDays} days!`);
       setExtendModalOpen(false);
+      cohortMembershipQuery?.refetch?.();
       fallbackCohortQuery.refetch?.();
     } catch (err) {
       showToast(err?.message || "Failed to extend cohort timeline.");
@@ -241,159 +229,37 @@ export function CohortScreen({
 
   return (
     <div className="tai-fade-in" style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-      <TopBar title={cohort.name || "Cohort"} sub={cohort.description || "Cohort Workspace"} onBack={back} />
+      <TopBar title={cohort.name || "Cohort"} sub="" onBack={back} />
 
-      {/* =========================================================================
-          HERO BANNER: Dedicated Cohort & Batch Space
-          ========================================================================= */}
-      {/* =========================================================================
-          HERO BANNER: Cohort Sprint Identity (Adaptive Liquid Glass)
-          ========================================================================= */}
-      <div
-        className="tai-card tai-hero-card anim-fluid-entrance"
-        style={{
-          borderRadius: 14,
-          padding: "clamp(18px, 2.5vw, 24px)",
-          position: "relative",
-          overflow: "hidden"
-        }}
-      >
-        <div style={{ position: "relative", zIndex: 1, display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 14 }}>
-          <div style={{ minWidth: 0, flex: 1 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-              <h1 className="tai-hero-title" style={{ fontSize: "clamp(20px, 2.5vw, 25px)", fontWeight: 900, letterSpacing: "-0.025em", margin: "0 0 4px", lineHeight: 1.2 }}>
-                {cohort?.name || "AI & Product Design Batch"}
-              </h1>
-              {cohortMembershipQuery?.data?.allCohorts?.length > 1 && (
-                <div style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "2px 8px", borderRadius: 8, background: "rgba(16, 185, 129, 0.15)", border: "1px solid rgba(16, 185, 129, 0.3)", fontSize: 11, fontWeight: 700, color: "#34D399" }}>
-                  <Layers size={12} />
-                  <span>Multiple Cohorts ({cohortMembershipQuery.data.allCohorts.length})</span>
-                </div>
-              )}
-            </div>
-            <p className="tai-hero-desc" style={{ fontSize: 13, margin: 0, maxWidth: 620, lineHeight: 1.45 }}>
-              {cohort?.description || "Collaborative sprint track with live instructor sessions and peer critique."}
-            </p>
-
-            {cohortMembershipQuery?.data?.allCohorts?.length > 1 && (
-              <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 10 }}>
-                <span style={{ fontSize: 12, fontWeight: 700, color: "var(--text-3)" }}>Switch Cohort:</span>
-                <select
-                  value={cohort?.id}
-                  onChange={(e) => {
-                    const nextId = e.target.value;
-                    if (push) {
-                      push("cohort", { cohortId: nextId, id: nextId });
-                    }
-                  }}
-                  style={{
-                    padding: "4px 10px",
-                    borderRadius: 8,
-                    fontSize: 12,
-                    fontWeight: 600,
-                    background: "var(--surface-2, rgba(0,0,0,0.3))",
-                    color: "var(--text, #fff)",
-                    border: "1px solid var(--border, rgba(255,255,255,0.15))",
-                    cursor: "pointer"
-                  }}
-                >
-                  {cohortMembershipQuery.data.allCohorts.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.name} {c.code ? `(${c.code})` : ""}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            )}
-          </div>
-
-          <div className="tai-hero-subcard" style={{ textAlign: "right", flexShrink: 0, padding: "10px 16px", borderRadius: 10 }}>
-            <div style={{ fontSize: 18, fontWeight: 900, color: "var(--text)" }}>{members.length} Peers Enrolled</div>
-            <div style={{ fontSize: 11, color: "var(--text-3)", fontWeight: 600 }}>Active Cohort Track</div>
-          </div>
+      <section className="tai-card tai-hero-card" style={{ padding: 18, borderRadius: 14, minWidth: 0 }} aria-label="Cohort overview">
+        {cohortMembershipQuery?.data?.allCohorts?.length > 1 && (
+          <label style={{ display: "grid", gap: 6, fontSize: 12, fontWeight: 700 }}>
+            Your cohorts
+            <select aria-label="Switch cohort" value={cohort.id} onChange={e => push?.("cohort", { cohortId: e.target.value, id: e.target.value })}
+              style={{ width: "100%", minWidth: 0, height: 44, padding: "0 10px", borderRadius: 8, background: "var(--surface)", color: "var(--text)", border: "1px solid var(--border)", fontSize: 14 }}>
+              {cohortMembershipQuery.data.allCohorts.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+            </select>
+          </label>
+        )}
+        <div style={{ display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: 8, marginTop: 12, fontSize: 13 }}>
+          <span>{members.length} members</span>
+          {cohort.starts_at && cohort.ends_at && <span>{progressInfo.daysRemaining > 0 ? progressInfo.daysRemaining + " days left" : "Cohort ended"}</span>}
         </div>
-
-        {/* 6-Week Cohort Timeline Progress Bar */}
-        <div className="tai-hero-subcard" style={{
-          marginTop: 16,
-          position: "relative",
-          zIndex: 1,
-          padding: "14px 18px",
-          borderRadius: 12,
-          border: "1px solid rgba(255, 255, 255, 0.08)",
-          background: "rgba(15, 23, 42, 0.65)",
-          backdropFilter: "blur(12px)"
-        }}>
-          <div className="tai-row tai-between" style={{ fontSize: 12.5, fontWeight: 700, marginBottom: 8, color: "var(--text)", flexWrap: "wrap", gap: 8 }}>
-            <div className="tai-row tai-gap8" style={{ alignItems: "center" }}>
-              <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#34D399", boxShadow: "0 0 8px #34D399" }} />
-              <span>
-                Cohort timeline: Week {progressInfo.currentWeek} of {progressInfo.totalWeeks} &bull; <strong style={{ color: "#34D399" }}>{progressInfo.daysRemaining} Days Left</strong> before cohort ends
-              </span>
-            </div>
-            <div className="tai-row tai-gap10" style={{ alignItems: "center" }}>
-              <span style={{
-                color: "#34D399",
-                fontSize: 13,
-                fontWeight: 800,
-                background: "rgba(16, 185, 129, 0.15)",
-                border: "1px solid rgba(16, 185, 129, 0.3)",
-                padding: "2px 8px",
-                borderRadius: 6
-              }}>
-                {progressInfo.daysRemaining} Days Left ({progressInfo.percent}% Elapsed)
-              </span>
-              {isAdminOrMentor && (
-                <button
-                  type="button"
-                  onClick={() => setExtendModalOpen(true)}
-                  style={{
-                    background: "rgba(59, 130, 246, 0.2)",
-                    border: "1px solid rgba(59, 130, 246, 0.4)",
-                    color: "#60A5FA",
-                    padding: "3px 10px",
-                    borderRadius: 6,
-                    fontSize: 11.5,
-                    fontWeight: 800,
-                    cursor: "pointer",
-                    display: "inline-flex",
-                    alignItems: "center",
-                    gap: 4
-                  }}
-                >
-                  <Clock size={12} /> Extend Timeline
-                </button>
-              )}
-            </div>
+        {cohort.starts_at && cohort.ends_at && <>
+          <div role="progressbar" aria-label="Cohort timeline" aria-valuenow={progressInfo.percent} aria-valuemin={0} aria-valuemax={100} style={{ height: 6, background: "rgba(255,255,255,.18)", borderRadius: 8, marginTop: 10, overflow: "hidden" }}>
+            <div style={{ width: progressInfo.percent + "%", height: "100%", background: "#34D399" }} />
           </div>
-
-          <div style={{
-            height: 9,
-            borderRadius: 99,
-            background: "rgba(255, 255, 255, 0.1)",
-            overflow: "hidden",
-            position: "relative"
-          }}>
-            <div style={{
-              width: `${progressInfo.percent}%`,
-              height: "100%",
-              background: "linear-gradient(90deg, #10B981 0%, #34D399 100%)",
-              borderRadius: 99,
-              boxShadow: "0 0 12px rgba(16, 185, 129, 0.4)",
-              transition: "width 0.4s ease"
-            }} />
-          </div>
-
-          <div className="tai-row tai-between" style={{ marginTop: 8, fontSize: 11, color: "var(--text-3)", flexWrap: "wrap", gap: 6 }}>
-            <span>
-              Started: {cohort?.starts_at ? new Date(cohort.starts_at).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" }) : "Cohort Launch"} &bull; Ends: {cohort?.ends_at ? new Date(cohort.ends_at).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" }) : "6 Weeks from Start"}
-            </span>
-            <span>
-              Assigned Curriculum: {completedAssignedCount} of {assignedCourses.length} Courses Completed ({assignedCompletionRate}%)
-            </span>
-          </div>
-        </div>
-      </div>
+          <div style={{ marginTop: 8, fontSize: 12 }}>Week {progressInfo.currentWeek} of {progressInfo.totalWeeks}</div>
+        </>}
+        <details style={{ marginTop: 12, fontSize: 13 }}>
+          <summary style={{ cursor: "pointer", padding: "6px 0" }}>Cohort details</summary>
+          {cohort.description && <p>{cohort.description}</p>}
+          {cohort.starts_at && <p>Starts {new Date(cohort.starts_at).toLocaleDateString()}</p>}
+          {cohort.ends_at && <p>Ends {new Date(cohort.ends_at).toLocaleDateString()}</p>}
+          <p>{completedAssignedCount} of {assignedCourses.length} courses completed</p>
+        </details>
+        {isAdminOrMentor && <button type="button" className="tai-btn" style={{ marginTop: 10 }} onClick={() => setExtendModalOpen(true)}><Clock size={14} /> Extend timeline</button>}
+      </section>
 
       {activityToday > 0 && (
         <div className="tai-card" style={{ padding: 12 }}>
@@ -411,13 +277,13 @@ export function CohortScreen({
           ========================================================================= */}
       <div className="tai-row tai-gap8" style={{ borderBottom: "1px solid var(--border)", paddingBottom: 10, overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
         {[
-          { k: "chat", label: `Announcements & Discussion (${posts.length})`, icon: MessageCircle },
-          { k: "cap", label: "CAP 3 Accelerator (6-Wk)", icon: Rocket },
+          { k: "chat", label: `Discussion (${posts.length})`, icon: MessageCircle },
+          { k: "cap", label: "CAP programme", icon: Rocket },
           { k: "sessions", label: `Live Sessions (${sessions.length})`, icon: Video },
-          { k: "courses", label: `Assigned Courses (${assignedCourses.length})`, icon: BookOpen },
-          { k: "resources", label: `Shared Resources (${resources.length})`, icon: FileText },
+          { k: "courses", label: `Courses (${assignedCourses.length})`, icon: BookOpen },
+          { k: "resources", label: `Resources (${resources.length})`, icon: FileText },
           { k: "members", label: `People (${members.length})`, icon: Users },
-        ].map(t => {
+        ].filter(t => t.k !== "cap" || /cap\s*(cohort\s*)?3|accelerator/i.test(`${cohort.name} ${cohort.program_name || ""}`)).map(t => {
           const Icon = t.icon;
           const isActive = tab === t.k;
           return (
@@ -449,6 +315,7 @@ export function CohortScreen({
         })}
       </div>
 
+      {activeQuery?.error && <div className="tai-card" role="alert" style={{ padding: 16 }}><p>{activeQuery.error}</p><button className="tai-btn tai-btn-outline" onClick={activeQuery.refetch}>Retry</button></div>}
       {/* =========================================================================
           TAB 1: ANNOUNCEMENTS & FEED
           ========================================================================= */}
@@ -456,7 +323,7 @@ export function CohortScreen({
         <div className="tai-col tai-gap14">
           {/* Read-only - only instructors/admins can post here (learners can read). */}
           {cohortPostsQuery?.loading && <div className="tai-empty"><LoadingSkeleton label="Loading cohort chat..." rows={3} /></div>}
-          {!cohortPostsQuery?.loading && posts.length === 0 && (
+          {!cohortPostsQuery?.loading && !cohortPostsQuery?.error && posts.length === 0 && (
             <div className="tai-empty">No announcements from your instructor yet.</div>
           )}
           {posts.map(cp => {
@@ -633,7 +500,7 @@ export function CohortScreen({
               </button>
             </div>
           )}
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 20 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 280px), 1fr))", gap: 20 }}>
             {sessions.map(s => (
               <div key={s.id} className="tai-card" style={{ padding: 22, borderRadius: 10, background: "var(--surface)" }}>
                 <div className="tai-row tai-between" style={{ marginBottom: 10 }}>
@@ -686,7 +553,7 @@ export function CohortScreen({
             <ProgressBar value={assignedCompletionRate} height={8} />
           </div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 20 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 280px), 1fr))", gap: 20 }}>
             {assignedCourses.map(cc => (
               <div key={cc.id} className="tai-card tai-card-hover" style={{ padding: 22, borderRadius: 10, cursor: "pointer" }} onClick={() => push?.("courseDetail", { id: cc.courses?.id || cc.course_id })}>
                 <h3 style={{ fontSize: 16, fontWeight: 800, color: "var(--text)", margin: "0 0 4px" }}>
@@ -729,7 +596,7 @@ export function CohortScreen({
       {tab === "resources" && (
         <div className="tai-col tai-gap14">
           {cohortResourcesQuery?.loading && <div className="tai-empty"><LoadingSkeleton label="Loading resources..." rows={3} /></div>}
-          {!cohortResourcesQuery?.loading && resources.length === 0 && (
+          {!cohortResourcesQuery?.loading && !cohortResourcesQuery?.error && resources.length === 0 && (
             <div className="tai-empty">No resources shared with your cohort yet.</div>
           )}
           {resources.map(r => (
@@ -781,7 +648,7 @@ export function CohortScreen({
       {tab === "members" && (
         <div className="tai-col tai-gap16">
           {cohortMembersQuery?.loading && !members.length && <div className="tai-empty"><LoadingSkeleton label="Loading members..." rows={3} /></div>}
-          {!cohortMembersQuery?.loading && members.length === 0 && (
+          {!cohortMembersQuery?.loading && !cohortMembersQuery?.error && members.length === 0 && (
             <div className="tai-empty">No members in this cohort yet.</div>
           )}
           <div className="tai-grid2">

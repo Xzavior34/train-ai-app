@@ -358,6 +358,14 @@ export function useLearnerData(session, screen, params) {
     if (!session?.user?.id) return null;
     return fetchMyCohortMembership(session.user.id);
   }, [session?.user?.id]);
+  // Also refresh on return to the app when Realtime is unavailable.
+  useEffect(() => {
+    if (!session?.user?.id) return;
+    const refresh = () => { if (!document.hidden) cohortMembershipQuery.refetch(); };
+    window.addEventListener("focus", refresh);
+    const timer = window.setInterval(refresh, 60000);
+    return () => { window.removeEventListener("focus", refresh); window.clearInterval(timer); };
+  }, [session?.user?.id, cohortMembershipQuery.refetch]);
   const cohortId = params?.id || params?.cohortId || cohortMembershipQuery.data?.cohort?.id || null;
   const cohortPostsQuery = useSupabaseQuery(async () => {
     if (!cohortId) return [];

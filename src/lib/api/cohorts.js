@@ -4,29 +4,20 @@ import { COHORT_STATUSES } from "../constants/terminology.js";
 /**
  * Robust Cohort Duration & Elapsed Time Progress Calculator
  * Handles invalid, missing, or future dates without crashing.
- * If either date is not explicitly set, calculates based on a standard 6-week (42 days) cohort track.
+ * Missing or invalid dates have no elapsed schedule; never invent a six-week track.
  */
 export function calculateCohortProgress(startDate, endDate) {
-  const effectiveStart = startDate || new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString();
-  const effectiveEnd = endDate || new Date(new Date(effectiveStart).getTime() + 42 * 24 * 60 * 60 * 1000).toISOString();
+  const unknown = { percent: 0, daysRemaining: 0, totalDays: 0, totalWeeks: 0, currentWeek: 0, isUpcoming: false, isCompleted: false, hasSchedule: false, statusLabel: "Schedule not set" };
+  if (!startDate || !endDate) return unknown;
+  const effectiveStart = startDate;
+  const effectiveEnd = endDate;
 
   try {
     const start = new Date(effectiveStart).getTime();
     const end = new Date(effectiveEnd).getTime();
     const now = Date.now();
 
-    if (isNaN(start) || isNaN(end) || end <= start) {
-      return {
-        percent: 0,
-        daysRemaining: 42,
-        totalDays: 42,
-        totalWeeks: 6,
-        currentWeek: 1,
-        isUpcoming: false,
-        isCompleted: false,
-        statusLabel: "6-Week Intensive Track",
-      };
-    }
+    if (isNaN(start) || isNaN(end) || end <= start) return unknown;
 
     const totalDurationMs = end - start;
     const totalDays = Math.max(1, Math.round(totalDurationMs / (1000 * 60 * 60 * 24)));
@@ -75,16 +66,7 @@ export function calculateCohortProgress(startDate, endDate) {
       statusLabel: `Week ${currentWeek} of ${totalWeeks} (${daysRemaining} day${daysRemaining === 1 ? "" : "s"} left)`,
     };
   } catch {
-    return {
-      percent: 33,
-      daysRemaining: 28,
-      totalDays: 42,
-      totalWeeks: 6,
-      currentWeek: 3,
-      isUpcoming: false,
-      isCompleted: false,
-      statusLabel: "Week 3 of 6 (28 days left)",
-    };
+    return unknown;
   }
 }
 

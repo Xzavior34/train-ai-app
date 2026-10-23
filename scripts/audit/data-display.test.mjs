@@ -8,7 +8,7 @@ const org = '10000000-0000-4000-8000-000000000001';
 const otherOrg = '10000000-0000-4000-8000-000000000002';
 const user = '20000000-0000-4000-8000-000000000001';
 const otherUser = '20000000-0000-4000-8000-000000000002';
-const bundle = await build({stdin:{contents:`export * from './src/lib/api/platform.js'; export {fetchPublishedCourses,fetchPublishedLearningPaths} from './src/lib/api/learner.js'; export {getReferralSignupsRoster,getLinkClicksRoster} from './src/lib/api/organizations.js'; import React from 'react'; import {renderToString} from 'react-dom/server'; import {MemberLearningTrack} from './src/platform/components/MemberLearningTrack.jsx';import {CoursesScreen} from './src/learner/screens/CoursesScreen.jsx';export const renderTrack=data=>renderToString(React.createElement(MemberLearningTrack,{learningTrackQuery:{data,loading:false,error:null}}));export const renderEmptyCourses=()=>renderToString(React.createElement(CoursesScreen,{courses:[],coursesLoading:false}));`,resolveDir:process.cwd()},bundle:true,platform:'node',format:'cjs',write:false,packages:'external',logLevel:'silent',plugins:[{name:'connected-fixture',setup(b){b.onResolve({filter:/(?:^|[\\/])supabaseClient\.js$/},()=>({path:'client',namespace:'fixture'}));b.onLoad({filter:/.*/,namespace:'fixture'},()=>({contents:`export const supabase=globalThis.fixtureClient;export const activeProject='organization_db'; export const isSupabaseConfigured=true; export const PROJECT_CONFIGURED={}; export const SUPABASE_PROJECTS={ORGANIZATION_DB:'organization_db',SARA_FOUNDATION:'sara_foundation'};export const getSupabaseClientForProject=()=>supabase; export function setActiveSupabaseProject(){};export const resolveProjectForSignIn=()=> 'organization_db'; export const resolveProjectForSignUp=resolveProjectForSignIn;export const fallbackProjectForSignIn=()=>null;`}));}}]});
+const bundle = await build({stdin:{contents:`export * from './src/lib/api/platform.js';export {calculateCohortProgress} from './src/lib/api/cohorts.js';export {fetchMyCohortMembership,fetchMyCohortMemberships} from './src/lib/api/schemaHelper.js'; export {fetchPublishedCourses,fetchPublishedLearningPaths} from './src/lib/api/learner.js'; export {getReferralSignupsRoster,getLinkClicksRoster} from './src/lib/api/organizations.js'; import React from 'react'; import {renderToString} from 'react-dom/server'; import {MemberLearningTrack} from './src/platform/components/MemberLearningTrack.jsx';import {CoursesScreen} from './src/learner/screens/CoursesScreen.jsx';export const renderTrack=data=>renderToString(React.createElement(MemberLearningTrack,{learningTrackQuery:{data,loading:false,error:null}}));export const renderEmptyCourses=()=>renderToString(React.createElement(CoursesScreen,{courses:[],coursesLoading:false}));`,resolveDir:process.cwd()},bundle:true,platform:'node',format:'cjs',write:false,packages:'external',logLevel:'silent',plugins:[{name:'connected-fixture',setup(b){b.onResolve({filter:/(?:^|[\\/])supabaseClient\.js$/},()=>({path:'client',namespace:'fixture'}));b.onLoad({filter:/.*/,namespace:'fixture'},()=>({contents:`export const supabase=globalThis.fixtureClient;export const activeProject='organization_db'; export const isSupabaseConfigured=true; export const PROJECT_CONFIGURED={}; export const SUPABASE_PROJECTS={ORGANIZATION_DB:'organization_db',SARA_FOUNDATION:'sara_foundation'};export const getSupabaseClientForProject=()=>supabase; export function setActiveSupabaseProject(){};export const resolveProjectForSignIn=()=> 'organization_db'; export const resolveProjectForSignUp=resolveProjectForSignIn;export const fallbackProjectForSignIn=()=>null;`}));}}]});
 
 function fixture({tables={},failTable=null,rpcData=null,rpcError=null}={}) {
  const calls=[];const storage=new Map();
@@ -38,11 +38,11 @@ test('Connected member directory ignores local sample signups and visitors',asyn
 
 test('Cohort summaries batch related reads and retain accurate counts and progress', async () => {
  const cohorts = Array.from({length:12},(_,i)=>({id:'cohort-'+i,organization_id:org,name:'Cohort '+i,created_by:otherUser}));
- const f=fixture({tables:{cohorts,cohort_members:cohorts.map(c=>({cohort_id:c.id,user_id:user})),cohort_courses:cohorts.flatMap(c=>[{cohort_id:c.id},{cohort_id:c.id}]),course_enrollments:[{user_id:user,progress_percentage:20},{user_id:user,progress_percentage:80}],user_profiles:[{id:otherUser,display_name:'Instructor',email:'instructor@example.invalid'}]}});
+ const f=fixture({tables:{cohorts,cohort_members:cohorts.map(c=>({cohort_id:c.id,user_id:user,cohort_role:"instructor"})),cohort_courses:cohorts.flatMap(c=>[{cohort_id:c.id},{cohort_id:c.id}]),course_enrollments:[{user_id:user,progress_percentage:20},{user_id:user,progress_percentage:80}],user_profiles:[{id:user,display_name:'Instructor',email:'instructor@example.invalid'}]}});
  const rows=await f.api.fetchCohortsWithStats(org);
  assert.equal(rows.length,12);
  for(const row of rows){assert.equal(row.members,1);assert.equal(row.courses,2);assert.equal(row.learningProgress,50);assert.equal(row.instructor.name,'Instructor');}
- assert.equal(f.calls.filter(call=>call.table).length,6,'Twelve cohorts should use six batched reads, not a request chain per cohort');
+ assert.equal(f.calls.filter(call=>call.table).length,5,'Twelve cohorts should use five batched reads, not a request chain per cohort');
  const failed=fixture({tables:{cohorts},failTable:'cohort_members'});
  await assert.rejects(failed.api.fetchCohortsWithStats(org),/Could not load cohorts/);
 });
@@ -83,3 +83,29 @@ test('Batched record lookups surface failed chunks instead of silently dropping 
 test('A failed learning record is not replaced by fictional progress',async()=>{const f=fixture({rpcError:{message:'fixture failure'}});await assert.rejects(f.api.fetchMemberLearningTrack(user,org),/Could not load this member/);assert.equal(f.calls.length,1);});
 test('Learning track renders saved progress and does not call a path-only record empty',()=>{const f=fixture();const html=f.api.renderTrack({tracks:[{id:'path',title:'Saved Path',courses:[{id:'course',title:'Saved Course',progress:37}]}],enrollments:[],avgProgress:37});assert.match(html,/Saved Path/);assert.match(html,/Saved Course/);assert.match(html,/37/);assert.doesNotMatch(html,/No courses or learning paths assigned/);});
 test('Empty connected course screen never claims all learning is complete',()=>{const f=fixture();const html=f.api.renderEmptyCourses();assert.match(html,/No courses available yet/);assert.doesNotMatch(html,/All lessons complete|Complete Material|Live Workshop/);});
+
+test('Cohort membership failures are not presented as missing assignments',async()=>{
+ const f=fixture({failTable:'cohort_members'});
+ await assert.rejects(f.api.fetchMyCohortMembership(user),/Could not load your cohort assignments/);
+ await assert.rejects(f.api.fetchMyCohortMemberships(user),/Could not load your cohort assignments/);
+ const hidden=fixture({tables:{cohort_members:[{user_id:user,cohort_id:'cap',cohorts:null}]}});
+ await assert.rejects(hidden.api.fetchMyCohortMembership(user),/assignment could not be opened/);
+});
+test('Learner cohort lookup preserves every saved assignment and a genuine empty roster',async()=>{
+ const f=fixture({tables:{cohort_members:[{user_id:user,cohort_id:'cap',cohorts:{id:'cap',name:'CAP Cohort 3'}},{user_id:user,cohort_id:'flip',cohorts:{id:'flip',name:'FLIP'}}]}});
+ const data=await f.api.fetchMyCohortMembership(user);assert.equal(data.allCohorts.length,2);assert.equal(data.allMemberships.length,2);
+ assert.equal(await fixture().api.fetchMyCohortMembership(user),null);
+});
+
+test('Authenticated cohort lookup respects server results and never bypasses access denials',async()=>{
+ const empty=fixture({rpcData:[],tables:{cohort_members:[{user_id:user,cohorts:{id:'stale'}}]}});
+ assert.equal(await empty.api.fetchMyCohortMembership(user),null);assert.ok(!empty.calls.some(c=>c.table==='cohort_members'));
+ const denied=fixture({rpcError:{code:'42501',message:'Not authorized'}});
+ await assert.rejects(denied.api.fetchMyCohortMembership(user),/Could not load/);assert.equal(denied.calls.length,1);
+ const assigned=fixture({rpcData:[{cohort_id:'cap',cohorts:{id:'cap'}}]});
+ assert.equal((await assigned.api.fetchMyCohortMembership(user)).cohort.id,'cap');assert.equal(assigned.calls[0].rpc,'get_my_cohort_memberships');
+});
+test('Cohorts without valid dates do not invent elapsed time',()=>{
+ const api=fixture().api;
+ for(const dates of [[null,null],['invalid','2026-12-31'],['2026-11-01','2026-10-01']]) { const progress=api.calculateCohortProgress(...dates);assert.equal(progress.percent,0);assert.equal(progress.statusLabel,'Schedule not set'); }
+});

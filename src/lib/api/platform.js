@@ -2300,17 +2300,13 @@ export async function fetchCohortsWithStats(organizationId) {
     // chain of member/course/role/profile requests for every cohort.
     const cohortIds = cohorts.map(c => c.id);
     const [memberRows, courseRows] = await Promise.all([
-      safeInQuery("cohort_members", "cohort_id, user_id", "cohort_id", cohortIds),
+      safeInQuery("cohort_members", "cohort_id, user_id, cohort_role", "cohort_id", cohortIds),
       safeInQuery("cohort_courses", "cohort_id", "cohort_id", cohortIds),
     ]);
     const userIds = [...new Set(memberRows.map(row => row.user_id).filter(Boolean))];
-    const [enrollments, roles] = await Promise.all([
-      safeInQuery("course_enrollments", "user_id, progress_percentage", "user_id", userIds),
-      safeInQuery("user_roles", "user_id, role", "user_id", userIds),
-    ]);
-    const mentorIds = new Set(roles.filter(row => row.role === "mentor").map(row => row.user_id));
-    const profileIds = [...new Set([...mentorIds, ...cohorts.map(c => c.created_by).filter(Boolean)])];
-    const profiles = await safeInQuery("user_profiles", "id, display_name, email", "id", profileIds);
+    const enrollments = await safeInQuery("course_enrollments", "user_id, progress_percentage", "user_id", userIds);
+    const instructorByCohort = new Map(memberRows.filter(row => row.cohort_role === "instructor").map(row => [row.cohort_id, row.user_id]));
+    const profiles = await safeInQuery("user_profiles", "id, display_name, email", "id", [...new Set(instructorByCohort.values())]);
     const profileById = new Map(profiles.map(profile => [profile.id, profile]));
     const membersByCohort = new Map();
     const coursesByCohort = new Map();
@@ -2333,7 +2329,7 @@ export async function fetchCohortsWithStats(organizationId) {
         const progress = progressByUser.get(userId);
         if (progress) { total += progress.total; count += progress.count; }
       }
-      const instructorId = members.find(userId => mentorIds.has(userId)) || c.created_by;
+      const instructorId = instructorByCohort.get(c.id);
       const profile = profileById.get(instructorId);
       return {
         ...c,

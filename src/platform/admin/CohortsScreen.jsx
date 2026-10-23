@@ -29,6 +29,7 @@ export function CohortsScreen({ orgId, onOpenCohort, orgSelector, setScreen, cur
   const [duplicateName, setDuplicateName] = useState("");
   const [actionBusy, setActionBusy] = useState(false);
 
+  const [announcementOpen, setAnnouncementOpen] = useState(false);
   const [announcementText, setAnnouncementText] = useState("");
   const [postingAnnouncement, setPostingAnnouncement] = useState(false);
   const cohortsQuery = useSupabaseQuery(async () => fetchCohortsWithStats(orgId || "demo-org-id"), [orgId]);
@@ -96,56 +97,29 @@ export function CohortsScreen({ orgId, onOpenCohort, orgSelector, setScreen, cur
   return (
     <div className="ta-fade">
       <TopBar
-        title="Cohorts" sub="Active cohorts, time-elapsed progress &amp; batch schedules"
+        title="Cohorts" sub="Manage cohorts and learners"
         orgSelector={orgSelector}
         onNavigate={setScreen}
       />
       <div className="ta-content" style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-        {/* =========================================================================
-            COHORT DASHBOARD HERO BANNER
-            ========================================================================= */}
-        <div className="ta-hero-banner anim-fluid-entrance">
-          <div className="tai-glow-cyan" />
-          <div className="ta-hero-inner">
-            <div className="ta-hero-text">
-              <h1 className="ta-hero-title">
-                Cohort Administration &amp; Milestone Pacing
-              </h1>
-              <p className="ta-hero-desc">
-                Manage structured training programmes, 6-week CAP accelerators, time-elapsed learner pacing, and batch broadcasts.
-              </p>
-            </div>
-
-            <div className="ta-hero-actions">
-              <button
-                className="ta-btn ta-btn-primary"
-                style={{ height: 36, padding: "0 14px", borderRadius: 8, fontSize: 12.5, display: "inline-flex", alignItems: "center", gap: 6 }}
-                onClick={() => setNewCohortOpen(true)}
-              >
-                <Plus size={14} /> Create Cohort
-              </button>
-            </div>
-          </div>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
+          <span className="ta-sub">{cohortsQuery.loading ? "Loading cohorts…" : cohortsQuery.error ? "Cohorts unavailable" : cohorts.length + " cohorts"}</span>
+          <button className="ta-btn ta-btn-primary" onClick={() => setNewCohortOpen(true)}><Plus size={16} /> Create Cohort</button>
         </div>
 
         <div className="ta-sidebar-layout">
           {/* Main Left Column */}
           <div style={{ display: "flex", flexDirection: "column", gap: 16, minWidth: 0 }}>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 260px), 1fr))", gap: 16 }}>
+              {cohortsQuery.error && <div className="ta-card" role="alert" style={{ padding: 20 }}><p>{cohortsQuery.error}</p><button className="ta-btn ta-btn-primary" onClick={cohortsQuery.refetch}>Retry</button></div>}
               {cohortsQuery.loading && <div className="ta-empty"><LoadingSkeleton label="Loading cohorts..." rows={3} /></div>}
-              {!cohortsQuery.loading && cohorts.length === 0 && (
-                <div className="ta-empty">No cohorts created yet. Click "Create Cohort" above to launch your first training batch.</div>
+              {!cohortsQuery.loading && !cohortsQuery.error && cohorts.length === 0 && (
+                <div className="ta-empty">No cohorts in this organization yet.</div>
               )}
               {cohorts.map((c, idx) => {
                 // Precise elapsed time calculation
                 const progressInfo = calculateCohortProgress(c.starts_at || c.startsAt, c.ends_at || c.endsAt);
-                const cohortCovers = [
-                  "https://images.unsplash.com/photo-1531482615713-2afd69097998?w=600&auto=format&fit=crop&q=80",
-                  "https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=600&auto=format&fit=crop&q=80",
-                  "https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?w=600&auto=format&fit=crop&q=80",
-                  "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=600&auto=format&fit=crop&q=80"
-                ];
-                const cover = c.banner_url || cohortCovers[idx % cohortCovers.length];
+                const cover = c.banner_url;
 
                 return (
                   <div
@@ -162,8 +136,8 @@ export function CohortsScreen({ orgId, onOpenCohort, orgSelector, setScreen, cur
                       flexDirection: "column",
                     }}
                   >
-                    <div style={{ position: "relative", width: "100%", height: 120, overflow: "hidden" }}>
-                      <img src={cover} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                    <div style={{ position: "relative", width: "100%", height: cover ? 120 : 88, overflow: "hidden", background: "#142747" }}>
+                      {cover && <img src={cover} alt="" loading="lazy" style={{ width: "100%", height: "100%", objectFit: "cover" }} />}
                       <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, rgba(15,23,42,0.15) 0%, rgba(15,23,42,0.85) 100%)" }} />
                       <div style={{ position: "absolute", top: 10, left: 10, right: 10, display: "flex", justifyContent: "space-between" }}>
                         <Tag tone="primary">{c.program_name || "Training Programme"}</Tag>
@@ -180,13 +154,13 @@ export function CohortsScreen({ orgId, onOpenCohort, orgSelector, setScreen, cur
                       <div>
                         <div className="ta-row ta-between" style={{ fontSize: 12, color: "var(--text-2)", marginBottom: 6 }}>
                           <span className="ta-row ta-gap6">
-                            <Users size={13} color="var(--primary)" /> {c.members ?? c.learner_count ?? 0} learners
+                            <Users size={13} color="var(--primary)" /> {c.members ?? c.learner_count ?? 0} members
                           </span>
                           <span style={{ fontWeight: 800, color: "var(--primary)" }}>{progressInfo.percent}% elapsed</span>
                         </div>
                         <ProgressBar value={progressInfo.percent} />
 
-                        <div className="ta-row ta-between" style={{ fontSize: 11.5, color: "var(--text-3)", marginTop: 8, alignItems: "center" }}>
+                        <div className="ta-row ta-between" style={{ fontSize: 11.5, color: "var(--text-3)", marginTop: 8, alignItems: "center", flexWrap: "wrap", gap: 8 }}>
                           <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
                             <Clock size={12} /> {progressInfo.statusLabel}
                           </div>
@@ -397,9 +371,9 @@ export function CohortsScreen({ orgId, onOpenCohort, orgSelector, setScreen, cur
           </div>
 
           {/* Right Side Panel */}
-          <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+          <div style={{ display: cohorts.length ? "flex" : "none", flexDirection: "column", gap: 20 }}>
             {/* Cohort Milestones */}
-            <div className="ta-card" style={{ padding: 20 }}>
+            <div className="ta-card" style={{ padding: 20, display: upcomingSessions.length || sessionsQuery.loading || sessionsQuery.error ? undefined : "none" }}>
               <div className="ta-row ta-between" style={{ paddingBottom: 12, borderBottom: "1px solid var(--border)" }}>
                 <div>
                   <div className="ta-title" style={{ fontSize: 15 }}>Cohort Milestones</div>
@@ -432,10 +406,11 @@ export function CohortsScreen({ orgId, onOpenCohort, orgSelector, setScreen, cur
             </div>
 
             {/* Cohort Discussion Feed & Announcement Composer */}
-            <div className="ta-card" style={{ padding: 20 }}>
+            <button className="ta-btn ta-btn-outline" aria-expanded={announcementOpen} onClick={() => setAnnouncementOpen(v => !v)}><Send size={14} /> {announcementOpen ? "Close announcement" : "Send cohort announcement"}</button>
+            <div className="ta-card" style={{ padding: 20, display: announcementOpen ? undefined : "none" }}>
               <div className="ta-row ta-between" style={{ paddingBottom: 12, borderBottom: "1px solid var(--border)" }}>
                 <div>
-                  <div className="ta-title" style={{ fontSize: 15 }}>Cohort Announcements &amp; Discussion</div>
+                  <div className="ta-title" style={{ fontSize: 15 }}>Cohort announcement</div>
                   <div className="ta-sub" style={{ fontSize: 12, marginTop: 2 }}>Post announcements into cohort stream</div>
                 </div>
                 <Tag tone="primary">Stream</Tag>
@@ -456,7 +431,7 @@ export function CohortsScreen({ orgId, onOpenCohort, orgSelector, setScreen, cur
                   disabled={postingAnnouncement || !announcementText.trim()}
                   onClick={async () => {
                     if (!announcementText.trim() || !currentUserId) return;
-                    const targets = cohorts.slice(0, 10);
+                    const targets = cohorts.filter(c => !c.is_archived && c.status !== "archived");
                     if (targets.length === 0) {
                       showToast("No active cohorts to broadcast to.");
                       return;
@@ -470,7 +445,7 @@ export function CohortsScreen({ orgId, onOpenCohort, orgSelector, setScreen, cur
                             authorId: currentUserId,
                             content: announcementText.trim(),
                             isAnnouncement: true,
-                          }).catch(() => {})
+                          })
                         )
                       );
                       setAnnouncementText("");

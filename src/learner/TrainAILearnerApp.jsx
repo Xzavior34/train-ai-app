@@ -832,6 +832,7 @@ export default function TrainAILearnerApp({ isActive = true, onSwitchToPlatform,
                   goToMyCourses={() => { setShowMyCoursesOnly(true); goTab("courses"); }}
                   cohort={cohortMembershipQuery.data?.cohort || null}
                   cohortLoading={cohortMembershipQuery.loading}
+                  cohortError={cohortMembershipQuery.error} retryCohort={cohortMembershipQuery.refetch}
                   cohortCoursesQuery={cohortCoursesQuery}
                   cohortMembersQuery={cohortMembersQuery}
                   myCertificatesQuery={myCertificatesQuery}
