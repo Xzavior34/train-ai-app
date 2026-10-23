@@ -2306,7 +2306,7 @@ export async function fetchCohortsWithStats(organizationId) {
     const userIds = [...new Set(memberRows.map(row => row.user_id).filter(Boolean))];
     const enrollments = await safeInQuery("course_enrollments", "user_id, progress_percentage", "user_id", userIds);
     const instructorByCohort = new Map(memberRows.filter(row => row.cohort_role === "instructor").map(row => [row.cohort_id, row.user_id]));
-    const profiles = await safeInQuery("user_profiles", "id, display_name, email", "id", [...new Set(instructorByCohort.values())]);
+    const profiles = await safeInQuery("user_profiles", "id, display_name", "id", [...new Set(instructorByCohort.values())]);
     const profileById = new Map(profiles.map(profile => [profile.id, profile]));
     const membersByCohort = new Map();
     const coursesByCohort = new Map();

@@ -42,6 +42,7 @@ test('Cohort summaries batch related reads and retain accurate counts and progre
  const rows=await f.api.fetchCohortsWithStats(org);
  assert.equal(rows.length,12);
  for(const row of rows){assert.equal(row.members,1);assert.equal(row.courses,2);assert.equal(row.learningProgress,50);assert.equal(row.instructor.name,'Instructor');}
+ assert.equal(f.calls.find(call=>call.table==='user_profiles').fields,'id, display_name');
  assert.equal(f.calls.filter(call=>call.table).length,5,'Twelve cohorts should use five batched reads, not a request chain per cohort');
  const failed=fixture({tables:{cohorts},failTable:'cohort_members'});
  await assert.rejects(failed.api.fetchCohortsWithStats(org),/Could not load cohorts/);
