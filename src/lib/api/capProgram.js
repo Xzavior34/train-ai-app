@@ -1,250 +1,170 @@
 import { supabase } from "../supabaseClient.js";
-import { CAP_PHASES, CAP_ROLES } from "../constants/terminology.js";
 
-const LOCAL_STORAGE_TEAMS_KEY = "trainai_cap_teams_cache_v2";
-
-const SEED_CAP_TEAMS = [
-  {
-    id: "cap-team-1",
-    cohort_id: "cap-cohort-3",
-    name: "Nexus AI Healthcare",
-    project_title: "Intelligent Patient Triage & Diagnostics Assistant",
-    problem_statement: "Reducing ER triage wait times across African urban hospitals using multilingual LLMs.",
-    technologies: ["React", "Python", "FastAPI", "OpenAI", "Supabase"],
-    github_url: "https://github.com/trainai-cap/nexus-ai-health",
-    demo_url: "https://nexus-health.trainailtd.com",
-    presentation_url: "https://slides.trainailtd.com/nexus-health",
-    demo_video_url: "https://youtube.com/watch?v=demo-nexus",
-    screenshot_url: "https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=800&auto=format&fit=crop&q=80",
-    mentor_id: null,
-    mentor_name: "Assigned Mentor",
-    phase: CAP_PHASES.BUILD.key,
-    demo_day_status: "Demo Day Ready",
-    final_score: 94.5,
-    judges_feedback: "Exceptional live demo, robust multilingual support, and clear hospital integration path.",
-    mentor_feedback: "Team executed sprint goals on schedule. Great architecture and clear division of labor.",
-    members: [
-      { id: "mem-1", name: "Kofi Mensah", role: "Product Manager", email: "kofi@example.com" },
-      { id: "mem-2", name: "Zainab Bello", role: "Software Engineer", email: "zainab@example.com" },
-      { id: "mem-3", name: "Tunde Bakare", role: "UI/UX Designer", email: "tunde@example.com" },
-      { id: "mem-4", name: "Chiamaka Eze", role: "Data Analyst", email: "chiamaka@example.com" },
-    ],
-  },
-  {
-    id: "cap-team-2",
-    cohort_id: "cap-cohort-3",
-    name: "AgriSense Africa",
-    project_title: "Satellite & Computer Vision Crop Disease Detection",
-    problem_statement: "Empowering smallholder maize farmers with instant mobile leaf analysis and fertilizer advisory.",
-    technologies: ["PyTorch", "React Native", "TensorFlow Lite", "Node.js"],
-    github_url: "https://github.com/trainai-cap/agrisense",
-    demo_url: "https://agrisense.trainailtd.com",
-    presentation_url: "https://slides.trainailtd.com/agrisense",
-    demo_video_url: "",
-    screenshot_url: "https://images.unsplash.com/photo-1592982537447-7440770cbfc9?w=800&auto=format&fit=crop&q=80",
-    mentor_id: null,
-    mentor_name: "Assigned Mentor",
-    phase: CAP_PHASES.BUILD.key,
-    demo_day_status: "Pending Review",
-    final_score: 88.0,
-    judges_feedback: "Strong problem statement and real farmer pilot data.",
-    mentor_feedback: "Refining edge inference model for low-connectivity rural deployment.",
-    members: [
-      { id: "mem-5", name: "Emeka Obi", role: "Product Manager", email: "emeka@example.com" },
-      { id: "mem-6", name: "Fatima Aliyu", role: "Software Engineer", email: "fatima@example.com" },
-      { id: "mem-7", name: "David K.", role: "AI Engineer", email: "davidk@example.com" },
-    ],
-  },
-  {
-    id: "cap-team-3",
-    cohort_id: "cap-cohort-3",
-    name: "PayFlow AI",
-    project_title: "Automated Cross-Border Invoicing & FX Hedging for MSMEs",
-    problem_statement: "Eliminating FX volatility losses for cross-border African merchants.",
-    technologies: ["Next.js", "Python", "Stripe", "Paystack", "PostgreSQL"],
-    github_url: "https://github.com/trainai-cap/payflow-ai",
-    demo_url: "https://payflow.trainailtd.com",
-    presentation_url: "https://slides.trainailtd.com/payflow",
-    demo_video_url: "",
-    screenshot_url: "https://images.unsplash.com/photo-1559526324-4b87b5e36e44?w=800&auto=format&fit=crop&q=80",
-    mentor_id: null,
-    mentor_name: "Assigned Mentor",
-    phase: CAP_PHASES.LAUNCH.key,
-    demo_day_status: "Featured",
-    final_score: 96.0,
-    judges_feedback: "Commercial readiness is remarkable. Ready for seed incubation.",
-    mentor_feedback: "Flawless presentation and highly defensible pricing architecture.",
-    members: [
-      { id: "mem-8", name: "Sarah N.", role: "Product Manager", email: "sarah@example.com" },
-      { id: "mem-9", name: "Ibrahim S.", role: "Software Engineer", email: "ibrahim@example.com" },
-      { id: "mem-10", name: "Grace O.", role: "UI/UX Designer", email: "grace@example.com" },
-      { id: "mem-11", name: "Samuel T.", role: "Data Analyst", email: "samuel@example.com" },
-    ],
-  },
-];
-
-function getCachedTeams() {
-  if (typeof window === "undefined") return SEED_CAP_TEAMS;
-  try {
-    const raw = localStorage.getItem(LOCAL_STORAGE_TEAMS_KEY);
-    return raw ? JSON.parse(raw) : SEED_CAP_TEAMS;
-  } catch {
-    return SEED_CAP_TEAMS;
-  }
+async function rpc(name, args) {
+  if (!supabase)
+    throw new Error("Connect to your workspace to save CAP records.");
+  const { data, error } = await supabase.rpc(name, args);
+  if (error)
+    throw new Error(error.message || "The CAP request failed. Please retry.", {
+      cause: error,
+    });
+  return data;
 }
-
-function saveCachedTeams(items) {
-  if (typeof window === "undefined") return;
-  try {
-    localStorage.setItem(LOCAL_STORAGE_TEAMS_KEY, JSON.stringify(items));
-  } catch {}
+export async function fetchCapWorkspace(cohortId) {
+  if (!supabase)
+    return {
+      teams: [],
+      checkins: [],
+      intentions: [],
+      members: [],
+      skillOptions: [],
+      canManage: false,
+      isAdmin: false,
+    };
+  if (!cohortId) throw new Error("Select an enrolled cohort.");
+  const data = await rpc("get_cap_workspace", { p_cohort_id: cohortId });
+  if (
+    !data ||
+    !["teams", "checkins", "intentions", "members", "skillOptions"].every(
+      (key) => Array.isArray(data[key]),
+    )
+  )
+    throw new Error("The CAP workspace could not be loaded. Please retry.");
+  return data;
 }
-
-/**
- * Fetches all CAP teams for a cohort
- */
 export async function fetchCapTeams(cohortId) {
-  const cached = getCachedTeams();
-  if (!supabase) return cached;
-
-  try {
-    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(cohortId || ""));
-    if (!isUuid) return [];
-    let query = supabase.from("cap_teams").select("*, cap_team_members(*)").order("created_at", { ascending: false });
-    if (isUuid) {
-      query = query.eq("cohort_id", cohortId);
-    }
-
-    const { data, error } = await query;
-    if (error) throw error;
-    if (!data || data.length === 0) return [];
-
-    const formatted = data.map((t) => ({
-      ...t,
-      members: (t.cap_team_members && t.cap_team_members.length > 0)
-        ? t.cap_team_members.map((m) => ({
-            id: m.id || m.user_id,
-            user_id: m.user_id,
-            name: m.name || "Team Member",
-            role: m.role || "Software Engineer",
-            email: m.email || "",
-          }))
-        : (cached.find((ct) => ct.id === t.id)?.members || []),
-    }));
-
-    // Merge with seeds if user is looking at CAP Cohort 3 so pre-configured tracks are always visible
-    const existingIds = new Set(formatted.map((t) => t.id));
-    const merged = [...formatted, ...cached.filter((t) => !existingIds.has(t.id))];
-    // Live data must never be merged with browser fixtures.
-    return merged;
-  } catch {
-    return cached;
-  }
+  return (await fetchCapWorkspace(cohortId)).teams || [];
 }
-
-/**
- * Creates or updates a CAP team
- */
-export async function saveCapTeam(teamData) {
-  const isNew = !teamData.id || teamData.id.startsWith("new-") || !teamData.id.includes("-");
-  const id = isNew ? `cap-team-${Date.now()}` : teamData.id;
-  const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(teamData.cohort_id || ""));
-
-  const payload = {
-    ...teamData,
-    id,
-    updated_at: new Date().toISOString(),
-  };
-
-  if (supabase) {
-    if (!isUuid) throw new Error("Select your enrolled cohort before saving a team.");
-    if (isNew) {
-      const { data, error } = await supabase.rpc("register_my_cap_team", {
-        p_cohort_id: teamData.cohort_id, p_name: teamData.name,
-        p_project_title: teamData.project_title, p_problem_statement: teamData.problem_statement || "",
-        p_technologies: teamData.technologies || [], p_role: teamData.members?.[0]?.role || "Software Engineer",
-      });
-      if (error) throw error;
-      return { success: true, data };
-    }
-    const fields = ["name","project_title","problem_statement","technologies","github_url","demo_url","presentation_url","demo_video_url","screenshot_url","mentor_name","mentor_id","phase","demo_day_status"];
-    const patch = Object.fromEntries(fields.filter(key => teamData[key] !== undefined).map(key => [key,teamData[key]]));
-    const { data, error } = await supabase.from("cap_teams").update(patch).eq("id",id).select().single();
-    if (error) throw error;
-    return { success: true, data };
-  }
-
-  const existing = getCachedTeams();
-  const updated = isNew ? [payload, ...existing] : existing.map((t) => (t.id === id ? { ...t, ...payload } : t));
-  saveCachedTeams(updated);
-  return { success: true, data: payload };
-}
-
-/**
- * Adds a member to a CAP team
- */
-export async function joinCapTeam({ teamId, userId, name, email, role = "Software Engineer" }) {
-  if (!teamId) throw new Error("Team ID is required.");
-
-  const memberObj = {
-    id: `mem-${Date.now()}`,
-    user_id: userId,
-    name: name || "Learner",
-    email: email || "",
-    role: role || "Software Engineer",
-  };
-
-  if (supabase) {
-    const { data, error } = await supabase.from("cap_team_members").upsert({ team_id: teamId, user_id: userId, name, role }, { onConflict: "team_id,user_id", ignoreDuplicates: true }).select();
-    if (error) throw error;
-    return { success: true, member: data?.[0] || null };
-  }
-
-  const existing = getCachedTeams();
-  const updated = existing.map((t) => {
-    if (t.id === teamId) {
-      const currentMembers = t.members || [];
-      const alreadyIn = currentMembers.some((m) => m.user_id === userId || m.email === email);
-      if (alreadyIn) return t;
-      return {
-        ...t,
-        members: [...currentMembers, memberObj],
-      };
-    }
-    return t;
-  });
-
-  saveCachedTeams(updated);
-  return { success: true, member: memberObj };
-}
-
-/**
- * Updates Demo Day submission status and score (Admin / Judges)
- */
-export async function updateDemoDayReview(teamId, { demoDayStatus, finalScore, judgesFeedback, mentorFeedback }) {
-  const patch = {
-    demo_day_status: demoDayStatus,
-    final_score: finalScore !== undefined ? finalScore : undefined,
-    judges_feedback: judgesFeedback,
-    mentor_feedback: mentorFeedback,
-    updated_at: new Date().toISOString(),
-  };
-
-  if (supabase) {
-    try {
-      await supabase.from("cap_teams").update(patch).eq("id", teamId);
-    } catch {}
-  }
-
-  const existing = getCachedTeams();
-  const updated = existing.map((t) => (t.id === teamId ? { ...t, ...patch } : t));
-  saveCachedTeams(updated);
-  return { success: true };
-}
-
 export async function canManageCapCohort(cohortId) {
   if (!supabase || !cohortId) return false;
-  const { data, error } = await supabase.rpc("can_manage_cohort", { p_cohort_id: cohortId });
-  if (error) return false;
-  return data === true;
+  return (
+    (await rpc("can_manage_cap_cohort", { p_cohort_id: cohortId })) === true
+  );
 }
+export async function saveCapTeam(team) {
+  const data = team.id
+    ? await rpc("update_cap_team", {
+        p_team_id: team.id,
+        p_patch: Object.fromEntries(
+          Object.entries(team).filter(([k]) =>
+            [
+              "name",
+              "project_title",
+              "problem_statement",
+              "technologies",
+              "github_url",
+              "demo_url",
+              "presentation_url",
+              "demo_video_url",
+              "screenshot_url",
+              "mentor_id",
+              "phase",
+              "demo_day_status",
+              "final_score",
+              "judges_feedback",
+              "mentor_feedback",
+              "is_archived",
+            ].includes(k),
+          ),
+        ),
+      })
+    : await rpc("register_my_cap_team", {
+        p_cohort_id: team.cohort_id,
+        p_name: team.name,
+        p_project_title: team.project_title,
+        p_problem_statement: team.problem_statement || "",
+        p_technologies: team.technologies || [],
+        p_role: team.role || "Team member",
+      });
+  return { success: true, data };
+}
+export async function joinCapTeam({ teamId, userId, role }) {
+  await rpc("set_cap_team_member", {
+    p_team_id: teamId,
+    p_user_id: userId,
+    p_role: role,
+    p_remove: false,
+  });
+  return { success: true };
+}
+export async function removeCapTeamMember(teamId, userId) {
+  return rpc("set_cap_team_member", {
+    p_team_id: teamId,
+    p_user_id: userId,
+    p_role: "Team member",
+    p_remove: true,
+  });
+}
+export async function updateDemoDayReview(
+  teamId,
+  { demoDayStatus, finalScore, judgesFeedback, mentorFeedback },
+) {
+  return saveCapTeam({
+    id: teamId,
+    demo_day_status: demoDayStatus,
+    final_score: finalScore,
+    judges_feedback: judgesFeedback,
+    mentor_feedback: mentorFeedback,
+  });
+}
+export async function saveCapLearningGoal(cohortId, track, skill) {
+  return rpc("save_my_cap_learning_goal", {
+    p_cohort_id: cohortId,
+    p_track: track,
+    p_skill: skill,
+  });
+}
+export async function saveCapProblem(cohortId, title, statement) {
+  return rpc("save_my_cap_problem", {
+    p_cohort_id: cohortId,
+    p_title: title,
+    p_statement: statement,
+  });
+}
+export async function reviewCapProblem(cohortId, userId, status, feedback) {
+  return rpc("review_cap_problem", {
+    p_cohort_id: cohortId,
+    p_user_id: userId,
+    p_status: status,
+    p_feedback: feedback,
+  });
+}
+export async function saveCapSkillOption(
+  cohortId,
+  track,
+  skill,
+  active = true,
+) {
+  return rpc("save_cap_skill_option", {
+    p_cohort_id: cohortId,
+    p_track: track,
+    p_skill: skill,
+    p_active: active,
+  });
+}
+export async function saveCapCheckin(teamId, values) {
+  return rpc("save_cap_checkin", {
+    p_team_id: teamId,
+    p_checkin_date: values.date,
+    p_notes: values.notes,
+    p_rating: Number(values.rating),
+    p_blockers: values.blockers || "",
+    p_actions: values.actions || "",
+    p_next_date: values.nextDate || null,
+    p_private: !!values.private,
+  });
+}
+export async function fetchMemberLearningInterests(
+  orgId,
+  userId,
+  cohortId = null,
+) {
+  return rpc("get_member_learning_interests", {
+    p_org_id: orgId,
+    p_user_id: userId,
+    p_cohort_id: cohortId,
+  });
+}
+
+export async function fetchMyLearningGoal() { return supabase ? rpc("get_my_learning_goal") : null; }
+export async function saveMyLearningGoal(track,skill) { return rpc("save_my_learning_goal",{p_track:track,p_skill:skill}); }

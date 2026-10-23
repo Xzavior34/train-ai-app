@@ -8,7 +8,7 @@ const org = '10000000-0000-4000-8000-000000000001';
 const otherOrg = '10000000-0000-4000-8000-000000000002';
 const user = '20000000-0000-4000-8000-000000000001';
 const otherUser = '20000000-0000-4000-8000-000000000002';
-const bundle = await build({stdin:{contents:`export * from './src/lib/api/platform.js';export {calculateCohortProgress} from './src/lib/api/cohorts.js';export {fetchMyCohortMembership,fetchMyCohortMemberships} from './src/lib/api/schemaHelper.js'; export {fetchPublishedCourses,fetchPublishedLearningPaths} from './src/lib/api/learner.js'; export {getReferralSignupsRoster,getLinkClicksRoster} from './src/lib/api/organizations.js'; import React from 'react'; import {renderToString} from 'react-dom/server'; import {MemberLearningTrack} from './src/platform/components/MemberLearningTrack.jsx';import {CoursesScreen} from './src/learner/screens/CoursesScreen.jsx';export const renderTrack=data=>renderToString(React.createElement(MemberLearningTrack,{learningTrackQuery:{data,loading:false,error:null}}));export const renderEmptyCourses=()=>renderToString(React.createElement(CoursesScreen,{courses:[],coursesLoading:false}));`,resolveDir:process.cwd()},bundle:true,platform:'node',format:'cjs',write:false,packages:'external',logLevel:'silent',plugins:[{name:'connected-fixture',setup(b){b.onResolve({filter:/(?:^|[\\/])supabaseClient\.js$/},()=>({path:'client',namespace:'fixture'}));b.onLoad({filter:/.*/,namespace:'fixture'},()=>({contents:`export const supabase=globalThis.fixtureClient;export const activeProject='organization_db'; export const isSupabaseConfigured=true; export const PROJECT_CONFIGURED={}; export const SUPABASE_PROJECTS={ORGANIZATION_DB:'organization_db',SARA_FOUNDATION:'sara_foundation'};export const getSupabaseClientForProject=()=>supabase; export function setActiveSupabaseProject(){};export const resolveProjectForSignIn=()=> 'organization_db'; export const resolveProjectForSignUp=resolveProjectForSignIn;export const fallbackProjectForSignIn=()=>null;`}));}}]});
+const bundle = await build({stdin:{contents:`export * from './src/lib/api/platform.js';export {fetchCapWorkspace,saveCapLearningGoal,updateDemoDayReview,saveCapTeam} from './src/lib/api/capProgram.js';export {calculateCohortProgress} from './src/lib/api/cohorts.js';export {fetchMyCohortMembership,fetchMyCohortMemberships} from './src/lib/api/schemaHelper.js'; export {fetchPublishedCourses,fetchPublishedLearningPaths} from './src/lib/api/learner.js'; export {getReferralSignupsRoster,getLinkClicksRoster} from './src/lib/api/organizations.js'; import React from 'react'; import {renderToString} from 'react-dom/server'; import {MemberLearningTrack} from './src/platform/components/MemberLearningTrack.jsx';import {CoursesScreen} from './src/learner/screens/CoursesScreen.jsx';export const renderTrack=data=>renderToString(React.createElement(MemberLearningTrack,{learningTrackQuery:{data,loading:false,error:null}}));export const renderEmptyCourses=()=>renderToString(React.createElement(CoursesScreen,{courses:[],coursesLoading:false}));`,resolveDir:process.cwd()},bundle:true,platform:'node',format:'cjs',write:false,packages:'external',logLevel:'silent',plugins:[{name:'connected-fixture',setup(b){b.onResolve({filter:/(?:^|[\\/])supabaseClient\.js$/},()=>({path:'client',namespace:'fixture'}));b.onLoad({filter:/.*/,namespace:'fixture'},()=>({contents:`export const supabase=globalThis.fixtureClient;export const activeProject='organization_db'; export const isSupabaseConfigured=true; export const PROJECT_CONFIGURED={}; export const SUPABASE_PROJECTS={ORGANIZATION_DB:'organization_db',SARA_FOUNDATION:'sara_foundation'};export const getSupabaseClientForProject=()=>supabase; export function setActiveSupabaseProject(){};export const resolveProjectForSignIn=()=> 'organization_db'; export const resolveProjectForSignUp=resolveProjectForSignIn;export const fallbackProjectForSignIn=()=>null;`}));}}]});
 
 function fixture({tables={},failTable=null,rpcData=null,rpcError=null}={}) {
  const calls=[];const storage=new Map();
@@ -109,4 +109,20 @@ test('Authenticated cohort lookup respects server results and never bypasses acc
 test('Cohorts without valid dates do not invent elapsed time',()=>{
  const api=fixture().api;
  for(const dates of [[null,null],['invalid','2026-12-31'],['2026-11-01','2026-10-01']]) { const progress=api.calculateCohortProgress(...dates);assert.equal(progress.percent,0);assert.equal(progress.statusLabel,'Schedule not set'); }
+});
+
+test('CAP live failures cannot return sample teams or report a successful review',async()=>{
+ const f=fixture({rpcError:{message:'Actual save failure'}});
+ await assert.rejects(f.api.fetchCapWorkspace('cohort-id'),/Actual save failure/);
+ await assert.rejects(f.api.updateDemoDayReview('team',{finalScore:100}),/Actual save failure/);
+});
+test('Specific learning goal is persisted under the authenticated caller, without client identity fields',async()=>{
+ const f=fixture({rpcData:{track:'Code',specific_skill:'Frontend development'}});
+ await f.api.saveCapLearningGoal('cohort-id','Code','Frontend development');
+ assert.equal(f.calls[0].rpc,'save_my_cap_learning_goal');assert.equal(f.calls[0].args.p_track,'Code');assert.equal(f.calls[0].args.p_skill,'Frontend development');assert.equal(f.calls[0].args.p_user_id,undefined);
+});
+
+test('Admin learning record shows exact skill choices and labels broad registration preferences honestly',()=>{
+ const html=fixture().api.renderTrack({learningInterests:[{track:'Code',specificSkill:'Frontend development',cohort:'CAP Cohort 3'},{kind:'registration',tracks:['Software Engineering (Full Stack, Frontend, Backend)'],specificInterest:null}],enrollments:[],tracks:[]});
+ assert.match(html,/Code.*Frontend development/);assert.match(html,/Registration preferences/);assert.match(html,/Specific skill not recorded/);
 });

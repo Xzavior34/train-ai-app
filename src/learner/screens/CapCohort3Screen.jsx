@@ -1,1653 +1,1033 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
+import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
+import { LoadingSkeleton } from "../../components/common/PageLoadingBoundary.jsx";
 import {
-  Rocket, BookOpen, Hammer, Award, Users, Github, ExternalLink,
-  CheckCircle2, Clock, Star, MessageSquare, AlertCircle,
-  KeyRound, ShieldCheck, ChevronRight, Play, FileText, Plus, Edit3, X, Check, Code
-} from "lucide-react";
-import { fetchCapTeams, saveCapTeam, joinCapTeam, updateDemoDayReview, canManageCapCohort } from "../../lib/api/capProgram.js";
-import { fetchMentorshipCheckins, createMentorCheckin } from "../../lib/api/mentorship.js";
-import { redeemAccessCode } from "../../lib/api/accessCodes.js";
-import { CAP_PHASES, CAP_ROLES } from "../../lib/constants/terminology.js";
+  fetchCapWorkspace,
+  saveCapTeam,
+  joinCapTeam,
+  removeCapTeamMember,
+  saveCapLearningGoal,
+  saveCapProblem,
+  reviewCapProblem,
+  saveCapSkillOption,
+  saveCapCheckin,
+} from "../../lib/api/capProgram.js";
 
-const LOCAL_STORAGE_PROBLEM_KEY = "trainai_cap_problem_statement_v1";
-
-export default function CapCohort3Screen({ session, showToast, push, goTab, cohortId, courses = [], user }) {
-  const [activePhase, setActivePhase] = useState("BUILD"); // LEARN | BUILD | LAUNCH
-  const [teams, setTeams] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [checkins, setCheckins] = useState([]);
-
-  // Access Code Modal
-  const [codeModalOpen, setCodeModalOpen] = useState(false);
-  const [inputCode, setInputCode] = useState("");
-  const [redeeming, setRedeeming] = useState(false);
-  const [trialStatus, setTrialStatus] = useState(null);
-
-  // Register Team Modal
-  const [registerModalOpen, setRegisterModalOpen] = useState(false);
-  const [newTeamName, setNewTeamName] = useState("");
-  const [newProjectTitle, setNewProjectTitle] = useState("");
-  const [newProblemStatement, setNewProblemStatement] = useState("");
-  const [newTechs, setNewTechs] = useState("React, Python, FastAPI, Supabase");
-  const [newMentorName, setNewMentorName] = useState("");
-  const [newCreatorRole, setNewCreatorRole] = useState("Software Engineer");
-  const [submittingTeam, setSubmittingTeam] = useState(false);
-
-  // Join Team Modal
-  const [joinModalOpen, setJoinModalOpen] = useState(false);
-  const [selectedTeamForJoin, setSelectedTeamForJoin] = useState(null);
-  const [selectedRole, setSelectedRole] = useState("Software Engineer");
-  const [joiningTeam, setJoiningTeam] = useState(false);
-
-  // Edit / Submit Project Links Modal
-  const [linksModalOpen, setLinksModalOpen] = useState(false);
-  const [selectedTeamForLinks, setSelectedTeamForLinks] = useState(null);
-  const [repoUrl, setRepoUrl] = useState("");
-  const [demoUrl, setDemoUrl] = useState("");
-  const [presentationUrl, setPresentationUrl] = useState("");
-  const [submittingLinks, setSubmittingLinks] = useState(false);
-
-  // Log Mentorship Check-in Modal
-  const [checkinModalOpen, setCheckinModalOpen] = useState(false);
-  const [checkinTeamId, setCheckinTeamId] = useState("");
-  const [checkinMentor, setCheckinMentor] = useState("");
-  const [checkinDate, setCheckinDate] = useState(() => new Date().toISOString().slice(0, 10));
-  const [checkinRating, setCheckinRating] = useState(5);
-  const [checkinNotes, setCheckinNotes] = useState("");
-  const [checkinBlockers, setCheckinBlockers] = useState("");
-  const [checkinActions, setCheckinActions] = useState("");
-  const [submittingCheckin, setSubmittingCheckin] = useState(false);
-
-  // Score / Review Demo Day Modal (Admins / Mentors / Judges)
-  const [scoreModalOpen, setScoreModalOpen] = useState(false);
-  const [selectedTeamForScore, setSelectedTeamForScore] = useState(null);
-  const [scoreStatus, setScoreStatus] = useState("Demo Day Ready");
-  const [scoreVal, setScoreVal] = useState(90);
-  const [scoreFeedback, setScoreFeedback] = useState("");
-  const [submittingScore, setSubmittingScore] = useState(false);
-
-  // Assign Mentor Modal (Admins & Instructors)
-  const [assignMentorModalOpen, setAssignMentorModalOpen] = useState(false);
-  const [selectedTeamForMentor, setSelectedTeamForMentor] = useState(null);
-  const [assignMentorInput, setAssignMentorInput] = useState("");
-  const [savingMentor, setSavingMentor] = useState(false);
-
-  // Problem Statement Modal (Phase A)
-  const [problemModalOpen, setProblemModalOpen] = useState(false);
-  const [problemTitle, setProblemTitle] = useState("");
-  const [problemText, setProblemText] = useState("");
-  const [savedProblem, setSavedProblem] = useState(() => {
-    try {
-      const raw = localStorage.getItem(LOCAL_STORAGE_PROBLEM_KEY);
-      return raw ? JSON.parse(raw) : null;
-    } catch {
-      return null;
-    }
-  });
-
-  const currentUserId = session?.user?.id || user?.id;
-  const currentUserName = user?.name || session?.user?.user_metadata?.display_name || session?.user?.email?.split("@")[0] || "Learner";
-  const currentUserEmail = session?.user?.email || "";
-
-  const [isAdminOrMentor, setIsAdminOrMentor] = useState(false);
-  const [loadError, setLoadError] = useState(null);
-  useEffect(() => {
-    let cancelled = false;
-    setIsAdminOrMentor(false);
-    canManageCapCohort(cohortId).then(allowed => { if (!cancelled) setIsAdminOrMentor(allowed); });
-    return () => { cancelled = true; };
-  }, [cohortId, currentUserId]);
-
-  async function loadData() {
-    setLoading(true);
-    try {
-      const [teamsData, checkinsData] = await Promise.all([
-        fetchCapTeams(cohortId || "cap-cohort-3"),
-        fetchMentorshipCheckins({ cohortId: cohortId || "cap-cohort-3" }),
-      ]);
-      setTeams(teamsData);
-      setCheckins(checkinsData);
-      if (teamsData.length > 0 && !checkinTeamId) {
-        setCheckinTeamId(teamsData[0].id);
-      }
-    } catch (e) {
-      setTeams([]);
-      setCheckins([]);
-      setLoadError("Could not load CAP teams and check-ins. Please retry.");
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  useEffect(() => {
-    loadData();
-  }, [cohortId]);
-
-  async function handleRedeemCode(e) {
-    e.preventDefault();
-    if (!inputCode.trim()) return;
-    setRedeeming(true);
-    try {
-      const res = await redeemAccessCode(inputCode.trim(), currentUserId);
-      if (res.success) {
-        setTrialStatus(res);
-        if (showToast) showToast(res.message || "Trial code redeemed successfully!");
-        setCodeModalOpen(false);
-        setInputCode("");
-      } else {
-        if (showToast) showToast(res.error || "Invalid code.");
-      }
-    } catch (e) {
-      if (showToast) showToast(e?.message || "Failed to redeem access code.");
-    } finally {
-      setRedeeming(false);
-    }
-  }
-
-  async function handleRegisterTeam(e) {
-    e.preventDefault();
-    if (!newTeamName.trim() || !newProjectTitle.trim()) {
-      showToast?.("Please enter a team name and project title.");
-      return;
-    }
-    setSubmittingTeam(true);
-    try {
-      const techsList = newTechs.split(",").map(s => s.trim()).filter(Boolean);
-      const teamPayload = {
-        cohort_id: cohortId || "cap-cohort-3",
-        name: newTeamName.trim(),
-        project_title: newProjectTitle.trim(),
-        problem_statement: newProblemStatement.trim() || "High-impact African industry solution.",
-        technologies: techsList.length ? techsList : ["React", "Python", "Supabase"],
-        mentor_name: newMentorName.trim() || "Assigned Mentor",
-        phase: "BUILD",
-        demo_day_status: "Pending Review",
-        members: [
-          {
-            id: `mem-${Date.now()}`,
-            user_id: currentUserId,
-            name: currentUserName,
-            email: currentUserEmail,
-            role: newCreatorRole,
-          }
-        ],
-      };
-      await saveCapTeam(teamPayload);
-      showToast?.(`Team "${newTeamName}" registered successfully!`);
-      setRegisterModalOpen(false);
-      setNewTeamName("");
-      setNewProjectTitle("");
-      setNewProblemStatement("");
-      await loadData();
-    } catch (err) {
-      showToast?.(err?.message || "Could not register team.");
-    } finally {
-      setSubmittingTeam(false);
-    }
-  }
-
-  async function handleConfirmJoinTeam(e) {
-    e.preventDefault();
-    if (!selectedTeamForJoin) return;
-    setJoiningTeam(true);
-    try {
-      await joinCapTeam({
-        teamId: selectedTeamForJoin.id,
-        userId: currentUserId,
-        name: currentUserName,
-        email: currentUserEmail,
-        role: selectedRole,
-      });
-      showToast?.(`Joined Team ${selectedTeamForJoin.name} as ${selectedRole}!`);
-      setJoinModalOpen(false);
-      setSelectedTeamForJoin(null);
-      await loadData();
-    } catch (err) {
-      showToast?.(err?.message || "Could not join team.");
-    } finally {
-      setJoiningTeam(false);
-    }
-  }
-
-  function openEditLinksModal(team) {
-    setSelectedTeamForLinks(team);
-    setRepoUrl(team.github_url || "");
-    setDemoUrl(team.demo_url || "");
-    setPresentationUrl(team.presentation_url || "");
-    setLinksModalOpen(true);
-  }
-
-  async function handleSaveLinks(e) {
-    e.preventDefault();
-    if (!selectedTeamForLinks) return;
-    setSubmittingLinks(true);
-    try {
-      await saveCapTeam({
-        ...selectedTeamForLinks,
-        github_url: repoUrl.trim() || null,
-        demo_url: demoUrl.trim() || null,
-        presentation_url: presentationUrl.trim() || null,
-      });
-      showToast?.("Project repository and demo links updated!");
-      setLinksModalOpen(false);
-      setSelectedTeamForLinks(null);
-      await loadData();
-    } catch (err) {
-      showToast?.(err?.message || "Failed to update project links.");
-    } finally {
-      setSubmittingLinks(false);
-    }
-  }
-
-  async function handleCreateCheckin(e) {
-    e.preventDefault();
-    if (!checkinNotes.trim()) {
-      showToast?.("Please enter sprint check-in notes.");
-      return;
-    }
-    setSubmittingCheckin(true);
-    try {
-      const selectedT = teams.find(t => t.id === checkinTeamId);
-      await createMentorCheckin({
-        teamId: checkinTeamId,
-        teamName: selectedT?.name || "Sprint Team",
-        cohortId: cohortId || "cap-cohort-3",
-        mentorId: currentUserId,
-        mentorName: checkinMentor.trim() || currentUserName,
-        checkinDate,
-        notes: checkinNotes.trim(),
-        progressRating: Number(checkinRating) || 5,
-        issuesBlockers: checkinBlockers.trim() || null,
-        recommendedActions: checkinActions.trim() || null,
-      });
-      showToast?.("Mentor check-in logged successfully!");
-      setCheckinModalOpen(false);
-      setCheckinNotes("");
-      setCheckinBlockers("");
-      setCheckinActions("");
-      await loadData();
-    } catch (err) {
-      showToast?.(err?.message || "Could not log check-in.");
-    } finally {
-      setSubmittingCheckin(false);
-    }
-  }
-
-  function openScoreModal(team) {
-    setSelectedTeamForScore(team);
-    setScoreStatus(team.demo_day_status || "Demo Day Ready");
-    setScoreVal(team.final_score !== undefined ? team.final_score : 90);
-    setScoreFeedback(team.judges_feedback || "");
-    setScoreModalOpen(true);
-  }
-
-  async function handleSaveScore(e) {
-    e.preventDefault();
-    if (!selectedTeamForScore) return;
-    setSubmittingScore(true);
-    try {
-      await updateDemoDayReview(selectedTeamForScore.id, {
-        demoDayStatus: scoreStatus,
-        finalScore: Number(scoreVal),
-        judgesFeedback: scoreFeedback.trim(),
-      });
-      showToast?.(`Review updated for Team ${selectedTeamForScore.name}!`);
-      setScoreModalOpen(false);
-      setSelectedTeamForScore(null);
-      await loadData();
-    } catch (err) {
-      showToast?.(err?.message || "Could not save review.");
-    } finally {
-      setSubmittingScore(false);
-    }
-  }
-
-  function handleSaveProblemStatement(e) {
-    e.preventDefault();
-    if (!problemText.trim()) return;
-    const doc = {
-      title: problemTitle.trim() || "African Industry Problem Statement",
-      statement: problemText.trim(),
-      submittedAt: new Date().toISOString(),
-    };
-    try {
-      localStorage.setItem(LOCAL_STORAGE_PROBLEM_KEY, JSON.stringify(doc));
-      setSavedProblem(doc);
-      showToast?.("Problem statement saved successfully!");
-      setProblemModalOpen(false);
-    } catch {
-      showToast?.("Could not save problem statement.");
-    }
-  }
-
-  function openAssignMentorModal(team) {
-    setSelectedTeamForMentor(team);
-    setAssignMentorInput(team.mentor_name || "");
-    setAssignMentorModalOpen(true);
-  }
-
-  async function handleSaveAssignedMentor(e) {
-    e.preventDefault();
-    if (!selectedTeamForMentor) return;
-    setSavingMentor(true);
-    try {
-      await saveCapTeam({
-        ...selectedTeamForMentor,
-        mentor_name: assignMentorInput.trim() || null,
-      });
-      showToast?.(`Mentor updated for Team ${selectedTeamForMentor.name}!`);
-      setAssignMentorModalOpen(false);
-      setSelectedTeamForMentor(null);
-      await loadData();
-    } catch (err) {
-      showToast?.(err?.message || "Failed to update mentor assignment.");
-    } finally {
-      setSavingMentor(false);
-    }
-  }
-
-  async function handleUpdateTeamPhase(team, nextPhase) {
-    try {
-      await saveCapTeam({
-        ...team,
-        phase: nextPhase,
-      });
-      showToast?.(`Team ${team.name} updated to Phase: ${nextPhase}!`);
-      await loadData();
-    } catch (err) {
-      showToast?.(err?.message || "Failed to update team phase.");
-    }
-  }
-
-  // Derive relevant courses for Phase A
-  const primaryCourse = courses.find(c => c.enrolled || c.assigned) || courses[0] || null;
-
+const card = {
+  padding: 18,
+  minWidth: 0,
+  overflowWrap: "anywhere",
+  background: "var(--surface,#fff)",
+  border: "1px solid var(--border,#e2e8f0)",
+  borderRadius: 12,
+};
+const grid = {
+  display: "grid",
+  gridTemplateColumns: "repeat(auto-fit,minmax(min(100%,280px),1fr))",
+  gap: 14,
+};
+function Field({ label, children }) {
   return (
-    <div className="ta-fade" style={{ maxWidth: 1100, margin: "0 auto", padding: "16px 20px 60px" }}>
-      {loadError && <div role="alert" className="ta-card" style={{ padding: 16, marginBottom: 16 }}>{loadError} <button className="ta-btn ta-btn-outline ta-btn-sm" onClick={loadData}>Retry</button></div>}
-      {/* CAP Hero Header */}
-      <div
-        style={{
-          background: "linear-gradient(135deg, #0F172A 0%, #1E293B 100%)",
-          borderRadius: 16,
-          padding: "28px 32px",
-          color: "#FFFFFF",
-          position: "relative",
-          overflow: "hidden",
-          border: "1.5px solid #334155",
-          boxShadow: "0 10px 25px -5px rgba(0,0,0,0.3)",
-          marginBottom: 24,
+    <label
+      style={{
+        display: "grid",
+        gap: 6,
+        fontSize: 13,
+        fontWeight: 600,
+        minWidth: 0,
+      }}
+    >
+      {label}
+      {children}
+    </label>
+  );
+}
+function Input({ label, ...props }) {
+  return (
+    <Field label={label}>
+      <input aria-label={label} className="ta-input" {...props} />
+    </Field>
+  );
+}
+function Textarea({ label, ...props }) {
+  return (
+    <Field label={label}>
+      <textarea aria-label={label} className="ta-input" rows={3} {...props} />
+    </Field>
+  );
+}
+function Select({ label, children, ...props }) {
+  return (
+    <Field label={label}>
+      <select aria-label={label} className="ta-input" {...props}>
+        {children}
+      </select>
+    </Field>
+  );
+}
+const preferenceText = (value) =>
+  Array.isArray(value)
+    ? value.join(", ")
+    : typeof value === "string"
+      ? value
+      : value
+        ? JSON.stringify(value)
+        : "Not recorded";
+const valuesOf = (form) => Object.fromEntries(new FormData(form));
+function ProjectLinks({ team }) {
+  return (
+    <div className="ta-row ta-gap8" style={{ flexWrap: "wrap" }}>
+      {[
+        ["github_url", "Repository"],
+        ["demo_url", "Live demo"],
+        ["presentation_url", "Presentation"],
+      ].map(([key, label]) =>
+        /^https?:\/\//i.test(team[key] || "") ? (
+          <a
+            className="ta-btn ta-btn-outline ta-btn-sm"
+            key={key}
+            href={team[key]}
+            target="_blank"
+            rel="noreferrer"
+          >
+            {label}
+          </a>
+        ) : null,
+      )}
+    </div>
+  );
+}
+
+function LearningGoal({ cohortId, workspace, userId, run, busy }) {
+  const own = workspace.intentions.find((i) => i.user_id === userId);
+  const options = workspace.skillOptions.filter((o) => o.is_active);
+  const [track, setTrack] = useState(own?.track || "");
+  const [skill, setSkill] = useState(own?.specific_skill || "");
+  return (
+    <section className="ta-card" style={card}>
+      <h2 style={{ fontSize: 17, marginTop: 0 }}>What do you want to learn?</h2>
+      <p className="ta-sub">
+        Your administrator can see your exact choice. Choosing a goal does not
+        enroll you in a course.
+      </p>
+      <p className="ta-sub">
+        Registration preferences:{" "}
+        {preferenceText(workspace.selfRegistration?.tracks)}
+        {workspace.selfRegistration?.specificInterest
+          ? ` · Specific interest: ${preferenceText(workspace.selfRegistration.specificInterest)}`
+          : ""}
+      </p>
+      <p>
+        {own?.track ? (
+          <>
+            <strong>Saved choice:</strong> {own.track} → {own.specific_skill}
+          </>
+        ) : (
+          "No learning goal selected yet."
+        )}
+      </p>
+      <form
+        style={{ display: "grid", gap: 12 }}
+        onSubmit={(e) => {
+          e.preventDefault();
+          run(
+            () => saveCapLearningGoal(cohortId, track, skill),
+            "Learning goal saved",
+          );
         }}
       >
-        <div style={{ position: "relative", zIndex: 1, display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 16 }}>
-          <div>
-            <div
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: 6,
-                background: "rgba(59,130,246,0.18)",
-                border: "1px solid rgba(59,130,246,0.3)",
-                color: "#60A5FA",
-                padding: "3px 12px",
-                borderRadius: 20,
-                fontSize: 11.5,
-                fontWeight: 700,
-                textTransform: "uppercase",
-                letterSpacing: ".06em",
-                marginBottom: 10,
-              }}
-            >
-              <Rocket size={12} /> 6-Week Intensive Accelerator
-            </div>
-            <h1 style={{ fontSize: "clamp(22px, 3vw, 30px)", fontWeight: 900, margin: "0 0 6px", letterSpacing: "-0.02em" }}>
-              Career Acceleration Programme (CAP): Cohort 3
-            </h1>
-            <p style={{ fontSize: 13.5, color: "#94A3B8", margin: 0, maxWidth: 640, lineHeight: 1.5 }}>
-              Hands-on enterprise AI product delivery, cross-functional sprints, dedicated industry mentorship, and Demo Day graduation.
-            </p>
-          </div>
-
-          <div style={{ display: "flex", flexDirection: "column", gap: 8, alignItems: "flex-end" }}>
-            <button
-              className="ta-btn ta-btn-primary"
-              style={{ padding: "8px 16px", fontSize: 13 }}
-              onClick={() => setCodeModalOpen(true)}
-            >
-              <KeyRound size={14} /> Enter Access Code
-            </button>
-            <span style={{ fontSize: 11.5, color: "#94A3B8" }}>
-              Have a sponsor or trial code? (e.g. <code>CAP3-2026</code>)
-            </span>
-          </div>
+        <div style={grid}>
+          <Select
+            label="Track"
+            required
+            value={track}
+            onChange={(e) => {
+              setTrack(e.target.value);
+              setSkill("");
+            }}
+          >
+            <option value="">Choose a track</option>
+            {[...new Set(options.map((o) => o.track))].map((t) => (
+              <option key={t}>{t}</option>
+            ))}
+          </Select>
+          <Select
+            label="Specific skill"
+            required
+            value={skill}
+            onChange={(e) => setSkill(e.target.value)}
+          >
+            <option value="">Choose a specific skill</option>
+            {options
+              .filter((o) => o.track === track)
+              .map((o) => (
+                <option key={o.id}>{o.skill}</option>
+              ))}
+          </Select>
         </div>
-      </div>
-
-      {/* Visual Progression Timeline: Learn -> Build -> Launch */}
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
-          gap: 12,
-          marginBottom: 28,
-        }}
-      >
-        {Object.values(CAP_PHASES).map((phase) => {
-          const isSelected = activePhase === phase.key;
-          const icons = {
-            LEARN: BookOpen,
-            BUILD: Hammer,
-            LAUNCH: Rocket,
-          };
-          const Icon = icons[phase.key];
-
-          return (
-            <div
-              key={phase.key}
-              onClick={() => setActivePhase(phase.key)}
-              style={{
-                background: isSelected ? "var(--bg-card, #FFFFFF)" : "var(--surface-2, #F8FAFC)",
-                border: isSelected ? "2px solid #2563EB" : "1px solid var(--border)",
-                borderRadius: 12,
-                padding: "16px 20px",
-                cursor: "pointer",
-                transition: "all .15s ease",
-                boxShadow: isSelected ? "0 4px 14px rgba(37,99,235,0.15)" : "none",
-              }}
+        {!options.length && (
+          <p>
+            Your administrator has not configured skill choices for this cohort
+            yet.
+          </p>
+        )}
+        <button
+          className="ta-btn ta-btn-primary"
+          disabled={
+            busy || !options.some((o) => o.track === track && o.skill === skill)
+          }
+        >
+          Save learning goal
+        </button>
+      </form>
+    </section>
+  );
+}
+function StaffGoals({ workspace, cohortId, run, busy }) {
+  const [filter, setFilter] = useState("");
+  return (
+    <details className="ta-card" style={card}>
+      <summary>View learner goals &amp; problem statements ({workspace.members.filter(m => m.cohort_role !== "instructor").length})</summary>
+      <h2 style={{ fontSize: 17, marginTop: 0 }}>
+        Learner goals &amp; problem statements
+      </h2>
+      <p className="ta-sub">
+        These are learners’ saved choices. “Not selected” means no choice has
+        been recorded.
+      </p>
+      <Input
+        label="Find learner or skill"
+        value={filter}
+        onChange={(e) => setFilter(e.target.value)}
+      />
+      <div style={{ ...grid, marginTop: 14 }}>
+        {workspace.members
+          .filter((m) => m.cohort_role !== "instructor")
+          .map((m) => ({
+            ...m,
+            intention: workspace.intentions.find(
+              (i) => i.user_id === m.user_id,
+            ),
+          }))
+          .filter((m) =>
+            `${m.name} ${preferenceText(m.registration_tracks)} ${preferenceText(m.registration_interest)} ${m.profile_goal?.track || ""} ${m.profile_goal?.skill || ""} ${m.intention?.track || ""} ${m.intention?.specific_skill || ""}`
+              .toLowerCase()
+              .includes(filter.toLowerCase()),
+          )
+          .map((m) => (
+            <article
+              className="ta-card"
+              key={m.user_id}
+              style={{ padding: 14 }}
             >
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <div className="tai-decoration-icon"
-                    style={{
-                      width: 28, height: 28, borderRadius: 6,
-                      background: isSelected ? "#2563EB" : "rgba(100,116,139,0.1)",
-                      color: isSelected ? "#FFFFFF" : "var(--text-2)",
-                      display: "flex", alignItems: "center", justifyContent: "center",
+              <strong>{m.name || "Cohort member"}</strong>
+              {m.profile_goal?.track && <p>Profile learning goal: {m.profile_goal.track} → {m.profile_goal.skill}</p>}
+              <p style={{ margin: "8px 0" }}>
+                {m.intention?.track
+                  ? `${m.intention.track} → ${m.intention.specific_skill}`
+                  : "CAP goal: Not selected"}
+              </p>
+              <p className="ta-sub">
+                Registration preferences:{" "}
+                {preferenceText(m.registration_tracks)}
+                {m.registration_interest
+                  ? ` · Specific interest: ${preferenceText(m.registration_interest)}`
+                  : ""}
+              </p>
+              {m.intention?.problem_statement && (
+                <details>
+                  <summary>
+                    Problem statement · {m.intention.review_status}
+                  </summary>
+                  <h3 style={{ fontSize: 14 }}>
+                    {m.intention.problem_title || "Problem statement"}
+                  </h3>
+                  <p style={{ whiteSpace: "pre-wrap" }}>
+                    {m.intention.problem_statement}
+                  </p>
+                  {m.intention.review_feedback && (
+                    <p>Feedback: {m.intention.review_feedback}</p>
+                  )}
+                  <form
+                    style={{ display: "grid", gap: 10 }}
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      const v = valuesOf(e.currentTarget);
+                      run(
+                        () =>
+                          reviewCapProblem(
+                            cohortId,
+                            m.user_id,
+                            v.status,
+                            v.feedback,
+                          ),
+                        "Problem statement review saved",
+                      );
                     }}
                   >
-                    <Icon size={14} />
-                  </div>
-                  <span style={{ fontWeight: 800, fontSize: 14, color: isSelected ? "#2563EB" : "var(--text)" }}>
-                    {phase.label}
-                  </span>
-                </div>
-                <span style={{ fontSize: 11, fontWeight: 700, color: "var(--text-3)", background: "var(--surface)", padding: "2px 6px", borderRadius: 4 }}>
-                  {phase.weeks}
-                </span>
-              </div>
-              <p style={{ fontSize: 12, color: "var(--text-2)", margin: 0, lineHeight: 1.4 }}>
-                {phase.description}
-              </p>
-            </div>
-          );
-        })}
+                    <Select label="Review status" name="status">
+                      <option>Reviewed</option>
+                      <option>Changes requested</option>
+                    </Select>
+                    <Textarea
+                      label="Review feedback"
+                      name="feedback"
+                      maxLength={20000}
+                      defaultValue={m.intention.review_feedback || ""}
+                    />
+                    <button className="ta-btn ta-btn-primary" disabled={busy}>
+                      Save review
+                    </button>
+                  </form>
+                </details>
+              )}
+            </article>
+          ))}
       </div>
-
-      {/* PHASE CONTENT VIEWS */}
-
-      {/* Phase A: LEARN */}
-      {activePhase === "LEARN" && (
-        <div className="ta-col ta-gap16">
-          <div className="ta-card" style={{ padding: 24 }}>
-            <div style={{ fontWeight: 800, fontSize: 16, marginBottom: 4 }}>
-              Phase A Curriculum &amp; Career Preparation Modules
+      {workspace.isAdmin && (
+        <details style={{ marginTop: 18 }}>
+          <summary>Manage track and skill choices</summary>
+          <p className="ta-sub">
+            Disabling a choice preserves existing learner selections.
+          </p>
+          <form
+            style={{ display: "grid", gap: 12 }}
+            onSubmit={(e) => {
+              e.preventDefault();
+              const v = valuesOf(e.currentTarget);
+              run(
+                () => saveCapSkillOption(cohortId, v.track, v.skill),
+                "Skill choice saved",
+              );
+            }}
+          >
+            <div style={grid}>
+              <Input label="Track name" name="track" required maxLength={120} />
+              <Input
+                label="Specific skill name"
+                name="skill"
+                required
+                maxLength={160}
+              />
             </div>
-            <div style={{ fontSize: 12.5, color: "var(--text-2)", marginBottom: 20 }}>
-              Master technical fundamentals, AI engineering tooling, and complete your job-ready portfolio documents.
-            </div>
-
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 14 }}>
-              {/* Module 1: AI Engineering */}
-              <div style={{ padding: 18, background: "var(--surface-2)", borderRadius: 10, border: "1px solid var(--border)", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
-                <div>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
-                    <CheckCircle2 size={16} color="#10B981" />
-                    <span style={{ fontWeight: 700, fontSize: 13.5 }}>AI Engineering &amp; LLM Foundations</span>
-                  </div>
-                  <p style={{ fontSize: 12, color: "var(--text-2)", margin: "0 0 10px", lineHeight: 1.45 }}>
-                    Prompt engineering, API integration, Supabase vector databases, and evaluation rubrics.
-                  </p>
-                  <div style={{ fontSize: 11.5, fontWeight: 700, color: (primaryCourse?.progress || 0) >= 100 ? "#10B981" : "#2563EB", marginBottom: 12 }}>
-                    {(primaryCourse?.progress || 0) >= 100 ? "Completed (100%)" : `Curriculum Pace: ${primaryCourse?.progress || 0}%`}
-                  </div>
-                </div>
-                {primaryCourse?.id && (
-                  <button
-                    className="ta-btn ta-btn-outline ta-btn-sm"
-                    style={{ fontSize: 12, alignSelf: "flex-start" }}
-                    onClick={() => push?.("courseDetail", { id: primaryCourse.id })}
-                  >
-                    Open Course Syllabus &rarr;
-                  </button>
-                )}
-              </div>
-
-              {/* Module 2: CV Workshop */}
-              <div style={{ padding: 18, background: "var(--surface-2)", borderRadius: 10, border: "1px solid var(--border)", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
-                <div>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
-                    <Clock size={16} color="#2563EB" />
-                    <span style={{ fontWeight: 700, fontSize: 13.5 }}>CV &amp; Cover Letter Workshop</span>
-                  </div>
-                  <p style={{ fontSize: 12, color: "var(--text-2)", margin: "0 0 10px", lineHeight: 1.45 }}>
-                    Engineering CV optimization, portfolio positioning, and soft skills interview prep.
-                  </p>
-                  <div style={{ fontSize: 11.5, fontWeight: 700, color: "#2563EB", marginBottom: 12 }}>
-                    Career Acceleration Track &bull; Active
-                  </div>
-                </div>
+            <button className="ta-btn ta-btn-primary" disabled={busy}>
+              Add skill choice
+            </button>
+          </form>
+          <div style={{ display: "grid", gap: 8, marginTop: 12 }}>
+            {workspace.skillOptions.map((o) => (
+              <div
+                className="ta-row ta-between"
+                style={{ flexWrap: "wrap", gap: 8 }}
+                key={o.id}
+              >
+                <span>
+                  {o.track} → {o.skill} {!o.is_active && "(disabled)"}
+                </span>
                 <button
                   className="ta-btn ta-btn-outline ta-btn-sm"
-                  style={{ fontSize: 12, alignSelf: "flex-start" }}
-                  onClick={() => {
-                    if (goTab) goTab("profile");
-                    else if (push) push("profile");
-                    showToast?.("Navigating to Career Profile & Credentials...");
-                  }}
+                  disabled={busy}
+                  onClick={() =>
+                    run(
+                      () =>
+                        saveCapSkillOption(
+                          cohortId,
+                          o.track,
+                          o.skill,
+                          !o.is_active,
+                        ),
+                      "Skill choice updated",
+                    )
+                  }
                 >
-                  View Career Profile &rarr;
+                  {o.is_active ? "Disable" : "Enable"}
                 </button>
               </div>
-
-              {/* Module 3: Problem Statement */}
-              <div style={{ padding: 18, background: "var(--surface-2)", borderRadius: 10, border: "1px solid var(--border)", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
-                <div>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
-                    <FileText size={16} color={savedProblem ? "#10B981" : "#64748B"} />
-                    <span style={{ fontWeight: 700, fontSize: 13.5 }}>Product Idea &amp; Problem Statement</span>
-                  </div>
-                  <p style={{ fontSize: 12, color: "var(--text-2)", margin: "0 0 10px", lineHeight: 1.45 }}>
-                    {savedProblem?.statement ? `"${savedProblem.statement.slice(0, 85)}..."` : "Identify a high-impact African industry problem (Health, Agri, Fintech) for Phase B."}
-                  </p>
-                  <div style={{ fontSize: 11.5, fontWeight: 700, color: savedProblem ? "#10B981" : "#64748B", marginBottom: 12 }}>
-                    {savedProblem ? "Submitted & Validated ✓" : "Ready for Phase B Submission"}
-                  </div>
-                </div>
-                <button
-                  className="ta-btn ta-btn-primary ta-btn-sm"
-                  style={{ fontSize: 12, alignSelf: "flex-start" }}
-                  onClick={() => {
-                    setProblemTitle(savedProblem?.title || "");
-                    setProblemText(savedProblem?.statement || "");
-                    setProblemModalOpen(true);
-                  }}
-                >
-                  {savedProblem ? "Edit Problem Statement" : "+ Submit Problem Statement"}
-                </button>
-              </div>
-            </div>
+            ))}
           </div>
+        </details>
+      )}
+    </details>
+  );
+}
+function TeamForm({ team, workspace, cohortId, run, busy, onDone }) {
+  const staff = workspace.canManage;
+  return (
+    <form
+      style={{ display: "grid", gap: 12 }}
+      onSubmit={(e) => {
+        e.preventDefault();
+        const v = valuesOf(e.currentTarget);
+        const patch = {
+          name: v.name,
+          project_title: v.project,
+          problem_statement: v.problem,
+          technologies: (v.tech || "")
+            .split(",")
+            .map((t) => t.trim())
+            .filter(Boolean),
+        };
+        if (team)
+          Object.assign(patch, {
+            id: team.id,
+            github_url: v.repo || null,
+            demo_url: v.demo || null,
+            presentation_url: v.slides || null,
+          });
+        if (team && staff)
+          Object.assign(patch, {
+            phase: v.phase,
+            mentor_id: v.mentor || null,
+            demo_day_status: v.status,
+            final_score: v.score === "" ? null : Number(v.score),
+            judges_feedback: v.feedback || "",
+          });
+        if (!team) Object.assign(patch, { cohort_id: cohortId, role: v.role });
+        run(
+          async () => {
+            await saveCapTeam(patch);
+            onDone?.();
+          },
+          team ? "Team updated" : "Team created",
+        );
+      }}
+    >
+      <div style={grid}>
+        <Input
+          label="Team name"
+          name="name"
+          required
+          maxLength={200}
+          defaultValue={team?.name || ""}
+        />
+        <Input
+          label="Project title"
+          name="project"
+          required
+          maxLength={300}
+          defaultValue={team?.project_title || ""}
+        />
+      </div>
+      <Textarea
+        label="Problem statement"
+        name="problem"
+        maxLength={20000}
+        defaultValue={team?.problem_statement || ""}
+      />
+      <Input
+        label="Technologies (comma separated)"
+        name="tech"
+        defaultValue={(team?.technologies || []).join(", ")}
+      />
+      {!team && !staff && (
+        <Input
+          label="Your team role"
+          name="role"
+          required
+          maxLength={120}
+          placeholder="e.g. Frontend developer"
+        />
+      )}
+      {team && (
+        <>
+          <Input
+            label="Repository URL"
+            name="repo"
+            type="url"
+            defaultValue={team.github_url || ""}
+          />
+          <Input
+            label="Live demo URL"
+            name="demo"
+            type="url"
+            defaultValue={team.demo_url || ""}
+          />
+          <Input
+            label="Presentation URL"
+            name="slides"
+            type="url"
+            defaultValue={team.presentation_url || ""}
+          />
+        </>
+      )}
+      {team && staff && (
+        <>
+          <div style={grid}>
+            <Select label="Team phase" name="phase" defaultValue={team.phase}>
+              <option value="LEARN">Learn</option>
+              <option value="BUILD">Build</option>
+              <option value="LAUNCH">Launch</option>
+            </Select>
+            <Select
+              label="Assigned mentor"
+              name="mentor"
+              defaultValue={team.mentor_id || ""}
+            >
+              <option value="">Not assigned</option>
+              {workspace.members
+                .filter((m) => m.cohort_role === "instructor")
+                .map((m) => (
+                  <option key={m.user_id} value={m.user_id}>
+                    {m.name}
+                  </option>
+                ))}
+            </Select>
+            <Select
+              label="Demo Day status"
+              name="status"
+              defaultValue={team.demo_day_status}
+            >
+              {[
+                "Draft",
+                "Pending Review",
+                "Demo Day Ready",
+                "Featured",
+                "Completed",
+                "Needs Revision",
+              ].map((s) => (
+                <option key={s}>{s}</option>
+              ))}
+            </Select>
+            <Input
+              label="Final score (0–100, blank if unscored)"
+              name="score"
+              type="number"
+              min={0}
+              max={100}
+              step="0.01"
+              defaultValue={team.final_score ?? ""}
+            />
+          </div>
+          <Textarea
+            label="Judges’ feedback"
+            name="feedback"
+            defaultValue={team.judges_feedback || ""}
+          />
+        </>
+      )}
+      <button className="ta-btn ta-btn-primary" disabled={busy}>
+        {team ? "Save team" : staff ? "Create team" : "Register & join team"}
+      </button>
+    </form>
+  );
+}
+function TeamCard({ team, workspace, cohortId, userId, run, busy }) {
+  const [editing, setEditing] = useState(false);
+  const own = (team.members || []).find((m) => m.user_id === userId);
+  return (
+    <article className="ta-card" style={card}>
+      <h3 style={{ marginTop: 0 }}>
+        {team.name} {team.is_archived && "(archived)"}
+      </h3>
+      <strong>{team.project_title}</strong>
+      <p>{team.problem_statement}</p>
+      <p>
+        Phase: {team.phase} · {team.demo_day_status}
+      </p>
+      <p>Mentor: {team.mentor_name || "Not assigned"}</p>
+      <ul style={{ paddingLeft: 18 }}>
+        {(team.members || []).map((m) => (
+          <li key={m.user_id}>
+            {m.name} · {m.role}{" "}
+            {workspace.canManage && (
+              <button
+                className="ta-btn ta-btn-ghost ta-btn-sm"
+                disabled={busy}
+                onClick={() =>
+                  run(
+                    () => removeCapTeamMember(team.id, m.user_id),
+                    "Team member removed",
+                  )
+                }
+              >
+                Remove
+              </button>
+            )}
+          </li>
+        ))}
+      </ul>
+      <ProjectLinks team={team} />
+      {workspace.canManage && !team.is_archived && (
+        <details style={{ marginTop: 12 }}>
+          <summary>Add or update team member</summary>
+          <form
+            style={{ display: "grid", gap: 10, marginTop: 10 }}
+            onSubmit={(e) => {
+              e.preventDefault();
+              const v = valuesOf(e.currentTarget);
+              run(
+                () =>
+                  joinCapTeam({
+                    teamId: team.id,
+                    userId: v.member,
+                    role: v.role,
+                  }),
+                "Team member saved",
+              );
+            }}
+          >
+            <Select label="Cohort member" name="member" required>
+              <option value="">Choose member</option>
+              {workspace.members
+                .filter((m) => m.cohort_role !== "instructor")
+                .map((m) => (
+                  <option key={m.user_id} value={m.user_id}>
+                    {m.name}
+                  </option>
+                ))}
+            </Select>
+            <Input label="Team role" name="role" required maxLength={120} />
+            <button className="ta-btn ta-btn-primary" disabled={busy}>
+              Save member
+            </button>
+          </form>
+        </details>
+      )}
+      {!workspace.canManage && !own && !team.is_archived && (
+        <form
+          style={{ display: "grid", gap: 10, marginTop: 12 }}
+          onSubmit={(e) => {
+            e.preventDefault();
+            const v = valuesOf(e.currentTarget);
+            run(
+              () => joinCapTeam({ teamId: team.id, userId, role: v.role }),
+              "Joined team",
+            );
+          }}
+        >
+          <Input label="Your team role" name="role" required maxLength={120} />
+          <button className="ta-btn ta-btn-outline" disabled={busy}>
+            Join team
+          </button>
+        </form>
+      )}
+      {(workspace.canManage || own) && (
+        <button
+          className="ta-btn ta-btn-outline"
+          style={{ marginTop: 12 }}
+          onClick={() => setEditing((v) => !v)}
+          aria-expanded={editing}
+        >
+          {editing ? "Close editor" : "Edit project"}
+        </button>
+      )}
+      {editing && (
+        <div style={{ marginTop: 14 }}>
+          <TeamForm
+            team={team}
+            workspace={workspace}
+            cohortId={cohortId}
+            run={run}
+            busy={busy}
+            onDone={() => setEditing(false)}
+          />
         </div>
       )}
-
-      {/* Phase B: BUILD (Teams & Projects) */}
-      {activePhase === "BUILD" && (
-        <div className="ta-col ta-gap20">
-          <div className="ta-row ta-between" style={{ flexWrap: "wrap", gap: 10, alignItems: "center" }}>
-            <div>
-              <div style={{ fontWeight: 800, fontSize: 17 }}>Cross-Functional Project Teams &amp; Sprints</div>
-              <div style={{ fontSize: 12.5, color: "var(--text-2)" }}>
-                Teams collaborate on real software builds with assigned roles, GitHub repos, and live demos.
-              </div>
-            </div>
+      {workspace.canManage && (
+        <button
+          className="ta-btn ta-btn-ghost"
+          disabled={busy}
+          onClick={() =>
+            run(
+              () =>
+                saveCapTeam({ id: team.id, is_archived: !team.is_archived }),
+              team.is_archived ? "Team restored" : "Team archived",
+            )
+          }
+        >
+          {team.is_archived ? "Restore team" : "Archive team"}
+        </button>
+      )}
+    </article>
+  );
+}
+export default function CapCohort3Screen({
+  session,
+  user,
+  cohortId,
+  cohortName,
+  courses = [],
+  push,
+  showToast,
+}) {
+  const userId = session?.user?.id || user?.id;
+  const query = useSupabaseQuery(
+    () => fetchCapWorkspace(cohortId),
+    [cohortId, userId],
+    { blocksPage: false },
+  );
+  const [phase, setPhase] = useState("LEARN");
+  const [busy, setBusy] = useState(false);
+  const [message, setMessage] = useState(null);
+  const [creating, setCreating] = useState(false);
+  async function run(action, success) {
+    setBusy(true);
+    setMessage(null);
+    try {
+      await action();
+      setMessage({ text: success });
+      showToast?.(success);
+      query.refetch();
+    } catch (e) {
+      setMessage({
+        text: e.message || "Could not save. Please retry.",
+        error: true,
+      });
+      showToast?.(e.message || "Could not save");
+    } finally {
+      setBusy(false);
+    }
+  }
+  if (query.loading)
+    return <LoadingSkeleton label="Loading CAP workspace" rows={3} />;
+  if (query.error)
+    return (
+      <div className="ta-card" role="alert" style={card}>
+        <p>{query.error}</p>
+        <button className="ta-btn ta-btn-outline" onClick={query.refetch}>
+          Retry CAP workspace
+        </button>
+      </div>
+    );
+  const workspace = query.data || {
+    teams: [],
+    checkins: [],
+    intentions: [],
+    skillOptions: [],
+    members: [],
+  };
+  const own = workspace.intentions.find((i) => i.user_id === userId);
+  const activeTeams = workspace.teams.filter((t) => !t.is_archived);
+  return (
+    <div
+      className="cap-workspace"
+      style={{ display: "grid", gap: 16, minWidth: 0 }}
+    >
+      <style>{`.cap-workspace .ta-row{display:flex;align-items:center;gap:8px}.cap-workspace .ta-between{justify-content:space-between}.cap-workspace .ta-sub{color:var(--text-3,#64748b);font-size:13px}.cap-workspace .ta-btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:9px 12px;border-radius:8px;border:1px solid var(--border,#e2e8f0);background:var(--surface,#fff);color:var(--text,#142747);font:inherit;font-size:13px;cursor:pointer}.cap-workspace .ta-btn-primary{background:var(--primary,#2563eb);color:#fff;border-color:transparent}.cap-workspace .ta-btn:disabled{opacity:.5;cursor:default}.cap-workspace .ta-input{padding:9px 10px;border:1px solid var(--border,#e2e8f0);border-radius:8px;background:var(--surface,#fff);color:var(--text,#142747);font:inherit}.cap-workspace input,.cap-workspace select,.cap-workspace textarea{width:100%;max-width:100%;box-sizing:border-box;min-height:40px}.cap-workspace h1{font-size:clamp(20px,3vw,26px)}.cap-workspace button{white-space:normal}.cap-workspace summary{cursor:pointer;font-weight:600;padding:8px 0}.cap-workspace form{min-width:0}.cap-workspace p{line-height:1.5}.cap-workspace .ta-row{min-width:0}@media(max-width:540px){.cap-workspace input,.cap-workspace select,.cap-workspace textarea{font-size:16px}}`}</style>
+      <header
+        className="ta-card"
+        style={{ ...card, background: "#142747", color: "white" }}
+      >
+        <div style={{ fontSize: 12 }}>Career Acceleration Programme</div>
+        <h1 style={{ margin: "8px 0" }}>
+          {workspace.cohort?.name || cohortName || "Cohort programme"}
+        </h1>
+        <p style={{ margin: 0 }}>
+          {workspace.canManage
+            ? "Manage learner goals, project teams, mentors and reviews."
+            : "Set your learning goal, develop your project and follow mentor feedback."}
+        </p>
+      </header>
+      {message && (
+        <div
+          role={message.error ? "alert" : "status"}
+          className="ta-card"
+          style={card}
+        >
+          {message.text}
+        </div>
+      )}
+      {workspace.canManage ? (
+        <StaffGoals
+          workspace={workspace}
+          cohortId={cohortId}
+          run={run}
+          busy={busy}
+        />
+      ) : (
+        <LearningGoal
+          key={cohortId}
+          cohortId={cohortId}
+          workspace={workspace}
+          userId={userId}
+          run={run}
+          busy={busy}
+        />
+      )}
+      <nav
+        aria-label="CAP programme sections"
+        style={{ display: "flex", flexWrap: "wrap", gap: 8 }}
+      >
+        {[
+          ["LEARN", "Learn"],
+          ["BUILD", "Build & teams"],
+          ["LAUNCH", "Demo Day"],
+        ].map(([key, label]) => (
+          <button
+            key={key}
+            className={`ta-btn ${phase === key ? "ta-btn-primary" : "ta-btn-outline"}`}
+            aria-pressed={phase === key}
+            onClick={() => setPhase(key)}
+          >
+            {label}
+          </button>
+        ))}
+      </nav>
+      {phase === "LEARN" && (
+        <>
+          <section className="ta-card" style={card}>
+            <h2 style={{ fontSize: 17, marginTop: 0 }}>Assigned curriculum</h2>
+            {courses.length ? (
+              courses.map((c) => (
+                <div key={c.id} style={{ padding: "10px 0" }}>
+                  <strong>{c.title}</strong>
+                  {push && (
+                    <button
+                      className="ta-btn ta-btn-ghost"
+                      onClick={() => push("courseDetail", { id: c.id })}
+                    >
+                      Open course
+                    </button>
+                  )}
+                </div>
+              ))
+            ) : (
+              <p>
+                No courses assigned to this cohort yet. An administrator can
+                configure course assignments from the cohort page.
+              </p>
+            )}
+          </section>
+          {!workspace.canManage && (
+            <section className="ta-card" style={card}>
+              <h2 style={{ fontSize: 17, marginTop: 0 }}>
+                Your problem statement
+              </h2>
+              <p>Status: {own?.review_status || "Not submitted"}</p>
+              {own?.review_feedback && (
+                <p>Staff feedback: {own.review_feedback}</p>
+              )}
+              <form
+                style={{ display: "grid", gap: 12 }}
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  const v = valuesOf(e.currentTarget);
+                  run(
+                    () => saveCapProblem(cohortId, v.title, v.statement),
+                    "Problem statement submitted for review",
+                  );
+                }}
+              >
+                <Input
+                  label="Problem title"
+                  name="title"
+                  maxLength={300}
+                  defaultValue={own?.problem_title || ""}
+                />
+                <Textarea
+                  label="Problem statement"
+                  name="statement"
+                  required
+                  maxLength={20000}
+                  defaultValue={own?.problem_statement || ""}
+                />
+                <button className="ta-btn ta-btn-primary" disabled={busy}>
+                  Submit problem statement
+                </button>
+              </form>
+            </section>
+          )}
+        </>
+      )}
+      {phase === "BUILD" && (
+        <>
+          <div
+            className="ta-row ta-between"
+            style={{ flexWrap: "wrap", gap: 10 }}
+          >
+            <h2 style={{ fontSize: 18, margin: 0 }}>
+              Project teams ({activeTeams.length})
+            </h2>
             <button
-              className="ta-btn ta-btn-primary ta-btn-sm"
-              style={{ fontWeight: 800 }}
-              onClick={() => setRegisterModalOpen(true)}
+              className="ta-btn ta-btn-primary"
+              onClick={() => setCreating((v) => !v)}
+              aria-expanded={creating}
             >
-              <Plus size={14} /> Register Team &amp; Project
+              {creating
+                ? "Cancel new team"
+                : workspace.canManage
+                  ? "Create team"
+                  : "Register team & project"}
             </button>
           </div>
-
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: 20 }}>
-            {teams.map((team) => {
-              const isMember = (team.members || []).some(
-                m => m.user_id === currentUserId || (currentUserEmail && m.email === currentUserEmail)
-              );
-
-              return (
-                <div
-                  key={team.id}
-                  className="ta-card"
-                  style={{
-                    padding: 20,
-                    display: "flex",
-                    flexDirection: "column",
-                    border: isMember ? "2px solid #2563EB" : "1.5px solid var(--border)",
-                    boxShadow: isMember ? "0 4px 14px rgba(37,99,235,0.12)" : "none",
-                  }}
-                >
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 10 }}>
-                    <div>
-                      <span style={{ fontSize: 11, fontWeight: 700, color: "#2563EB", textTransform: "uppercase" }}>
-                        Team {team.name} {isMember && <span style={{ color: "#10B981", fontWeight: 800 }}>(Your Team)</span>}
-                      </span>
-                      <h3 style={{ fontSize: 16, fontWeight: 800, margin: "2px 0 0", color: "var(--text)" }}>
-                        {team.project_title}
-                      </h3>
-                    </div>
-                    <span
-                      style={{
-                        fontSize: 10.5,
-                        fontWeight: 700,
-                        padding: "2px 8px",
-                        borderRadius: 6,
-                        background: team.demo_day_status === "Featured" ? "rgba(16,185,129,0.15)" : "rgba(37,99,235,0.1)",
-                        color: team.demo_day_status === "Featured" ? "#10B981" : "#2563EB",
-                        textTransform: "uppercase",
-                      }}
-                    >
-                      {team.demo_day_status}
-                    </span>
-                  </div>
-
-                  <p style={{ fontSize: 12.5, color: "var(--text-2)", lineHeight: 1.45, margin: "0 0 14px", flex: 1 }}>
-                    {team.problem_statement}
-                  </p>
-
-                  {/* Team Members & Roles */}
-                  <div style={{ marginBottom: 14 }}>
-                    <div className="ta-row ta-between" style={{ marginBottom: 6, alignItems: "center" }}>
-                      <div style={{ fontSize: 11, fontWeight: 700, color: "var(--text-3)", textTransform: "uppercase" }}>
-                        Team Members &amp; Roles ({team.members?.length || 0})
-                      </div>
-                      {!isMember && (
-                        <button
-                          type="button"
-                          className="ta-btn ta-btn-outline ta-btn-sm"
-                          style={{ fontSize: 11, padding: "2px 8px" }}
-                          onClick={() => {
-                            setSelectedTeamForJoin(team);
-                            setJoinModalOpen(true);
-                          }}
-                        >
-                          <Plus size={11} /> Join Team
-                        </button>
-                      )}
-                    </div>
-                    <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-                      {(team.members || []).map((m, idx) => (
-                        <span
-                          key={idx}
-                          style={{
-                            fontSize: 11.5,
-                            padding: "3px 8px",
-                            borderRadius: 6,
-                            background: "var(--surface-2)",
-                            border: "1px solid var(--border)",
-                            color: "var(--text)",
-                            fontWeight: 600,
-                          }}
-                        >
-                          {m.name} <span style={{ color: "#2563EB", fontWeight: 700 }}>({m.role})</span>
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Mentor */}
-                  <div style={{ fontSize: 12, color: "var(--text-2)", marginBottom: 14, display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 6 }}>
-                    <div>
-                      Mentor: <strong style={{ color: "var(--text)" }}>{team.mentor_name || "Assigned Mentor"}</strong>
-                    </div>
-                    {isAdminOrMentor && (
-                      <button
-                        type="button"
-                        className="ta-btn ta-btn-outline ta-btn-sm"
-                        style={{ fontSize: 11, padding: "2px 8px" }}
-                        onClick={() => openAssignMentorModal(team)}
-                      >
-                        <Edit3 size={11} /> Reassign Mentor
-                      </button>
-                    )}
-                  </div>
-
-                  {/* Instructor / Admin Phase Controls */}
-                  {isAdminOrMentor && (
-                    <div style={{ marginBottom: 14, padding: "8px 12px", background: "var(--surface-2)", borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, flexWrap: "wrap" }}>
-                      <span style={{ fontSize: 11, fontWeight: 700, color: "var(--text-3)", textTransform: "uppercase" }}>Accelerator Phase:</span>
-                      <select
-                        className="ta-select"
-                        style={{ fontSize: 11.5, padding: "4px 8px", borderRadius: 6, fontWeight: 600, background: "var(--surface)", color: "var(--text)", border: "1px solid var(--border)" }}
-                        value={team.phase || "BUILD"}
-                        onChange={(e) => handleUpdateTeamPhase(team, e.target.value)}
-                      >
-                        <option value="LEARN">Phase A: LEARN (Foundation)</option>
-                        <option value="BUILD">Phase B: BUILD (Sprint Delivery)</option>
-                        <option value="LAUNCH">Phase C: LAUNCH (Demo Day)</option>
-                      </select>
-                    </div>
-                  )}
-
-                  {/* Submission Links */}
-                  <div style={{ display: "flex", gap: 8, flexWrap: "wrap", borderTop: "1px solid var(--border)", paddingTop: 12, alignItems: "center", justifyContent: "space-between" }}>
-                    <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-                      {team.github_url && (
-                        <a
-                          href={team.github_url}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="ta-btn ta-btn-outline ta-btn-sm"
-                          style={{ fontSize: 11.5, padding: "4px 8px" }}
-                        >
-                          <Github size={12} /> GitHub
-                        </a>
-                      )}
-                      {team.demo_url && (
-                        <a
-                          href={team.demo_url}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="ta-btn ta-btn-primary ta-btn-sm"
-                          style={{ fontSize: 11.5, padding: "4px 8px" }}
-                        >
-                          <ExternalLink size={12} /> Live Demo
-                        </a>
-                      )}
-                    </div>
-
-                    {(isMember || isAdminOrMentor) && (
-                      <button
-                        type="button"
-                        className="ta-btn ta-btn-ghost ta-btn-sm"
-                        style={{ fontSize: 11.5, padding: "4px 8px", color: "var(--primary)" }}
-                        onClick={() => openEditLinksModal(team)}
-                      >
-                        <Edit3 size={12} /> Edit Links
-                      </button>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-
-          {/* Mentorship Feed Section */}
-          <div className="ta-card" style={{ padding: 24 }}>
-            <div className="ta-row ta-between" style={{ marginBottom: 14, alignItems: "center", flexWrap: "wrap", gap: 10 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <MessageSquare size={18} color="#2563EB" />
-                <span style={{ fontWeight: 800, fontSize: 16 }}>Mentorship Check-in Feed</span>
-              </div>
-              {isAdminOrMentor && (
-                <button
-                  type="button"
-                  className="ta-btn ta-btn-outline ta-btn-sm"
-                  style={{ fontWeight: 700 }}
-                  onClick={() => setCheckinModalOpen(true)}
-                >
-                  <Plus size={13} /> Log Mentorship Check-in
-                </button>
-              )}
-            </div>
-
-            <div className="ta-col ta-gap12">
-              {checkins.length === 0 && (
-                <div style={{ fontSize: 13, color: "var(--text-3)", padding: "12px 0" }}>
-                  No mentorship check-ins recorded yet.
-                </div>
-              )}
-              {checkins.map((chk) => (
-                <div
-                  key={chk.id}
-                  style={{
-                    padding: "14px 18px",
-                    background: "var(--surface-2)",
-                    borderRadius: 10,
-                    border: "1px solid var(--border)",
-                  }}
-                >
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
-                    <div style={{ fontWeight: 700, fontSize: 13.5, color: "var(--text)" }}>
-                      {chk.team_name} &bull; Check-in with {chk.mentor_name}
-                    </div>
-                    <span style={{ fontSize: 11.5, color: "var(--text-3)" }}>{chk.checkin_date}</span>
-                  </div>
-                  <p style={{ fontSize: 12.5, color: "var(--text-2)", margin: "0 0 8px", lineHeight: 1.45 }}>
-                    {chk.notes}
-                  </p>
-                  {chk.recommended_actions && (
-                    <div style={{ fontSize: 12, color: "#2563EB", fontWeight: 600 }}>
-                      Next Steps: {chk.recommended_actions}
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Phase C: LAUNCH (Demo Day Showcase) */}
-      {activePhase === "LAUNCH" && (
-        <div className="ta-col ta-gap20">
-          <div className="ta-card" style={{ padding: 24, textAlign: "center" }}>
-            <Rocket size={36} color="#2563EB" style={{ margin: "0 auto 12px" }} />
-            <h2 style={{ fontSize: 20, fontWeight: 800, margin: "0 0 6px" }}>
-              CAP Cohort 3 Demo Day Showcase
-            </h2>
-            <p style={{ fontSize: 13, color: "var(--text-2)", maxWidth: 540, margin: "0 auto 20px" }}>
-              Graduating teams present live software solutions to hiring partners, angel syndicates, and industry leaders.
-            </p>
-
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 16, textAlign: "left" }}>
-              {teams.map((t) => (
-                <div
-                  key={t.id}
-                  style={{
-                    padding: 18,
-                    background: "var(--surface-2)",
-                    borderRadius: 12,
-                    border: "1px solid var(--border)",
-                    display: "flex",
-                    flexDirection: "column",
-                    justifyContent: "space-between"
-                  }}
-                >
-                  <div>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
-                      <span style={{ fontSize: 11, fontWeight: 700, color: "#10B981", textTransform: "uppercase" }}>
-                        Final Score: {t.final_score !== undefined ? `${t.final_score}/100` : "Pending"}
-                      </span>
-                      <span style={{ fontSize: 10.5, fontWeight: 700, padding: "2px 6px", borderRadius: 4, background: "rgba(37,99,235,0.1)", color: "#2563EB" }}>
-                        {t.demo_day_status}
-                      </span>
-                    </div>
-                    <div style={{ fontWeight: 800, fontSize: 15, margin: "4px 0 6px" }}>{t.project_title}</div>
-                    <div style={{ fontSize: 12, color: "var(--text-3)", marginBottom: 8 }}>Team: {t.name}</div>
-                    <div style={{ fontSize: 12, color: "var(--text-2)", marginBottom: 14, fontStyle: "italic" }}>
-                      Judges: "{t.judges_feedback || "Commercial validation in progress."}"
-                    </div>
-                  </div>
-
-                  <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", borderTop: "1px solid var(--border)", paddingTop: 10 }}>
-                    {t.demo_url ? (
-                      <a href={t.demo_url} target="_blank" rel="noreferrer" className="ta-btn ta-btn-primary ta-btn-sm" style={{ fontSize: 11.5 }}>
-                        Launch Project <ExternalLink size={12} />
-                      </a>
-                    ) : (
-                      <span style={{ fontSize: 11, color: "var(--text-3)" }}>Demo URL pending</span>
-                    )}
-
-                    {isAdminOrMentor && (
-                      <button
-                        type="button"
-                        className="ta-btn ta-btn-ghost ta-btn-sm"
-                        style={{ fontSize: 11.5, color: "var(--primary)" }}
-                        onClick={() => openScoreModal(t)}
-                      >
-                        <Award size={13} /> Score Team
-                      </button>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* =========================================================================
-          MODALS
-          ========================================================================= */}
-
-      {/* Access Code Modal */}
-      {codeModalOpen && (
-        <div
-          style={{
-            position: "fixed",
-            inset: 0,
-            background: "rgba(15, 23, 42, 0.6)",
-            zIndex: 99999,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            padding: 16,
-          }}
-        >
-          <div
-            style={{
-              background: "#FFFFFF",
-              borderRadius: 14,
-              padding: 28,
-              maxWidth: 440,
-              width: "100%",
-              boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)",
-            }}
-          >
-            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
-              <div className="tai-decoration-icon" style={{ width: 36, height: 36, borderRadius: 8, background: "rgba(37,99,235,0.1)", color: "#2563EB", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                <KeyRound size={18} />
-              </div>
-              <div>
-                <div style={{ fontWeight: 800, fontSize: 16, color: "#10142A" }}>Enter Trial / Access Code</div>
-                <div style={{ fontSize: 11.5, color: "#64748B" }}>Unlock 6-week CAP Cohort 3 sponsored access</div>
-              </div>
-            </div>
-
-            <form onSubmit={handleRedeemCode}>
-              <input
-                type="text"
-                className="ta-input"
-                style={{
-                  fontSize: 15,
-                  letterSpacing: ".08em",
-                  textAlign: "center",
-                  textTransform: "uppercase",
-                  fontWeight: 700,
-                  padding: "12px",
-                  margin: "12px 0 16px",
-                  border: "1.5px solid #CBD5E1",
-                  width: "100%",
-                  boxSizing: "border-box"
-                }}
-                placeholder="e.g. CAP3-2026"
-                required
-                value={inputCode}
-                onChange={(e) => setInputCode(e.target.value.toUpperCase())}
+          {creating && (
+            <section className="ta-card" style={card}>
+              <TeamForm
+                workspace={workspace}
+                cohortId={cohortId}
+                run={run}
+                busy={busy}
+                onDone={() => setCreating(false)}
               />
-
-              <div style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}>
-                <button
-                  type="button"
-                  className="ta-btn ta-btn-ghost ta-btn-sm"
-                  onClick={() => setCodeModalOpen(false)}
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="ta-btn ta-btn-primary ta-btn-sm"
-                  disabled={redeeming}
-                >
-                  {redeeming ? "Validating Code..." : "Redeem & Unlock Access"}
-                </button>
-              </div>
-            </form>
+            </section>
+          )}
+          {!workspace.teams.length && (
+            <p>No teams registered in this cohort yet.</p>
+          )}
+          <div style={grid}>
+            {workspace.teams
+              .filter((t) => workspace.canManage || !t.is_archived)
+              .map((team) => (
+                <TeamCard
+                  key={team.id}
+                  team={team}
+                  workspace={workspace}
+                  cohortId={cohortId}
+                  userId={userId}
+                  run={run}
+                  busy={busy}
+                />
+              ))}
           </div>
-        </div>
-      )}
-
-      {/* Register Team & Project Modal */}
-      {registerModalOpen && (
-        <div
-          style={{
-            position: "fixed",
-            inset: 0,
-            background: "rgba(15, 23, 42, 0.6)",
-            zIndex: 99999,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            padding: 16,
-          }}
-        >
-          <div
-            style={{
-              background: "#FFFFFF",
-              borderRadius: 14,
-              padding: 26,
-              maxWidth: 520,
-              width: "100%",
-              boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)",
-              color: "#0F172A",
-            }}
-          >
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
-              <div style={{ fontWeight: 800, fontSize: 17, color: "#0F172A" }}>Register CAP Sprint Team &amp; Project</div>
-              <button
-                type="button"
-                className="ta-btn ta-btn-ghost ta-btn-sm"
-                onClick={() => setRegisterModalOpen(false)}
-              >
-                <X size={16} />
-              </button>
-            </div>
-
-            <form onSubmit={handleRegisterTeam}>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 12 }}>
-                <div>
-                  <div style={{ fontSize: 12, fontWeight: 700, marginBottom: 4 }}>Team Name *</div>
-                  <input
-                    type="text"
-                    className="ta-input"
-                    style={{ width: "100%", boxSizing: "border-box" }}
-                    placeholder="e.g. Apex Health AI"
+          <section className="ta-card" style={card}>
+            <h2 style={{ fontSize: 17, marginTop: 0 }}>Mentorship check-ins</h2>
+            {workspace.canManage && (
+              <details>
+                <summary>Log mentorship check-in</summary>
+                <form
+                  style={{ display: "grid", gap: 12 }}
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    const v = valuesOf(e.currentTarget);
+                    run(
+                      () =>
+                        saveCapCheckin(v.team, {
+                          ...v,
+                          private: v.private === "on",
+                        }),
+                      "Mentorship check-in saved",
+                    );
+                  }}
+                >
+                  <div style={grid}>
+                    <Select label="Team" name="team" required>
+                      <option value="">Choose team</option>
+                      {activeTeams.map((t) => (
+                        <option key={t.id} value={t.id}>
+                          {t.name}
+                        </option>
+                      ))}
+                    </Select>
+                    <Input
+                      label="Check-in date"
+                      name="date"
+                      type="date"
+                      required
+                      defaultValue={new Date().toLocaleDateString("en-CA")}
+                    />
+                    <Select
+                      label="Progress rating (1–5)"
+                      name="rating"
+                      defaultValue="3"
+                    >
+                      {[1, 2, 3, 4, 5].map((n) => (
+                        <option key={n}>{n}</option>
+                      ))}
+                    </Select>
+                    <Input
+                      label="Next check-in date"
+                      name="nextDate"
+                      type="date"
+                    />
+                  </div>
+                  <Textarea
+                    label="Progress notes"
+                    name="notes"
                     required
-                    value={newTeamName}
-                    onChange={(e) => setNewTeamName(e.target.value)}
+                    maxLength={20000}
                   />
-                </div>
-                <div>
-                  <div style={{ fontSize: 12, fontWeight: 700, marginBottom: 4 }}>Your Sprint Role</div>
-                  <select
-                    className="ta-input"
-                    style={{ width: "100%", boxSizing: "border-box" }}
-                    value={newCreatorRole}
-                    onChange={(e) => setNewCreatorRole(e.target.value)}
+                  <Textarea label="Blockers" name="blockers" />
+                  <Textarea label="Recommended next steps" name="actions" />
+                  {workspace.isAdmin && (
+                    <label>
+                      <input
+                        type="checkbox"
+                        name="private"
+                        style={{ width: "auto", minHeight: 0 }}
+                      />{" "}
+                      Private admin note
+                    </label>
+                  )}
+                  <button
+                    className="ta-btn ta-btn-primary"
+                    disabled={busy || !activeTeams.length}
                   >
-                    {CAP_ROLES.map((r) => (
-                      <option key={r} value={r}>{r}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              <div style={{ marginBottom: 12 }}>
-                <div style={{ fontSize: 12, fontWeight: 700, marginBottom: 4 }}>Project Title *</div>
-                <input
-                  type="text"
-                  className="ta-input"
-                  style={{ width: "100%", boxSizing: "border-box" }}
-                  placeholder="e.g. Real-Time Patient Triage & Bed Allocation Engine"
-                  required
-                  value={newProjectTitle}
-                  onChange={(e) => setNewProjectTitle(e.target.value)}
-                />
-              </div>
-
-              <div style={{ marginBottom: 12 }}>
-                <div style={{ fontSize: 12, fontWeight: 700, marginBottom: 4 }}>Problem Statement</div>
-                <textarea
-                  className="ta-input"
-                  rows={2}
-                  style={{ width: "100%", boxSizing: "border-box" }}
-                  placeholder="What specific African industry pain point does this team solve?"
-                  value={newProblemStatement}
-                  onChange={(e) => setNewProblemStatement(e.target.value)}
-                />
-              </div>
-
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 16 }}>
-                <div>
-                  <div style={{ fontSize: 12, fontWeight: 700, marginBottom: 4 }}>Technologies (comma separated)</div>
-                  <input
-                    type="text"
-                    className="ta-input"
-                    style={{ width: "100%", boxSizing: "border-box" }}
-                    placeholder="React, Python, FastAPI"
-                    value={newTechs}
-                    onChange={(e) => setNewTechs(e.target.value)}
-                  />
-                </div>
-                <div>
-                  <div style={{ fontSize: 12, fontWeight: 700, marginBottom: 4 }}>Assigned Mentor</div>
-                  <input
-                    type="text"
-                    className="ta-input"
-                    style={{ width: "100%", boxSizing: "border-box" }}
-                    placeholder="e.g. Assigned Mentor"
-                    value={newMentorName}
-                    onChange={(e) => setNewMentorName(e.target.value)}
-                  />
-                </div>
-              </div>
-
-              <div style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}>
-                <button
-                  type="button"
-                  className="ta-btn ta-btn-outline ta-btn-sm"
-                  onClick={() => setRegisterModalOpen(false)}
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="ta-btn ta-btn-primary ta-btn-sm"
-                  disabled={submittingTeam}
-                >
-                  {submittingTeam ? "Registering..." : "Register & Join Team"}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* Join Team Modal */}
-      {joinModalOpen && selectedTeamForJoin && (
-        <div
-          style={{
-            position: "fixed",
-            inset: 0,
-            background: "rgba(15, 23, 42, 0.6)",
-            zIndex: 99999,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            padding: 16,
-          }}
-        >
-          <div
-            style={{
-              background: "#FFFFFF",
-              borderRadius: 14,
-              padding: 26,
-              maxWidth: 440,
-              width: "100%",
-              boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)",
-              color: "#0F172A",
-            }}
-          >
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-              <div style={{ fontWeight: 800, fontSize: 16 }}>Join Team {selectedTeamForJoin.name}</div>
-              <button
-                type="button"
-                className="ta-btn ta-btn-ghost ta-btn-sm"
-                onClick={() => setJoinModalOpen(false)}
+                    Save check-in
+                  </button>
+                </form>
+              </details>
+            )}
+            {!workspace.checkins.length && (
+              <p>No mentorship check-ins recorded yet.</p>
+            )}
+            {workspace.checkins.map((c) => (
+              <article
+                key={c.id}
+                style={{
+                  borderTop: "1px solid var(--border)",
+                  paddingTop: 12,
+                  marginTop: 12,
+                }}
               >
-                <X size={16} />
-              </button>
-            </div>
-
-            <p style={{ fontSize: 13, color: "#64748B", margin: "0 0 14px" }}>
-              Project: <strong>{selectedTeamForJoin.project_title}</strong>
-            </p>
-
-            <form onSubmit={handleConfirmJoinTeam}>
-              <div style={{ marginBottom: 16 }}>
-                <div style={{ fontSize: 12, fontWeight: 700, marginBottom: 6 }}>Select Your Team Role</div>
-                <select
-                  className="ta-input"
-                  style={{ width: "100%", boxSizing: "border-box" }}
-                  value={selectedRole}
-                  onChange={(e) => setSelectedRole(e.target.value)}
-                >
-                  {CAP_ROLES.map((r) => (
-                    <option key={r} value={r}>{r}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}>
-                <button
-                  type="button"
-                  className="ta-btn ta-btn-outline ta-btn-sm"
-                  onClick={() => setJoinModalOpen(false)}
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="ta-btn ta-btn-primary ta-btn-sm"
-                  disabled={joiningTeam}
-                >
-                  {joiningTeam ? "Joining..." : "Confirm & Join Team"}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
+                <strong>
+                  {c.team_name} · {c.mentor_name}
+                </strong>
+                <p>
+                  {c.checkin_date} · Rating {c.progress_rating}/5{" "}
+                  {c.is_private_admin && "· Private admin note"}
+                </p>
+                <p style={{ whiteSpace: "pre-wrap" }}>{c.notes}</p>
+                {c.issues_blockers && <p>Blockers: {c.issues_blockers}</p>}
+                {c.recommended_actions && (
+                  <p>Next steps: {c.recommended_actions}</p>
+                )}
+                {c.next_checkin_date && (
+                  <p>Next check-in: {c.next_checkin_date}</p>
+                )}
+              </article>
+            ))}
+          </section>
+        </>
       )}
-
-      {/* Edit / Submit Links Modal */}
-      {linksModalOpen && selectedTeamForLinks && (
-        <div
-          style={{
-            position: "fixed",
-            inset: 0,
-            background: "rgba(15, 23, 42, 0.6)",
-            zIndex: 99999,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            padding: 16,
-          }}
-        >
-          <div
-            style={{
-              background: "#FFFFFF",
-              borderRadius: 14,
-              padding: 26,
-              maxWidth: 480,
-              width: "100%",
-              boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)",
-              color: "#0F172A",
-            }}
-          >
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-              <div style={{ fontWeight: 800, fontSize: 16 }}>Update Links: {selectedTeamForLinks.name}</div>
-              <button
-                type="button"
-                className="ta-btn ta-btn-ghost ta-btn-sm"
-                onClick={() => setLinksModalOpen(false)}
-              >
-                <X size={16} />
-              </button>
-            </div>
-
-            <form onSubmit={handleSaveLinks}>
-              <div style={{ marginBottom: 10 }}>
-                <div style={{ fontSize: 12, fontWeight: 700, marginBottom: 4 }}>GitHub Repository URL</div>
-                <input
-                  type="url"
-                  className="ta-input"
-                  style={{ width: "100%", boxSizing: "border-box" }}
-                  placeholder="https://github.com/..."
-                  value={repoUrl}
-                  onChange={(e) => setRepoUrl(e.target.value)}
-                />
-              </div>
-
-              <div style={{ marginBottom: 10 }}>
-                <div style={{ fontSize: 12, fontWeight: 700, marginBottom: 4 }}>Live Demo URL</div>
-                <input
-                  type="url"
-                  className="ta-input"
-                  style={{ width: "100%", boxSizing: "border-box" }}
-                  placeholder="https://myproject.trainailtd.com"
-                  value={demoUrl}
-                  onChange={(e) => setDemoUrl(e.target.value)}
-                />
-              </div>
-
-              <div style={{ marginBottom: 16 }}>
-                <div style={{ fontSize: 12, fontWeight: 700, marginBottom: 4 }}>Presentation Slides URL</div>
-                <input
-                  type="url"
-                  className="ta-input"
-                  style={{ width: "100%", boxSizing: "border-box" }}
-                  placeholder="https://slides.trainailtd.com/..."
-                  value={presentationUrl}
-                  onChange={(e) => setPresentationUrl(e.target.value)}
-                />
-              </div>
-
-              <div style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}>
-                <button
-                  type="button"
-                  className="ta-btn ta-btn-outline ta-btn-sm"
-                  onClick={() => setLinksModalOpen(false)}
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="ta-btn ta-btn-primary ta-btn-sm"
-                  disabled={submittingLinks}
-                >
-                  {submittingLinks ? "Saving..." : "Save Links"}
-                </button>
-              </div>
-            </form>
+      {phase === "LAUNCH" && (
+        <section className="ta-card" style={card}>
+          <h2 style={{ fontSize: 17, marginTop: 0 }}>
+            Project submissions &amp; Demo Day reviews
+          </h2>
+          {!activeTeams.length && <p>No project submissions yet.</p>}
+          <div style={grid}>
+            {activeTeams.map((t) => (
+              <article className="ta-card" key={t.id} style={card}>
+                <h3>{t.project_title}</h3>
+                <p>
+                  {t.name} · {t.demo_day_status}
+                </p>
+                <p>
+                  Final score:{" "}
+                  {t.final_score == null
+                    ? "Not scored"
+                    : `${t.final_score}/100`}
+                </p>
+                <p>
+                  {t.judges_feedback || "No judges’ feedback recorded yet."}
+                </p>
+                <ProjectLinks team={t} />
+                {workspace.canManage && (
+                  <details>
+                    <summary>Edit review</summary>
+                    <TeamForm
+                      team={t}
+                      workspace={workspace}
+                      cohortId={cohortId}
+                      run={run}
+                      busy={busy}
+                    />
+                  </details>
+                )}
+              </article>
+            ))}
           </div>
-        </div>
-      )}
-
-      {/* Log Mentorship Check-in Modal */}
-      {checkinModalOpen && (
-        <div
-          style={{
-            position: "fixed",
-            inset: 0,
-            background: "rgba(15, 23, 42, 0.6)",
-            zIndex: 99999,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            padding: 16,
-          }}
-        >
-          <div
-            style={{
-              background: "#FFFFFF",
-              borderRadius: 14,
-              padding: 26,
-              maxWidth: 500,
-              width: "100%",
-              boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)",
-              color: "#0F172A",
-            }}
-          >
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-              <div style={{ fontWeight: 800, fontSize: 16 }}>Log Mentorship Sprint Check-in</div>
-              <button
-                type="button"
-                className="ta-btn ta-btn-ghost ta-btn-sm"
-                onClick={() => setCheckinModalOpen(false)}
-              >
-                <X size={16} />
-              </button>
-            </div>
-
-            <form onSubmit={handleCreateCheckin}>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 10 }}>
-                <div>
-                  <div style={{ fontSize: 12, fontWeight: 700, marginBottom: 4 }}>Select Team</div>
-                  <select
-                    className="ta-input"
-                    style={{ width: "100%", boxSizing: "border-box" }}
-                    value={checkinTeamId}
-                    onChange={(e) => setCheckinTeamId(e.target.value)}
-                  >
-                    {teams.map((t) => (
-                      <option key={t.id} value={t.id}>Team {t.name}</option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <div style={{ fontSize: 12, fontWeight: 700, marginBottom: 4 }}>Check-in Date</div>
-                  <input
-                    type="date"
-                    className="ta-input"
-                    style={{ width: "100%", boxSizing: "border-box" }}
-                    value={checkinDate}
-                    onChange={(e) => setCheckinDate(e.target.value)}
-                  />
-                </div>
-              </div>
-
-              <div style={{ marginBottom: 10 }}>
-                <div style={{ fontSize: 12, fontWeight: 700, marginBottom: 4 }}>Sprint Progress Notes *</div>
-                <textarea
-                  className="ta-input"
-                  rows={2}
-                  style={{ width: "100%", boxSizing: "border-box" }}
-                  placeholder="Sprint milestones completed this week..."
-                  required
-                  value={checkinNotes}
-                  onChange={(e) => setCheckinNotes(e.target.value)}
-                />
-              </div>
-
-              <div style={{ marginBottom: 10 }}>
-                <div style={{ fontSize: 12, fontWeight: 700, marginBottom: 4 }}>Blockers / Architecture Issues</div>
-                <input
-                  type="text"
-                  className="ta-input"
-                  style={{ width: "100%", boxSizing: "border-box" }}
-                  placeholder="Optional latency, API, or data bottlenecks"
-                  value={checkinBlockers}
-                  onChange={(e) => setCheckinBlockers(e.target.value)}
-                />
-              </div>
-
-              <div style={{ marginBottom: 16 }}>
-                <div style={{ fontSize: 12, fontWeight: 700, marginBottom: 4 }}>Recommended Next Steps</div>
-                <input
-                  type="text"
-                  className="ta-input"
-                  style={{ width: "100%", boxSizing: "border-box" }}
-                  placeholder="Action items before next check-in"
-                  value={checkinActions}
-                  onChange={(e) => setCheckinActions(e.target.value)}
-                />
-              </div>
-
-              <div style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}>
-                <button
-                  type="button"
-                  className="ta-btn ta-btn-outline ta-btn-sm"
-                  onClick={() => setCheckinModalOpen(false)}
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="ta-btn ta-btn-primary ta-btn-sm"
-                  disabled={submittingCheckin}
-                >
-                  {submittingCheckin ? "Saving..." : "Log Check-in"}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* Demo Day Score / Review Modal */}
-      {scoreModalOpen && selectedTeamForScore && (
-        <div
-          style={{
-            position: "fixed",
-            inset: 0,
-            background: "rgba(15, 23, 42, 0.6)",
-            zIndex: 99999,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            padding: 16,
-          }}
-        >
-          <div
-            style={{
-              background: "#FFFFFF",
-              borderRadius: 14,
-              padding: 26,
-              maxWidth: 480,
-              width: "100%",
-              boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)",
-              color: "#0F172A",
-            }}
-          >
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-              <div style={{ fontWeight: 800, fontSize: 16 }}>Score Demo Day: Team {selectedTeamForScore.name}</div>
-              <button
-                type="button"
-                className="ta-btn ta-btn-ghost ta-btn-sm"
-                onClick={() => setScoreModalOpen(false)}
-              >
-                <X size={16} />
-              </button>
-            </div>
-
-            <form onSubmit={handleSaveScore}>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 12 }}>
-                <div>
-                  <div style={{ fontSize: 12, fontWeight: 700, marginBottom: 4 }}>Demo Day Status</div>
-                  <select
-                    className="ta-input"
-                    style={{ width: "100%", boxSizing: "border-box" }}
-                    value={scoreStatus}
-                    onChange={(e) => setScoreStatus(e.target.value)}
-                  >
-                    <option value="Featured">Featured (Top Pick)</option>
-                    <option value="Demo Day Ready">Demo Day Ready</option>
-                    <option value="Pending Review">Pending Review</option>
-                  </select>
-                </div>
-                <div>
-                  <div style={{ fontSize: 12, fontWeight: 700, marginBottom: 4 }}>Final Score (0-100)</div>
-                  <input
-                    type="number"
-                    min="0"
-                    max="100"
-                    className="ta-input"
-                    style={{ width: "100%", boxSizing: "border-box" }}
-                    value={scoreVal}
-                    onChange={(e) => setScoreVal(e.target.value)}
-                  />
-                </div>
-              </div>
-
-              <div style={{ marginBottom: 16 }}>
-                <div style={{ fontSize: 12, fontWeight: 700, marginBottom: 4 }}>Judges Feedback</div>
-                <textarea
-                  className="ta-input"
-                  rows={3}
-                  style={{ width: "100%", boxSizing: "border-box" }}
-                  placeholder="Critique, commercial validation, and technical architecture feedback..."
-                  value={scoreFeedback}
-                  onChange={(e) => setScoreFeedback(e.target.value)}
-                />
-              </div>
-
-              <div style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}>
-                <button
-                  type="button"
-                  className="ta-btn ta-btn-outline ta-btn-sm"
-                  onClick={() => setScoreModalOpen(false)}
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="ta-btn ta-btn-primary ta-btn-sm"
-                  disabled={submittingScore}
-                >
-                  {submittingScore ? "Saving..." : "Save Score & Feedback"}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* Problem Statement Modal (Phase A) */}
-      {problemModalOpen && (
-        <div
-          style={{
-            position: "fixed",
-            inset: 0,
-            background: "rgba(15, 23, 42, 0.6)",
-            zIndex: 99999,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            padding: 16,
-          }}
-        >
-          <div
-            style={{
-              background: "#FFFFFF",
-              borderRadius: 14,
-              padding: 26,
-              maxWidth: 500,
-              width: "100%",
-              boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)",
-              color: "#0F172A",
-            }}
-          >
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-              <div style={{ fontWeight: 800, fontSize: 16 }}>Submit African Industry Problem Statement</div>
-              <button
-                type="button"
-                className="ta-btn ta-btn-ghost ta-btn-sm"
-                onClick={() => setProblemModalOpen(false)}
-              >
-                <X size={16} />
-              </button>
-            </div>
-
-            <form onSubmit={handleSaveProblemStatement}>
-              <div style={{ marginBottom: 12 }}>
-                <div style={{ fontSize: 12, fontWeight: 700, marginBottom: 4 }}>Target Industry &amp; Title</div>
-                <input
-                  type="text"
-                  className="ta-input"
-                  style={{ width: "100%", boxSizing: "border-box" }}
-                  placeholder="e.g. Health: Reducing Maternal Referral Delays"
-                  value={problemTitle}
-                  onChange={(e) => setProblemTitle(e.target.value)}
-                />
-              </div>
-
-              <div style={{ marginBottom: 16 }}>
-                <div style={{ fontSize: 12, fontWeight: 700, marginBottom: 4 }}>Problem Statement &amp; Scope *</div>
-                <textarea
-                  className="ta-input"
-                  rows={4}
-                  style={{ width: "100%", boxSizing: "border-box" }}
-                  placeholder="Detail the pain point, who suffers from it, and what software/AI intervention can solve it..."
-                  required
-                  value={problemText}
-                  onChange={(e) => setProblemText(e.target.value)}
-                />
-              </div>
-
-              <div style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}>
-                <button
-                  type="button"
-                  className="ta-btn ta-btn-outline ta-btn-sm"
-                  onClick={() => setProblemModalOpen(false)}
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="ta-btn ta-btn-primary ta-btn-sm"
-                >
-                  Save Problem Statement
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* Assign Mentor Modal (Admins & Instructors) */}
-      {assignMentorModalOpen && selectedTeamForMentor && (
-        <div
-          style={{
-            position: "fixed",
-            inset: 0,
-            background: "rgba(15, 23, 42, 0.6)",
-            zIndex: 99999,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            padding: 16,
-          }}
-        >
-          <div
-            style={{
-              background: "#FFFFFF",
-              borderRadius: 14,
-              padding: 26,
-              maxWidth: 440,
-              width: "100%",
-              boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)",
-              color: "#0F172A",
-            }}
-          >
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-              <div style={{ fontWeight: 800, fontSize: 16 }}>Assign Mentor to Team {selectedTeamForMentor.name}</div>
-              <button
-                type="button"
-                className="ta-btn ta-btn-ghost ta-btn-sm"
-                onClick={() => setAssignMentorModalOpen(false)}
-              >
-                <X size={16} />
-              </button>
-            </div>
-
-            <p style={{ fontSize: 13, color: "#64748B", margin: "0 0 14px" }}>
-              Project: <strong>{selectedTeamForMentor.project_title}</strong>
-            </p>
-
-            <form onSubmit={handleSaveAssignedMentor}>
-              <div style={{ marginBottom: 16 }}>
-                <div style={{ fontSize: 12, fontWeight: 700, marginBottom: 6 }}>Assigned Mentor Name or Email *</div>
-                <input
-                  type="text"
-                  className="ta-input"
-                  style={{ width: "100%", boxSizing: "border-box" }}
-                  placeholder="e.g. Lead Industry Mentor"
-                  required
-                  value={assignMentorInput}
-                  onChange={(e) => setAssignMentorInput(e.target.value)}
-                />
-              </div>
-
-              <div style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}>
-                <button
-                  type="button"
-                  className="ta-btn ta-btn-outline ta-btn-sm"
-                  onClick={() => setAssignMentorModalOpen(false)}
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="ta-btn ta-btn-primary ta-btn-sm"
-                  disabled={savingMentor}
-                >
-                  {savingMentor ? "Saving..." : "Save Mentor Assignment"}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
+        </section>
       )}
     </div>
   );

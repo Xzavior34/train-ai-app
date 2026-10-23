@@ -16,6 +16,7 @@ import {
   addCohortResource, deleteCohortResource, createCohortSession, deleteCohortSession,
   bulkAddCohortMembersByEmail, batchAssignTrackCoursesToCohort,
 } from "../../lib/api/platform.js";
+import CapCohort3Screen from "../../learner/screens/CapCohort3Screen.jsx";
 import { MemberDetailModal } from "./PeopleScreen.jsx";
 
 
@@ -347,7 +348,7 @@ function CohortCourseAssignmentSection({
   );
 }
 
-export function CohortDetailScreen({ orgId, cohortId, currentUserId, onBack, orgSelector, setScreen }) {
+export function CohortDetailScreen({ orgId, cohortId, currentUserId, session, onBack, orgSelector, setScreen }) {
   const showToast = useContext(ToastContext);
   const [tab, setTab] = useState("members");
 
@@ -672,11 +673,13 @@ export function CohortDetailScreen({ orgId, cohortId, currentUserId, onBack, org
                 { k: "progressmatrix", label: "Progress Matrix" },
                 { k: "activity", label: `Activity (${posts.length})` },
                 { k: "resources", label: "Resources & sessions" },
+                ...(/cap.*3|accelerator/i.test(cohort.name || "") ? [{ k: "cap", label: "CAP programme & learner goals" }] : []),
               ].map((t) => (
                 <div key={t.k} className={`ta-tab ${tab === t.k ? "active" : ""}`} onClick={() => setTab(t.k)}>{t.label}</div>
               ))}
             </div>
 
+            {tab === "cap" && <div className="ta-mt16"><CapCohort3Screen key={cohortId} cohortId={cohortId} cohortName={cohort.name} session={session || {user:{id:currentUserId}}} showToast={showToast} courses={cohortCourses.map(cc=>cc.courses).filter(Boolean)}/></div>}
             {tab === "members" && (
               <div style={{ display: "flex", flexDirection: "column", gap: 16 }} className="ta-mt16">
                 {/* 1. Dedicated Instructors & Mentors Management */}

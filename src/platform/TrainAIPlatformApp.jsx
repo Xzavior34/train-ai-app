@@ -276,7 +276,7 @@ export default function TrainAIPlatformApp({ session, isActive = true, onSwitchT
                     />
                   )}
                   {screen === "cohort-detail" && (
-                    <CohortDetailScreen
+                    <CohortDetailScreen session={session}
                       orgId={effectiveOrgId}
                       cohortId={selectedCohortId}
                       currentUserId={session?.user?.id}

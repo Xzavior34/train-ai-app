@@ -1,4 +1,5 @@
 import { supabase, activeProject } from "../supabaseClient.js";
+import { fetchMemberLearningInterests } from "./capProgram.js";
 import { sharePendingRead } from "../pendingReads.js";
 import { fetchProfilesByUserIds } from "./schemaHelper.js";
 import { isRealDatabaseId, isMockDataEnabled } from "../mockDataManager.js";
@@ -5571,7 +5572,8 @@ export async function fetchMemberLearningTrack(userId, organizationId, cohortId 
     const { data, error } = await supabase.rpc("get_member_learning_track", { p_org_id: orgId, p_user_id: cleanUserId, p_cohort_id: cohortId });
     if (error) throw new Error("Could not load this member's learning track. Please retry or check that the database is up to date.");
     if (!data) throw new Error("No learning record was returned for this member. Please retry.");
-    return data;
+    const interests = await fetchMemberLearningInterests(orgId, cleanUserId, cohortId);
+    return { ...data, learningInterests: Array.isArray(interests) ? interests : [] };
   }
 
   // Sample progress is available in preview, demo, or fallback modes.

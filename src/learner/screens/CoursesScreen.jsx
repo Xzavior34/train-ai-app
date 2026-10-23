@@ -1,3 +1,4 @@
+import { LearningGoalPreference } from "../components/LearningGoalPreference.jsx";
 import { CourseImage } from "../../components/common/CourseImage.jsx";
 import React, { useState, useEffect, useRef } from "react";
 import { TopBar, CourseCard, ProgressBar, Tag, Avatar, initialsOf } from "../components/LearnerUI.jsx";
@@ -185,7 +186,7 @@ const SPECIALIZATIONS = [];
 const RECENT_RECORDINGS = [];
 
 export function CoursesScreen({
-  user = {},
+  user = {}, userId,
   courses = [], coursesLoading, coursesError, onRetryCourses, courseSearch = "", setCourseSearch,
   courseLevelFilter = "all", setCourseLevelFilter, courseSourceTab = "all", setCourseSourceTab,
   showMyCoursesOnly = false, setShowMyCoursesOnly, push, handleEnroll, handleRequestJoin,
@@ -416,6 +417,7 @@ export function CoursesScreen({
 
   if (coursesError || (!coursesLoading && courses.length === 0)) return (
     <div className="tai-fade-in">
+      <LearningGoalPreference userId={userId || user?.id}/>
       <TopBar title="Courses" sub="Your organization's published learning content" />
       <div className="tai-card" role={coursesError ? "alert" : "status"} style={{ padding: 28, marginTop: 16, textAlign: "center" }}>
         <BookOpen size={28} style={{ marginBottom: 12 }} />
@@ -428,6 +430,7 @@ export function CoursesScreen({
 
   return (
     <div className="tai-fade-in" style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+      <LearningGoalPreference userId={userId || user?.id}/>
       
       {/* =========================================================================
           DYNAMIC MOVING SPOTLIGHT HERO CAROUSEL (LEARNER TRACK FOCUSED)

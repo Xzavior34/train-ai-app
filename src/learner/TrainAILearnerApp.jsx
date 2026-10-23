@@ -844,7 +844,7 @@ export default function TrainAILearnerApp({ isActive = true, onSwitchToPlatform,
                 />
               )}
               {screen === "courses" && (
-                <CoursesScreen
+                <CoursesScreen userId={session?.user?.id}
                   user={user}
                   courses={courses.map(c => {
                     const ca = (complianceAssignmentsQuery.data || []).find(a => (a.course_id || a.courses?.id) === c.id);

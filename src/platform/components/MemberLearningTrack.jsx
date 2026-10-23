@@ -39,6 +39,10 @@ export function MemberLearningTrack({ orgId, userId, cohortId = null, member = n
   return (
     <div className="ta-col ta-gap16 ta-mt16">
       {data?.isPreview && <div className="ta-tag">Preview data · sample learning progress</div>}
+      <section className="ta-card" style={{padding:16}} aria-label="Learner selected skills">
+        <strong>What this learner wants to learn</strong>
+        {(data?.learningInterests || []).length ? <ul>{data.learningInterests.map((goal,i)=><li key={i} style={{marginTop:8}}><strong>{goal.kind === "registration" ? `Registration preferences: ${Array.isArray(goal.tracks) ? goal.tracks.join(", ") : goal.tracks || "Not recorded"}${goal.specificInterest ? ` · Specific interest: ${Array.isArray(goal.specificInterest) ? goal.specificInterest.join(", ") : typeof goal.specificInterest === "string" ? goal.specificInterest : JSON.stringify(goal.specificInterest)}` : " · Specific skill not recorded"}` : `${goal.track} → ${goal.specificSkill}`}</strong>{goal.cohort && <span className="ta-sub"> · {goal.cohort}</span>}</li>)}</ul> : <p className="ta-sub">No specific skill choice recorded yet. Assigned courses below do not imply a learner preference.</p>}
+      </section>
       {/* Metric summary banner */}
       <div className="ta-grid ta-grid-3 ta-gap8">
         <div className="ta-card" style={{ padding: "12px 14px", borderRadius: 10 }}>

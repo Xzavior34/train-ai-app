@@ -637,7 +637,8 @@ export function CohortScreen({
           push={push}
           goTab={goTab}
           cohortId={cohort?.id}
-          courses={courses}
+            cohortName={cohort?.name}
+          courses={assignedCourses.map(c => c.courses)}
           user={user}
         />
       )}
