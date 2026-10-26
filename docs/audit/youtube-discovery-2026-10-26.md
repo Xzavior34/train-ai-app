@@ -6,7 +6,7 @@ Admins can open **Courses → Find YouTube courses**, describe a skill and audie
 
 The `youtube-course-discovery` Edge Function uses the existing server-side `OPENAI_API_KEY` and a new server-side `YOUTUBE_API_KEY`. The latter must belong to a Google Cloud project with **YouTube Data API v3** enabled and should be restricted to that API. Public video discovery uses an API key; admins do not need to grant access to a personal YouTube account. Keys are never stored in browser code or learner records.
 
-The function was deployed to the canonical production project `jeobggrtxeybxvlwpxvn`. Migration `202610260001_youtube_course_discovery.sql` was applied successfully through its SQL editor. The production secret list contained the AI connection but no YouTube key at deployment time. The user was given setup instructions. Actual provider search cannot be verified until the YouTube key is saved; the UI displays this pending setup state and disables new searches.
+The function was deployed to the canonical production project `jeobggrtxeybxvlwpxvn`. Migration `202610260001_youtube_course_discovery.sql` was applied successfully through its SQL editor. YouTube Data API v3 was subsequently enabled in the existing Train AI Google Cloud project. With the user's explicit confirmation, a dedicated key restricted to that API was created and saved as the encrypted `YOUTUBE_API_KEY` server secret. No key was saved in source code.
 
 ## Accuracy and permissions
 
@@ -15,7 +15,7 @@ The function was deployed to the canonical production project `jeobggrtxeybxvlwp
 - Saved suggestions, review decisions and imports are scoped to an organization. Only its active owner/admin or a platform owner can operate this flow. Learners cannot create suggestions or approve courses, and direct browser writes to discovery tables are denied.
 - Accepting is transactional and deduplicates imports by organization and YouTube video. New imports stay unpublished; accepted/rejected state survives reload. Rejection can be reversed. Old unverified suggestions expire after one day.
 - Assignment validates active organization membership, excludes suspended members and cohort instructors from whole-cohort assignment, preserves existing enrollment progress, and prevents duplicate records. No automatic enrollment occurs on search or acceptance.
-- Search uses existing `ai_recommendation` credit metering and refunds provider failures and empty results. Organization search limits (10/hour, 50/day) prevent unbounded provider usage. No learner personal data is sent to the AI; only the administrator's course request, chosen level and public video metadata are used.
+- Admin search uses one organization AI credit and the existing ledger/refund mechanism; provider failures and empty results are refunded. Organization search limits (10/hour, 50/day) prevent unbounded provider usage. No learner personal data is sent to the AI; only the administrator's course request, chosen level and public video metadata are used.
 - Removed the previous curriculum button that inserted four fixed YouTube links while claiming to generate AI lessons.
 
 ## Verification
@@ -25,3 +25,11 @@ The function was deployed to the canonical production project `jeobggrtxeybxvlwp
 - Existing unit suite: 33 passed. Screen render audit: 73 passed (existing unrelated React `fetchPriority` warning).
 - Deno type check and production website build passed.
 - Screenshots in `youtube-discovery/review-*.png` use synthetic records and a synthetic thumbnail. No test courses, learner assignments or fake suggestions were created in production.
+
+## Organization credit routing correction
+
+The user requested 50 additional Sara Foundation organization credits. They were added once to the verified organization account with an `admin_grant` ledger entry, yielding a balance of 50. A later live search still reported exhausted credits. Reading the actual production `consume_ai_credits` function established the cause: it explicitly excludes Sara Foundation from organization fallback and uses personal learner credits.
+
+Migration `202610260002_admin_discovery_organization_credits.sql` introduces an admin-only organization-funded operation bound to the saved search, its creator, and its organization. It charges one credit with row locks, records the debit in the existing ledger, denies duplicate charges, and preserves the existing learner credit policy. It also adds an admin-only balance read. The admin search page displays the organization balance with an explicit refresh control and refreshes it after a search, including failed searches/refunds. No second 50-credit grant was made.
+
+Regression coverage verifies the 50→49 organization debit, duplicate-charge denial, cross-organization/learner access denial, zero-credit denial without a ledger write, and updated balance display after searching.

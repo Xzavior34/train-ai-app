@@ -137,7 +137,7 @@ async function handlerFixture(options = {}) {
             ? !options.denied
             : name === "begin_youtube_course_search"
               ? "search-id"
-              : name === "consume_ai_credits"
+              : name === "consume_youtube_discovery_credits"
                 ? {
                     authorized: !options.noCredits,
                     transaction_id: "transaction",
@@ -237,7 +237,7 @@ test("signed-out, foreign admins, and missing keys never invoke providers or spe
     const r = await handlerFixture(options);
     assert.ok(r.response.status >= 400);
     assert.equal(
-      r.calls.some((c) => c.url || c.name === "consume_ai_credits"),
+      r.calls.some((c) => c.url || c.name === "consume_youtube_discovery_credits"),
       false,
     );
   }
@@ -269,7 +269,7 @@ test("search persists verified metadata with organization scope", async () => {
     "10000000-0000-4000-8000-000000000001",
   );
   assert.equal(
-    r.calls.filter((c) => c.name === "consume_ai_credits").length,
+    r.calls.filter((c) => c.name === "consume_youtube_discovery_credits").length,
     1,
   );
   assert.equal(

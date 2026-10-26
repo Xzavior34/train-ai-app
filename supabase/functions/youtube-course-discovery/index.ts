@@ -52,12 +52,16 @@ Deno.serve(async (req) => {
       return json({ error: "Organization admin access required." }, 403);
     const youtubeKey = Deno.env.get("YOUTUBE_API_KEY"),
       aiKey = Deno.env.get("OPENAI_API_KEY");
-    if (body.action === "status")
+    if (body.action === "status") {
+      const {data:organizationCredits,error:balanceError}=await client.rpc('get_youtube_discovery_credit_balance',{p_org_id:org});
+      if(balanceError) throw new Error('Could not read the organization AI balance. Please retry.');
       return json({
         ready: !!youtubeKey && !!aiKey,
         youtube: !!youtubeKey,
         ai: !!aiKey,
+        organizationCredits,
       });
+    }
     if (!youtubeKey || !aiKey)
       return json(
         {
@@ -132,8 +136,8 @@ Deno.serve(async (req) => {
     if (reserveError) return json({ error: reserveError.message }, 429);
     searchId = reserved;
     const { data: credits, error: creditError } = await client.rpc(
-      "consume_ai_credits",
-      { p_operation_key: "ai_recommendation", p_reference_id: searchId },
+      "consume_youtube_discovery_credits",
+      { p_search_id: searchId },
     );
     if (creditError)
       throw new Error("AI usage could not be verified. Please retry.");
@@ -145,7 +149,7 @@ Deno.serve(async (req) => {
       return json(
         {
           error:
-            "Your AI credits are exhausted. Ask the platform owner to add credits.",
+            "Your organization’s AI credits are exhausted. Ask the platform owner to add organization credits.",
         },
         402,
       );

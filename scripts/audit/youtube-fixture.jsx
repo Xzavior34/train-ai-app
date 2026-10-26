@@ -20,6 +20,7 @@ function rows() {
 }
 const api = {
   discoveryStatus: async () => ({
+    organizationCredits: sessionStorage.getItem('youtube-fixture') ? 49 : 50,
     ready: !new URLSearchParams(location.search).has("missing_key"),
     youtube: !new URLSearchParams(location.search).has("missing_key"),
     ai: true,

@@ -56,6 +56,7 @@ export function YouTubeCourseDiscovery({
     } catch (e) {
       setError(e.message || "Could not save. Please retry.");
     } finally {
+      try { setConnection(await api.discoveryStatus(orgId)); } catch {}
       setBusy("");
     }
   }
@@ -85,6 +86,7 @@ export function YouTubeCourseDiscovery({
           <X size={20} />
         </button>
       </div>
+      {Number.isFinite(connection?.organizationCredits) && <div className="yt-message" role="status"><strong>Organization AI credits: {connection.organizationCredits}</strong>{" "}<button className="ta-btn ta-btn-outline ta-btn-sm" disabled={loading || !!busy} onClick={load}>Refresh balance</button></div>}
       {error && (
         <div className="yt-message yt-error" role="alert">
           {error}{" "}
@@ -170,7 +172,7 @@ export function YouTubeCourseDiscovery({
           </button>
         </div>
         <p className="yt-muted">
-          Uses 1 AI recommendation credit per successful search. Recommendations
+            Uses 1 organization AI credit per successful search. Recommendations
           assess titles and descriptions; preview the teaching content before
           accepting.
         </p>

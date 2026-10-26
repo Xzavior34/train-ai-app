@@ -23,7 +23,10 @@ try {
  create table lessons(id uuid default gen_random_uuid(),course_id uuid references courses(id),title text,description text,video_url text,duration_minutes int,order_index int,is_published boolean);
  create table course_enrollments(user_id uuid,course_id uuid,progress_percentage numeric default 0,unique(user_id,course_id));
  create table cohort_courses(cohort_id uuid,course_id uuid,unique(cohort_id,course_id));
- create table cohort_learner_courses(cohort_id uuid,user_id uuid,course_id uuid,assigned_by uuid);`);
+ create table cohort_learner_courses(cohort_id uuid,user_id uuid,course_id uuid,assigned_by uuid);
+ create table ai_credit_accounts(id uuid primary key default gen_random_uuid(),organization_id uuid,account_type text,owner_user_id uuid,balance int,lifetime_consumed int default 0,updated_at timestamptz default now());
+ create table ai_credit_transactions(id uuid primary key default gen_random_uuid(),organization_id uuid,account_id uuid,user_id uuid,transaction_type text,amount int,balance_before int,balance_after int,reference_type text,reference_id text,metadata jsonb);
+ insert into ai_credit_accounts(organization_id,account_type,balance) values('${org}','organization',50),('${other}','organization',100);`);
   const helper = fs
     .readFileSync(
       "supabase/migrations/202610200006_instructor_assignment_and_member_tracking.sql",
@@ -39,12 +42,15 @@ try {
   );
   await db.exec(sql);
   await db.exec(sql);
+  const creditSql=fs.readFileSync('supabase/migrations/202610260002_admin_discovery_organization_credits.sql','utf8');
+  await db.exec(creditSql);await db.exec(creditSql);
   const actor = async (id, role = "authenticated") => {
     await db.exec("reset role");
     await db.query("select set_config('request.jwt.claim.sub',$1,false)", [id]);
     await db.exec("set role " + role);
   };
   await actor(learner);
+  await assert.rejects(db.query('select get_youtube_discovery_credit_balance($1)',[org]),/admin access/i);
   await assert.rejects(
     db.query("select begin_youtube_course_search($1,$2,$3)", [
       org,
@@ -69,6 +75,18 @@ try {
       "beginner",
     ])
   ).rows[0].id;
+  assert.equal((await db.query('select get_youtube_discovery_credit_balance($1) balance',[org])).rows[0].balance,50);
+  await assert.rejects(db.query('select get_youtube_discovery_credit_balance($1)',[other]),/admin access/i);
+  const charge=(await db.query('select consume_youtube_discovery_credits($1) result',[search])).rows[0].result;
+  assert.equal(charge.authorized,true);assert.equal(charge.consumed_from,'organization');assert.equal(charge.organization_balance,49);
+  await assert.rejects(db.query('select consume_youtube_discovery_credits($1)',[search]),/already been charged/i);
+  await actor(learner);await assert.rejects(db.query('select consume_youtube_discovery_credits($1)',[search]),/admin access/i);
+  await db.exec('reset role');assert.equal((await db.query("select balance from ai_credit_accounts where organization_id=$1",[other])).rows[0].balance,100);
+  assert.equal((await db.query('select count(*)::int n from ai_credit_transactions')).rows[0].n,1);
+  await db.exec("update ai_credit_accounts set balance=0 where organization_id='"+org+"'");
+  await actor(admin);const unfunded=(await db.query('select begin_youtube_course_search($1,$2,$3) id',[org,'AI automation course','beginner'])).rows[0].id;
+  assert.equal((await db.query('select consume_youtube_discovery_credits($1) result',[unfunded])).rows[0].result.authorized,false);
+  await db.exec('reset role');assert.equal((await db.query('select count(*)::int n from ai_credit_transactions')).rows[0].n,1);await actor(admin);
   await assert.rejects(
     db.exec(
       `insert into youtube_course_suggestions(search_id,organization_id,video_id,title,channel_title,duration_seconds,reason,category,level,rank) values('${search}','${org}','ABCDEFGHIJK','Fake','Fake',1,'Fake','Fake','beginner',1)`,
@@ -216,7 +234,7 @@ try {
     targets.learners.map((l) => l.id),
     [learner],
   );
-  for (let i = 0; i < 9; i++)
+  for (let i = 0; i < 8; i++)
     await db.query("select begin_youtube_course_search($1,$2,$3)", [
       org,
       "Product management",

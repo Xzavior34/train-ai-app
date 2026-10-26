@@ -39,7 +39,9 @@ try {
       .click();
   };
   await page.goto(base);
+  await page.getByText('Organization AI credits: 50',{exact:true}).waitFor();
   await search();
+  await page.getByText('Organization AI credits: 49',{exact:true}).waitFor();
   await page.getByText("1 new suggestions saved for review.").waitFor();
   for (const width of [320, 390, 768, 1440]) {
     await page.setViewportSize({ width, height: 900 });
