@@ -7,6 +7,7 @@ import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
 import { fetchCourses, updateCourse, deleteCourse, replaceCourseLessons, fetchCourseApplications, decideCourseApplication, fetchCourseEnrolledLearners, fetchAssessmentAttemptsForCourse, overrideAssessmentScore, fetchCertificateRequestsForCourse, reviewCertificate, upsertCertificateTemplate, fetchAssessmentForCourseWithQuestions, createAssessmentForCourse, addAssessmentQuestion, deleteAssessmentQuestion, checkEffectiveOrgPermission, issueCertificateDirectly, fetchCourseMaterials, addCourseMaterial, deleteCourseMaterial, fetchCourseQualityReview, submitCourseQualityReview } from "../../lib/api/platform.js";
 import { fetchCertificateForCourse } from "../../lib/api/learner.js";
 import FileUploadZone from "../../components/common/FileUploadZone.jsx";
+import { YouTubeCourseDiscovery } from "./YouTubeCourseDiscovery.jsx";
 import { CourseBuilderWizard } from "./CourseBuilderWizard.jsx";
 import { OrgCertificateStudio } from "../../components/certificates/OrgCertificateStudio.jsx";
 import { CertificateDocument } from "../../components/certificates/CertificateDocument.jsx";
@@ -51,7 +52,7 @@ function GradingRow({ attempt, currentUserId, onOverride }) {
   );
 }
 
-export function ContentScreen({ orgId, orgSelector, setScreen, selectedCourseId, setSelectedCourseId, currentUserId, openBuilderOnMount = false }) {
+export function ContentScreen({ orgId, orgSelector, setScreen, selectedCourseId, setSelectedCourseId, currentUserId, openBuilderOnMount = false, allowDiscovery = false }) {
   const showToast = useContext(ToastContext);
   // When the sidebar's Course Builder entry is what mounted this screen, start
   // on the course LIST, not on whatever course was last opened. Without this,
@@ -71,6 +72,7 @@ export function ContentScreen({ orgId, orgSelector, setScreen, selectedCourseId,
   // openBuilderOnMount backs the sidebar's own "Course Builder" entry under
   // Learning - that nav item lands here with the wizard already open rather
   // than making someone find the Create button first.
+  const [discoveryOpen, setDiscoveryOpen] = useState(false);
   const [newCourseOpen, setNewCourseOpen] = useState(openBuilderOnMount);
   const [selectedCourseIds, setSelectedCourseIds] = useState(new Set());
   const [bulkActionLoading, setBulkActionLoading] = useState(false);
@@ -562,45 +564,13 @@ export function ContentScreen({ orgId, orgSelector, setScreen, selectedCourseId,
                     </div>
                   </div>
                   <div className="ta-row ta-gap8">
-                    <button className="ta-btn ta-btn-outline ta-btn-sm" onClick={() => {
-                      const newGenerated = [
-                        { id: `gen-${Date.now()}-1`, title: "1.0 Course Orientation & Foundations", duration_minutes: 15, video_url: "https://www.youtube.com/watch?v=gHGN6hs2gZY" },
-                        { id: `gen-${Date.now()}-2`, title: "2.0 Deep Dive & Core Architecture", duration_minutes: 30, video_url: "https://www.youtube.com/watch?v=2xxziIWmaSA" },
-                        { id: `gen-${Date.now()}-3`, title: "3.0 Practical Lab & Case Study", duration_minutes: 45, video_url: "https://www.youtube.com/watch?v=bMknfKXIFA8" },
-                        { id: `gen-${Date.now()}-4`, title: "4.0 Final Assessment & Certification", duration_minutes: 25, video_url: "https://www.youtube.com/watch?v=jC4v5AS4RIM" }
-                      ];
-                      setEditLessons(prev => [...prev, ...newGenerated]);
-                      showToast("AI generated 4 new structured lessons!");
-                    }}>
-                      <Brain size={14} /> Auto-Generate with AI
-                    </button>
                     <button className="ta-btn ta-btn-primary ta-btn-sm" onClick={handleAddLesson}>
                       <Plus size={14} /> Add New Lesson
                     </button>
                   </div>
                 </div>
 
-                {/* AI Curriculum Generator Trigger Card */}
-                <div style={{
-                  padding: "12px 16px",
-                  borderRadius: 8,
-                  background: "rgba(37, 99, 235, 0.05)",
-                  border: "1px solid rgba(37, 99, 235, 0.2)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  flexWrap: "wrap",
-                  gap: 12
-                }}>
-                  <div className="ta-row ta-gap10">
-                    <Brain size={18} color="#2563EB" />
-                    <div>
-                      <div style={{ fontWeight: 700, fontSize: 13.5, color: "var(--text)" }}>AI-Powered Curriculum Builder</div>
-                      <div style={{ fontSize: 11.5, color: "var(--text-2)" }}>Generate modules, lesson outlines, and quizzes aligned with industry benchmarks in 1 click.</div>
-                    </div>
-                  </div>
-                  <Tag tone="primary">AI Enabled</Tag>
-                </div>
+                <p style={{fontSize:13,color:"var(--text-2)"}}>Add lessons using verified video links. Admins can find and review YouTube courses from the course catalog.</p>
 
                 {editLessons.length === 0 ? (
                   <div className="ta-empty" style={{ padding: 40, border: "1px dashed var(--border)", borderRadius: 8 }}>
@@ -1165,6 +1135,7 @@ export function ContentScreen({ orgId, orgSelector, setScreen, selectedCourseId,
                 </div>
 
                 <div className="ta-hero-actions">
+                  {allowDiscovery && <button className="ta-btn ta-btn-outline" onClick={() => setDiscoveryOpen(v => !v)}><Brain size={16} /> Find YouTube courses</button>}
                   <button
                     className="ta-btn ta-btn-primary"
                     style={{
@@ -1187,6 +1158,8 @@ export function ContentScreen({ orgId, orgSelector, setScreen, selectedCourseId,
                 </div>
               </div>
             </div>
+
+            {allowDiscovery && discoveryOpen && <YouTubeCourseDiscovery key={orgId} orgId={orgId} onClose={() => setDiscoveryOpen(false)} onChanged={() => coursesQuery.refetch()} onManage={id => {setActiveCourseId(id);setSelectedCourseId?.(id);}} />}
 
             {selectedCourseIds.size > 0 && (
               <div className="ta-card ta-row ta-between" style={{ marginBottom: 12, borderColor: "var(--primary)", gap: 10, flexWrap: "wrap" }}>

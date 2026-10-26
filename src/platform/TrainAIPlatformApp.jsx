@@ -250,12 +250,12 @@ export default function TrainAIPlatformApp({ session, isActive = true, onSwitchT
                   {screen === "dashboard" && <AdminDashboardScreen orgId={effectiveOrgId} profileQuery={profileQuery} setScreen={setScreen} orgSelector={orgSelector} isPlatformOwner={isSuperAdminUser} />}
                   {screen === "demos" && <DemoRequestsScreen orgSelector={orgSelector} />}
                   {screen === "people" && <PeopleScreen orgId={effectiveOrgId} orgSelector={orgSelector} setScreen={setScreen} currentUserId={session?.user?.id} />}
-                  {screen === "content" && <ContentScreen orgId={effectiveOrgId} orgSelector={orgSelector} setScreen={setScreen} selectedCourseId={selectedCourseId} setSelectedCourseId={setSelectedCourseId} currentUserId={session?.user?.id} />}
+                  {screen === "content" && <ContentScreen allowDiscovery orgId={effectiveOrgId} orgSelector={orgSelector} setScreen={setScreen} selectedCourseId={selectedCourseId} setSelectedCourseId={setSelectedCourseId} currentUserId={session?.user?.id} />}
                   {screen === "paths" && <LearningPathsScreen orgId={effectiveOrgId} orgSelector={orgSelector} setScreen={setScreen} />}
                   {/* Course Builder is its own Learning nav entry - same
                       ContentScreen, mounted with the builder wizard already
                       open. */}
-                  {screen === "coursebuilder" && <ContentScreen orgId={effectiveOrgId} orgSelector={orgSelector} setScreen={setScreen} selectedCourseId={selectedCourseId} setSelectedCourseId={setSelectedCourseId} currentUserId={session?.user?.id} openBuilderOnMount />}
+                  {screen === "coursebuilder" && <ContentScreen allowDiscovery orgId={effectiveOrgId} orgSelector={orgSelector} setScreen={setScreen} selectedCourseId={selectedCourseId} setSelectedCourseId={setSelectedCourseId} currentUserId={session?.user?.id} openBuilderOnMount />}
                   {screen === "emails" && <EmailCenterScreen orgId={effectiveOrgId} orgSelector={orgSelector} setScreen={setScreen} currentUserId={session?.user?.id} />}
                   {screen === "payouts" && <PayoutsScreen orgId={effectiveOrgId} orgSelector={orgSelector} setScreen={setScreen} currentUserId={session?.user?.id} />}
                   {screen === "seats" && <SeatsScreen orgId={effectiveOrgId} orgSelector={orgSelector} setScreen={setScreen} userEmail={session?.user?.email} />}

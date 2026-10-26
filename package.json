@@ -15,7 +15,8 @@
     "test:website": "node scripts/audit/website-inventory.mjs",
     "test:pages": "node scripts/audit/page-render-checks.mjs",
     "test:pages:browser": "node scripts/audit/page-checks.mjs && node scripts/audit/page-interactions.mjs",
-    "test:cap": "node scripts/audit/cap-database.mjs && node --test scripts/audit/data-display.test.mjs"
+    "test:cap": "node scripts/audit/cap-database.mjs && node --test scripts/audit/data-display.test.mjs",
+    "test:youtube": "node scripts/audit/youtube-database.mjs && node --test scripts/audit/youtube-providers.test.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.110.9",

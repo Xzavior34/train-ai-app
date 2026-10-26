@@ -1,0 +1,163 @@
+.yt-discovery {
+  margin-bottom: 20px;
+  min-width: 0;
+  color: var(--text);
+  padding: clamp(14px, 3vw, 24px);
+}
+.yt-heading,
+.yt-search-row,
+.yt-actions,
+.yt-filters {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.yt-heading {
+  align-items: flex-start;
+  justify-content: space-between;
+}
+.yt-heading > div {
+  flex: 1;
+  min-width: 0;
+}
+.yt-discovery h2 {
+  font-size: 20px;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin: 0 0 8px;
+}
+.yt-discovery h3 {
+  font-size: 17px;
+  margin: 0 0 8px;
+  overflow-wrap: anywhere;
+}
+.yt-discovery p {
+  line-height: 1.55;
+  margin: 8px 0;
+}
+.yt-discovery label {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  font-weight: 600;
+  font-size: 13px;
+}
+.yt-discovery textarea {
+  width: 100%;
+  resize: vertical;
+}
+.yt-search-row {
+  align-items: flex-end;
+  margin: 12px 0;
+}
+.yt-search-row label {
+  min-width: 160px;
+}
+.yt-muted {
+  font-size: 12px;
+  color: var(--text-2);
+}
+.yt-message {
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface-2);
+  margin: 12px 0;
+}
+.yt-error {
+  border-color: #dc2626;
+}
+.yt-filters {
+  padding: 18px 0;
+}
+.yt-results {
+  display: grid;
+  gap: 16px;
+}
+.yt-result {
+  display: grid;
+  grid-template-columns: 180px minmax(0, 1fr);
+  gap: 16px;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+.yt-result > img {
+  width: 100%;
+  border-radius: 8px;
+  aspect-ratio: 4/3;
+  object-fit: cover;
+}
+.yt-result-body {
+  min-width: 0;
+}
+.yt-actions {
+  margin-top: 14px;
+}
+.yt-discovery .ta-btn {
+  white-space: normal;
+  text-align: center;
+  min-height: 40px;
+  justify-content: center;
+}
+.yt-description {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font-size: 13px;
+}
+.yt-discovery details {
+  margin-top: 12px;
+}
+.yt-discovery summary {
+  cursor: pointer;
+  font-size: 13px;
+}
+.yt-assignment {
+  margin-top: 18px;
+  padding: 16px;
+  border: 1px solid var(--primary);
+  border-radius: 12px;
+  display: grid;
+  gap: 12px;
+}
+.yt-learners {
+  max-height: 260px;
+  overflow: auto;
+  display: grid;
+  gap: 10px;
+}
+.yt-learners label {
+  flex-direction: row;
+  align-items: center;
+  overflow-wrap: anywhere;
+}
+@media (max-width: 600px) {
+  .yt-result {
+    grid-template-columns: 1fr;
+    padding: 12px;
+  }
+  .yt-result > img {
+    max-height: 180px;
+    object-fit: contain;
+    background: #0f172a;
+  }
+  .yt-search-row > * {
+    width: 100%;
+  }
+  .yt-actions > * {
+    flex: 1 1 145px;
+  }
+  .yt-filters {
+    gap: 8px;
+  }
+  .yt-filters .ta-btn {
+    flex: 1;
+    font-size: 12px;
+    padding: 8px;
+  }
+  .yt-discovery h2 {
+    font-size: 18px;
+  }
+}
